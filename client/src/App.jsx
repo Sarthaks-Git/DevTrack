@@ -9,8 +9,13 @@ import Projects from './pages/Projects'
 import Goals from './pages/Goals'
 import Journal from "./pages/Journal";
 import Timeline from "./pages/Timeline";
+import Test from "./components/Test";
 const router=createBrowserRouter(
   [
+    {
+      path:"/test",
+      element: <Test/>
+    },
     {
       path: "/",
       element: <Landing/>
