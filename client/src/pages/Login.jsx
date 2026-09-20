@@ -1,23 +1,54 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  function handleSubmit(event) {
+  const navigate = useNavigate();
+  async function handleSubmit(event) {
     event.preventDefault();
+    setLoading(true);
+    try {
+      const response = await fetch("http://localhost:5000/api/auth/login", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.message || "Login failed");
+      }
+      setMessage(result.message || "Login successful!");
+
+      setTimeout(() => {
+        navigate("/app/dashboard");
+      }, 1000);
+    } catch (error) {
+      setMessage(error.message);
+    } finally {
+      setLoading(false);
+    }
   }
 
-  const handleEmail=(event)=>{
-    const {value} =event.target;
+  const handleEmail = (event) => {
+    const { value } = event.target;
     setEmail(value);
+  };
 
-  }
-
-  const handlePassword=(event)=>{
-    const {value} = event.target;
+  const handlePassword = (event) => {
+    const { value } = event.target;
     setPassword(value);
-  }
+  };
 
   return (
     <>
@@ -25,19 +56,19 @@ const Login = () => {
       <img src="" alt="logo" />
 
       <form onSubmit={handleSubmit}>
-        Email: <input
-          type="email"
-          name="email"
-          onChange={handleEmail}
-          value={email}
-        /> 
-        Password: <input
+        Email:{" "}
+        <input type="email" name="email" onChange={handleEmail} value={email} />
+        Password:{" "}
+        <input
           type="password"
           name="password"
           onChange={handlePassword}
           value={password}
         />
-        <button type="submit">Login</button>
+        <button type="submit" disabled={loading}>
+          {loading ? "Logging in..." : "Log in"}
+        </button>
+        <p>{message}</p>
         Don't have an account? <Link to="/register">Register</Link>
         <Link to="#">Forgot Password?</Link>
       </form>
