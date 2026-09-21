@@ -11,6 +11,7 @@ import Journal from "./pages/Journal";
 import Timeline from "./pages/Timeline";
 import Test from "./components/Test";
 import ProtectedRoute from "./components/ProtectedRoute";
+import { AuthProvider } from "./context/AuthContext";
 const router = createBrowserRouter([
   {
     path: "/test",
@@ -49,9 +50,9 @@ const router = createBrowserRouter([
 
 function App() {
   return (
-    <>
-      <RouterProvider router={router}></RouterProvider>
-    </>
+    <AuthProvider>
+      <RouterProvider router={router} />
+    </AuthProvider>
   );
 }
 

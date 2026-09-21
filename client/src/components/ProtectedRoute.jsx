@@ -1,39 +1,15 @@
-import { useEffect, useState } from "react";
+import { useContext } from "react";
 import { Navigate, Outlet } from "react-router-dom";
+import { AuthContext } from "../context/AuthContext";
 
 const ProtectedRoute = () => {
-  const [status, setStatus] = useState("checking");
+  const { user, loading } = useContext(AuthContext);
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const response = await fetch(
-          "http://localhost:5000/api/auth/me",
-          {
-            method: "GET",
-            credentials: "include",
-          }
-        );
-
-        if (response.ok) {
-          setStatus("authenticated");
-        } else {
-          setStatus("unauthenticated");
-        }
-      } catch (error) {
-        console.error("Auth check failed:", error);
-        setStatus("unauthenticated");
-      }
-    };
-
-    checkAuth();
-  }, []);
-
-  if (status === "checking") {
+  if (loading) {
     return <p>Checking authentication...</p>;
   }
 
-  if (status === "unauthenticated") {
+  if (!user) {
     return <Navigate to="/login" replace />;
   }
 
