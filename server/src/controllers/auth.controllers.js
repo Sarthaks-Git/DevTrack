@@ -49,14 +49,14 @@ export async function getMe(req, res, next) {
     }
 }
 
-export async function logout(req, res, next) {
-    try {
-        res.clearCookie('accessToken');
+export function logout(req, res) {
+    res.clearCookie('accessToken', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax'
+    });
 
-        return res.status(200).json({
-            message: "Logout successful"
-        });
-    } catch (error) {
-
-    }
+    return res.status(200).json({
+        message: 'Logout successful'
+    });
 }
