@@ -3,6 +3,7 @@ import cors from 'cors';
 import authRouter from './routes/auth.routes.js';
 import { errorMiddleware } from './middlewares/error.middleware.js';
 import cookieParser from 'cookie-parser';
+import goalRouter from './routes/goal.routes.js';
 
 
 const app = express();
@@ -25,7 +26,7 @@ app.get('/api/health', (req, res) => {
 });
 
 app.use('/api/auth', authRouter);
-
+app.use('/api/goals', goalRouter);
 
 app.use(errorMiddleware);
 
