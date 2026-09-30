@@ -504,3 +504,53 @@ a {
 .dt-goal-enter {
     animation: dt-goal-enter 350ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
+
+/* =========================================================
+   ROUTE VIEW TRANSITIONS
+   ========================================================= */
+
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation-duration: 260ms;
+    animation-timing-function: var(--dt-ease-standard);
+}
+
+::view-transition-old(root) {
+    animation-name: dt-view-exit;
+}
+
+::view-transition-new(root) {
+    animation-name: dt-view-enter;
+}
+
+@keyframes dt-view-exit {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+}
+
+@keyframes dt-view-enter {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    ::view-transition-old(root),
+    ::view-transition-new(root) {
+        animation-duration: 1ms;
+    }
+}
