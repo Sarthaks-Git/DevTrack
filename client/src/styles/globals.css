@@ -1,0 +1,73 @@
+@import "./tokens.css";
+
+@import url("https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600;700&display=swap");
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    background: var(--dt-background);
+    color-scheme: dark;
+}
+
+body {
+    margin: 0;
+    min-width: 320px;
+
+    background:
+        radial-gradient(
+            circle at 50% 0%,
+            rgba(128, 102, 255, 0.045),
+            transparent 35%
+        ),
+        var(--dt-background);
+
+    color: var(--dt-text-primary);
+
+    font-family: var(--dt-font-ui);
+
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+button,
+input,
+textarea,
+select {
+    font: inherit;
+}
+
+button {
+    cursor: pointer;
+}
+
+button:disabled {
+    cursor: not-allowed;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+::selection {
+    background: rgba(128, 102, 255, 0.3);
+    color: var(--dt-text-primary);
+}
+
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--dt-background);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--dt-border-strong);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--dt-text-muted);
+}
