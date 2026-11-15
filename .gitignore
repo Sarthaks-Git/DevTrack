@@ -1,0 +1,18 @@
+# Dependencies and generated output
+node_modules/
+dist/
+coverage/
+
+# Local environment files (example files are intentionally tracked)
+.env*
+!.env.example
+
+# Test and tool artifacts
+*.log
+.DS_Store
+
+# Local planning/agent notes and design drafts (not published)
+/*.md
+!/README.md
+/docs/
+/.design-themes/

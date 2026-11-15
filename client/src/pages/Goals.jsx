@@ -1,0 +1,300 @@
+import { useEffect, useRef, useState } from "react";
+import GoalList from "../components/goals/GoalList";
+import PageHeader from "../components/common/PageHeader";
+import GoalForm from "../components/goals/GoalForm";
+import DeleteConfirmModal from "../components/goals/DeleteConfirmModal";
+import {
+  getGoals,
+  deleteGoal,
+  addGoalMilestone,
+  updateGoalMilestone,
+  deleteGoalMilestone,
+} from "../services/goalService";
+import { getProjects } from "../services/projectService";
+
+function Goals() {
+  const [goals, setGoals] = useState([]);
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const [editingGoal, setEditingGoal] = useState(null);
+  const [showForm, setShowForm] = useState(false);
+
+  const formSectionRef = useRef(null);
+
+  const [deletingGoal, setDeletingGoal] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    if (!showForm) {
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      formSectionRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }, 180);
+
+    return () => clearTimeout(timer);
+  }, [showForm]);
+
+  useEffect(() => {
+    async function loadGoals() {
+      try {
+        setLoading(true);
+        setError("");
+
+        const data = await getGoals();
+
+        setGoals(data.goals);
+
+        // Linked projects are context only; the page still works if they fail to load.
+        getProjects()
+          .then((response) => setProjects(response.data?.projects || []))
+          .catch(() => setProjects([]));
+      } catch (error) {
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadGoals();
+  }, []);
+
+  function handleNewGoal() {
+    setEditingGoal(null);
+    setShowForm(true);
+  }
+
+  function handleGoalCreated(newGoal) {
+    setGoals((previousGoals) => [newGoal, ...previousGoals]);
+
+    setTimeout(() => {
+      setShowForm(false);
+    }, 100);
+  }
+
+  function handleEdit(goal) {
+    setEditingGoal(goal);
+    setShowForm(true);
+  }
+
+  function handleGoalUpdated(updatedGoal) {
+    setGoals((previousGoals) =>
+      previousGoals.map((goal) =>
+        goal._id === updatedGoal._id ? updatedGoal : goal,
+      ),
+    );
+
+    setTimeout(() => {
+      setEditingGoal(null);
+      setShowForm(false);
+    }, 100);
+  }
+
+  function replaceGoal(updatedGoal) {
+    setGoals((previousGoals) =>
+      previousGoals.map((goal) =>
+        goal._id === updatedGoal._id ? updatedGoal : goal,
+      ),
+    );
+  }
+
+  const milestoneHandlers = {
+    add: async (goalId, milestone) => replaceGoal(await addGoalMilestone(goalId, milestone)),
+    update: async (goalId, milestoneId, changes) =>
+      replaceGoal(await updateGoalMilestone(goalId, milestoneId, changes)),
+    remove: async (goalId, milestoneId) =>
+      replaceGoal(await deleteGoalMilestone(goalId, milestoneId)),
+  };
+
+  function handleCancelForm() {
+    setEditingGoal(null);
+    setShowForm(false);
+  }
+
+  function handleDelete(goal) {
+    setDeletingGoal(goal);
+  }
+
+  function handleCancelDelete() {
+    setDeletingGoal(null);
+  }
+
+  async function handleConfirmDelete() {
+    try {
+      setDeleting(true);
+      setError("");
+
+      await deleteGoal(deletingGoal._id);
+
+      setGoals((previousGoals) =>
+        previousGoals.filter((item) => item._id !== deletingGoal._id),
+      );
+      // The server unlinks projects from a deleted goal; mirror that locally.
+      setProjects((previous) =>
+        previous.map((project) =>
+          project.goal === deletingGoal._id ? { ...project, goal: null } : project,
+        ),
+      );
+
+      setDeletingGoal(null);
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <p className="text-sm text-[var(--dt-text-secondary)]">
+        Loading goals...
+      </p>
+    );
+  }
+
+  if (error) {
+    return <p className="text-sm text-red-400">{error}</p>;
+  }
+
+  return (
+    <section>
+      <PageHeader
+        eyebrow="02 — Goals"
+        title={
+          <>
+            Things you're
+            <br />
+            building toward.
+          </>
+        }
+        description="Track the things that matter now, the things you're working toward, and the things you eventually want to accomplish."
+      />
+
+      {/* Goals Toolbar */}
+      <div
+        className="
+                    mb-8
+                    flex
+                    items-end
+                    justify-between
+                    border-b
+                    border-[var(--dt-border)]
+                    pb-4
+                "
+      >
+        <div>
+          <p className="text-xs uppercase tracking-[0.25em] text-[var(--dt-text-muted)]">
+            Active goals
+          </p>
+
+          <p className="mt-2 text-sm text-[var(--dt-text-secondary)]">
+            {goals.length} {goals.length === 1 ? "goal" : "goals"}
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={showForm ? handleCancelForm : handleNewGoal}
+          className="
+                        text-xs
+                        font-medium
+                        uppercase
+                        tracking-[0.2em]
+                        text-[var(--dt-text-secondary)]
+                        transition-colors
+                        duration-200
+                        hover:text-[var(--dt-accent-soft)]
+                    "
+        >
+          {showForm ? "× Close" : "+ New goal"}
+        </button>
+      </div>
+
+      {/* Goal Form */}
+      <div
+        ref={formSectionRef}
+        className={`dt-goal-form-wrapper ${showForm ? "is-open" : ""}`}
+      >
+        <div className="dt-goal-form-inner">
+          <GoalForm
+            key={editingGoal?._id || (showForm ? "new-open" : "new")}
+            editingGoal={editingGoal}
+            onGoalCreated={handleGoalCreated}
+            onGoalUpdated={handleGoalUpdated}
+            onCancelEdit={handleCancelForm}
+          />
+        </div>
+      </div>
+
+      {/* Goal List / Empty State */}
+      {goals.length === 0 ? (
+        <div
+          className="
+                        border-t
+                        border-[var(--dt-border)]
+                        py-16
+                    "
+        >
+          <p className="text-xs uppercase tracking-[0.25em] text-[var(--dt-text-muted)]">
+            Nothing here yet
+          </p>
+
+          <p
+            className="
+                            mt-4
+                            max-w-md
+                            font-[family-name:var(--dt-font-display)]
+                            text-2xl
+                            leading-tight
+                            text-[var(--dt-text-primary)]
+                        "
+          >
+            Give yourself something worth building toward.
+          </p>
+
+          <button
+            type="button"
+            onClick={handleNewGoal}
+            className="
+                            mt-6
+                            text-xs
+                            font-medium
+                            uppercase
+                            tracking-[0.2em]
+                            text-[var(--dt-text-secondary)]
+                            transition-colors
+                            duration-200
+                            hover:text-[var(--dt-accent-soft)]
+                        "
+          >
+            + Create your first goal
+          </button>
+        </div>
+      ) : (
+        <GoalList
+          goals={goals}
+          projects={projects}
+          milestoneHandlers={milestoneHandlers}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
+      )}
+
+      {/* Delete Modal */}
+      <DeleteConfirmModal
+        goal={deletingGoal}
+        loading={deleting}
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+      />
+    </section>
+  );
+}
+
+export default Goals;
