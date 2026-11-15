@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import ActivityItem from "../activity/ActivityItem";
+import LearningSignal from "./LearningSignal";
 import { relativeTime } from "../activity/activityMeta";
 import { getActivity, getActivitySummary } from "../../services/activityService";
 import { getCodingProfiles, syncLeetCode } from "../../services/codingService";
@@ -53,6 +54,7 @@ function DashboardPulse() {
   const [activity, setActivity] = useState(null);
   const [summary, setSummary] = useState(null);
   const [profile, setProfile] = useState(undefined);
+  const [skillsVersion, setSkillsVersion] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -62,7 +64,10 @@ function DashboardPulse() {
       return getCodingProfiles()
         .then(result => {
           const verified = result.data.profiles.find(item => item.platform === "leetcode" && item.connectionStatus === "verified") || null;
-          if (active) setProfile(verified);
+          if (active) {
+            setProfile(verified);
+            setSkillsVersion((value) => value + 1);
+          }
           return verified;
         })
         .catch(() => {
@@ -110,6 +115,7 @@ function DashboardPulse() {
       <div>
         <SectionTitle>Coding snapshot</SectionTitle>
         {profile === undefined ? <p className="text-sm text-[var(--dt-text-muted)]">Loading...</p> : <CodingSnapshot profile={profile} />}
+        {profile ? <LearningSignal version={skillsVersion} /> : null}
       </div>
     </section>
   );

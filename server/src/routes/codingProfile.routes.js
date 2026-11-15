@@ -17,6 +17,9 @@ import { syncLeetCode, listSolvedProblems, listProblemDays } from '../controller
 import { validateSyncRequest, validateProblemListQuery, validateProblemDaysQuery } from '../validators/problemTracking.validator.js';
 import { validateCodingProfile } from '../validators/codingProfile.validator.js';
 
+import { validateTodayQuery } from '../validators/viewerDay.validator.js';
+import { getSkills } from '../controllers/skills.controller.js';
+
 const codingProfileRouter = Router();
 
 codingProfileRouter.use(authMiddleware);
@@ -56,6 +59,9 @@ codingProfileRouter.post(
 codingProfileRouter.get('/leetcode/problems', validateProblemListQuery, listSolvedProblems);
 
 codingProfileRouter.get('/leetcode/days', validateProblemDaysQuery, listProblemDays);
+
+// Read-only skill signals derived from the stored problem log (no provider call).
+codingProfileRouter.get('/leetcode/skills', validateTodayQuery, getSkills);
 
 codingProfileRouter.put(
     '/leetcode',

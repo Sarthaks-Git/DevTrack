@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { getCodingProfiles, syncLeetCode, getSolvedProblems, getProblemDays } from "../services/codingService";
 import ProblemLog from "../components/coding/ProblemLog";
+import SkillsPanel from "../components/coding/SkillsPanel";
 import PageHeader from "../components/common/PageHeader";
 
 
@@ -767,6 +768,8 @@ function Coding() {
     const [message, setMessage] = useState("");
     const [problems, setProblems] = useState({ data: null, loading: true, error: "", loadingMore: false });
     const [problemDays, setProblemDays] = useState(null);
+    // Bumped after every load so the skills panel re-reads the (possibly re-synced) problem log.
+    const [skillsVersion, setSkillsVersion] = useState(0);
     // Profile, problem log and heatmap details. Each part fails on its own.
     const loadAll = useCallback(async () => {
         const result = await getCodingProfiles();
@@ -785,6 +788,7 @@ function Coding() {
                 .then(setProblemDays)
                 .catch(() => setProblemDays(null)),
         ]);
+        setSkillsVersion((value) => value + 1);
         return leetcode;
     }, []);
 
@@ -1204,6 +1208,8 @@ function Coding() {
                     </section>
 
 
+
+                    <SkillsPanel version={skillsVersion} />
 
                     <section>
 
