@@ -58,39 +58,3 @@ export function getFocusGoal(goals) {
         );
     })[0];
 }
-
-export function getAttentionGoals(goals, limit = 4) {
-    return [...goals]
-        .filter(
-            (goal) =>
-                goal.status !== "completed" &&
-                goal.status !== "archived",
-        )
-        .sort((a, b) => {
-            const priorityDifference =
-                getGoalPriorityRank(b.priority) -
-                getGoalPriorityRank(a.priority);
-
-            if (priorityDifference !== 0) {
-                return priorityDifference;
-            }
-
-            if (!a.deadline && !b.deadline) {
-                return 0;
-            }
-
-            if (!a.deadline) {
-                return 1;
-            }
-
-            if (!b.deadline) {
-                return -1;
-            }
-
-            return (
-                new Date(a.deadline) -
-                new Date(b.deadline)
-            );
-        })
-        .slice(0, limit);
-}

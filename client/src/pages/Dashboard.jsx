@@ -5,15 +5,12 @@ import { getGoals } from "../services/goalService";
 import { getProjects } from "../services/projectService";
 import DashboardPulse from "../components/dashboard/DashboardPulse";
 import UpcomingMilestones from "../components/dashboard/UpcomingMilestones";
+import NeedsAttention from "../components/dashboard/NeedsAttention";
 import { useDayPeriod } from "../components/dashboard/useDayPeriod";
 import TechTip from "../components/dashboard/TechTip";
 import PageHeader from "../components/common/PageHeader";
 import { getOpenMilestones } from "../utils/milestoneUtils";
-import {
-    getAttentionGoals,
-    getFocusGoal,
-    formatGoalDeadline,
-} from "../utils/goalUtils";
+import { getFocusGoal, formatGoalDeadline } from "../utils/goalUtils";
 
 function Dashboard() {
     const [goals, setGoals] = useState([]);
@@ -101,11 +98,6 @@ function Dashboard() {
     }, [projects]);
 
     const focusGoal = useMemo(() => getFocusGoal(goals), [goals]);
-
-    const attentionGoals = useMemo(
-        () => getAttentionGoals(goals),
-        [goals]
-    );
 
     const recentProjects = useMemo(() => {
         return [...projects]
@@ -481,68 +473,7 @@ function Dashboard() {
                 </div>
             </section>
 
-            {/* Needs Attention */}
-            <section>
-                <div className="mb-5 flex items-end justify-between border-b border-[var(--dt-border)] pb-4">
-                    <p className="text-xs uppercase tracking-[0.25em] text-[var(--dt-text-muted)]">
-                        Needs attention
-                    </p>
-
-                    <span className="text-[10px] uppercase tracking-[0.2em] text-[var(--dt-text-muted)]">
-                        {attentionGoals.length}{" "}
-                        {attentionGoals.length === 1 ? "ITEM" : "ITEMS"}
-                    </span>
-                </div>
-
-                {attentionGoals.length === 0 ? (
-                    <div className="border-b border-[var(--dt-border)] py-10">
-                        <p className="text-sm text-[var(--dt-text-secondary)]">
-                            Nothing currently needs your attention.
-                        </p>
-                    </div>
-                ) : (
-                    <div>
-                        {attentionGoals.map((goal, index) => (
-                            <article
-                                key={goal._id}
-                                className="grid gap-4 border-b border-[var(--dt-border)] py-6 md:grid-cols-[40px_1fr_auto] md:items-start md:gap-6"
-                            >
-                                <span className="font-mono text-[9px] tracking-[0.15em] text-[var(--dt-text-muted)]">
-                                    {String(index + 1).padStart(2, "0")}
-                                </span>
-
-                                <div>
-                                    <Link
-                                        to="/app/goals"
-                                        className="inline-block text-base font-medium tracking-tight text-[var(--dt-text-primary)] transition-colors duration-200 hover:text-[var(--dt-accent-soft)]"
-                                    >
-                                        {goal.title}
-                                    </Link>
-
-                                    <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2">
-                                        <span className="text-[10px] uppercase tracking-[0.16em] text-[var(--dt-text-secondary)]">
-                                            {formatStatus(goal.status)}
-                                        </span>
-
-                                        {goal.deadline && (
-                                            <span className="text-[10px] uppercase tracking-[0.16em] text-[var(--dt-text-muted)]">
-                                                Due{" "}
-                                                {formatGoalDeadline(
-                                                    goal.deadline
-                                                )}
-                                            </span>
-                                        )}
-                                    </div>
-                                </div>
-
-                                <span className="text-left text-[10px] font-medium uppercase tracking-[0.18em] text-[var(--dt-text-muted)] md:text-right">
-                                    {goal.priority}
-                                </span>
-                            </article>
-                        ))}
-                    </div>
-                )}
-            </section>
+            <NeedsAttention />
 
             <DashboardPulse />
         </section>
