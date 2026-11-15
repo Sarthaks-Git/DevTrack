@@ -1,6 +1,7 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useContext, useState } from "react";
 import { AuthContext } from "../context/authContextObject";
+import NotificationBell from "./common/NotificationBell";
 
 const navigationItems = [
   { number: "01", label: "Overview", path: "/app/dashboard" },
@@ -12,7 +13,7 @@ const navigationItems = [
   { number: "07", label: "Settings", path: "/app/settings" },
 ];
 
-function Sidebar({ onNavigate }) {
+function Sidebar({ unread = 0, onNavigate }) {
   const navigate = useNavigate();
   const { logout, user } = useContext(AuthContext);
   const [loggingOut, setLoggingOut] = useState(false);
@@ -61,6 +62,7 @@ function Sidebar({ onNavigate }) {
       </nav>
 
       <div className="mt-auto border-t border-[var(--dt-border)] pt-5">
+        <NotificationBell unread={unread} onNavigate={onNavigate} className="mb-4" />
         {user ? <p className="mb-3 truncate text-xs text-[var(--dt-text-muted)]">@{user.username}</p> : null}
         <button
           type="button"

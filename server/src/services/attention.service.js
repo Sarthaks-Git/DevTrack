@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import Goal from '../models/Goal.js';
 import Project from '../models/Project.js';
 import JournalEntry from '../models/JournalEntry.js';
+import User from '../models/User.js';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -10,6 +11,12 @@ export const ATTENTION_RULES = Object.freeze({
   stalledDays: 14,
   maxItems: 5,
 });
+
+// The user's own stall threshold (Settings > Reminders), falling back to the default rule.
+export async function stalledDaysFor(owner) {
+  const user = await User.findById(owner).select('reminders.stalledAfterDays').lean();
+  return user?.reminders?.stalledAfterDays ?? ATTENTION_RULES.stalledDays;
+}
 
 const SEVERITY = { overdue: 3, milestone_overdue: 3, due_soon: 2, milestone_due_soon: 2, stalled: 2 };
 const PRIORITY_RANK = { high: 3, medium: 2, low: 1 };
@@ -32,7 +39,7 @@ function openMilestones(item) {
     .sort((a, b) => (time(a.dueDate) ?? Infinity) - (time(b.dueDate) ?? Infinity) || time(a.createdAt) - time(b.createdAt));
 }
 
-function evaluate(item, { kind, deadline, active, lastActivityAt }, today) {
+function evaluate(item, { kind, deadline, active, lastActivityAt }, today, stalledDays) {
   const dueSoonLimit = today + ATTENTION_RULES.dueSoonDays * DAY_MS;
   const reasons = [];
   const deadlineTime = time(deadline);
@@ -47,7 +54,7 @@ function evaluate(item, { kind, deadline, active, lastActivityAt }, today) {
   else if (dueSoon.length) reasons.push({ code: 'milestone_due_soon', count: dueSoon.length, date: dueSoon[0].dueDate });
 
   const idleDays = Math.floor((today - time(lastActivityAt)) / DAY_MS);
-  if (active && idleDays >= ATTENTION_RULES.stalledDays) reasons.push({ code: 'stalled', days: idleDays });
+  if (active && idleDays >= stalledDays) reasons.push({ code: 'stalled', days: idleDays });
 
   if (reasons.length === 0) return null;
 
@@ -73,9 +80,11 @@ function evaluate(item, { kind, deadline, active, lastActivityAt }, today) {
   };
 }
 
-export async function getAttentionLogic(userId, todayDate) {
+// Every open goal/project that needs attention, ranked. Shared by the dashboard and reminders.
+export async function computeAttention(userId, todayDate, { stalledDays } = {}) {
   const owner = new mongoose.Types.ObjectId(String(userId));
   const today = todayDate.getTime();
+  const threshold = stalledDays ?? await stalledDaysFor(owner);
 
   const [goals, projects] = await Promise.all([
     Goal.find({ owner, status: { $in: ['not_started', 'in_progress'] } }).lean(),
@@ -103,13 +112,13 @@ export async function getAttentionLogic(userId, todayDate) {
       deadline: goal.deadline,
       active: goal.status === 'in_progress',
       lastActivityAt: latest(goal.updatedAt, goalJournal.get(String(goal._id)), projectTouchByGoal.get(String(goal._id))),
-    }, today)),
+    }, today, threshold)),
     ...projects.map(project => evaluate(project, {
       kind: 'project',
       deadline: project.endDate,
       active: project.status === 'in_progress',
       lastActivityAt: latest(project.updatedAt, projectJournal.get(String(project._id))),
-    }, today)),
+    }, today, threshold)),
   ].filter(Boolean);
 
   items.sort((a, b) =>
@@ -118,9 +127,14 @@ export async function getAttentionLogic(userId, todayDate) {
     || a.sortDate - b.sortDate
     || a.title.localeCompare(b.title));
 
+  return { items, stalledDays: threshold };
+}
+
+export async function getAttentionLogic(userId, todayDate) {
+  const { items, stalledDays } = await computeAttention(userId, todayDate);
   return {
     today: todayDate.toISOString().slice(0, 10),
-    rules: ATTENTION_RULES,
+    rules: { ...ATTENTION_RULES, stalledDays },
     total: items.length,
     items: items.slice(0, ATTENTION_RULES.maxItems).map(({ severity, sortDate, ...item }) => ({ ...item, severity })),
   };

@@ -6,6 +6,7 @@ import AccountSection from "../components/settings/AccountSection";
 import SecuritySection from "../components/settings/SecuritySection";
 import PlatformsSection from "../components/settings/PlatformsSection";
 import DangerSection from "../components/settings/DangerSection";
+import RemindersSection from "../components/settings/RemindersSection";
 
 export default function Settings() {
   const { user, refreshUser, clearSession } = useContext(AuthContext);
@@ -23,6 +24,7 @@ export default function Settings() {
       <AccountSection key={`${user?.username}|${user?.email}`} user={user} onUpdated={refreshUser} />
       <SecuritySection user={user} onSignedOut={signedOut} />
       <PlatformsSection />
+      <RemindersSection />
       <DangerSection onDeleted={signedOut} />
     </section>
   );

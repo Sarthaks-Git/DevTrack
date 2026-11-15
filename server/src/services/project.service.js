@@ -1,5 +1,6 @@
 
 import mongoose from 'mongoose';
+import { deleteNotificationsForSubject } from './notification.service.js';
 import Project from '../models/Project.js';
 import Goal from '../models/Goal.js';
 import JournalEntry from '../models/JournalEntry.js';
@@ -185,8 +186,11 @@ export async function deleteProjectLogic(userId, projectId) {
         throw new AppError('Project not found', 404);
     }
 
-    // Keep journal entries but drop their link to the deleted project.
-    await JournalEntry.updateMany({ owner: userId, project: project._id }, { $set: { project: null } });
+    // Keep journal entries but drop their link to the deleted project; its reminders go with it.
+    await Promise.all([
+        JournalEntry.updateMany({ owner: userId, project: project._id }, { $set: { project: null } }),
+        deleteNotificationsForSubject(userId, project._id),
+    ]);
 
     return project;
 }

@@ -33,4 +33,6 @@ export const passwordCheckRateLimit = createRateLimit({ name: 'passwordCheck', l
 export const verificationRateLimit = createRateLimit({ name: 'verification', limit: 20, keyGenerator: byUser });
 export const statsRefreshRateLimit = createRateLimit({ name: 'statsRefresh', limit: 30, keyGenerator: byUser });
 // Auto-sync is called on page loads but throttled server-side, so most calls are cheap no-ops.
+// Bell polling is about 1 request per 2 minutes per tab; this leaves room for several tabs.
+export const notificationRateLimit = createRateLimit({ name: 'notifications', limit: 300, keyGenerator: byUser });
 export const codingSyncRateLimit = createRateLimit({ name: 'codingSync', limit: 60, keyGenerator: byUser });

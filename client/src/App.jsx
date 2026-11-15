@@ -15,6 +15,7 @@ const Coding = lazy(() => import("./pages/Coding"));
 const Journal = lazy(() => import("./pages/Journal"));
 const Timeline = lazy(() => import("./pages/Timeline"));
 const Settings = lazy(() => import("./pages/Settings"));
+const Notifications = lazy(() => import("./pages/Notifications"));
 
 function PageFallback() {
   return <p className="p-8 text-sm text-[var(--dt-text-secondary)]" role="status">Loading...</p>;
@@ -54,6 +55,7 @@ const router = createBrowserRouter([
           { path: "journal", element: page(Journal) },
           { path: "timeline", element: page(Timeline) },
           { path: "settings", element: page(Settings) },
+          { path: "notifications", element: page(Notifications) },
           { path: "*", element: <NotFound /> },
         ],
       },

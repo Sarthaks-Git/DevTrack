@@ -5,6 +5,7 @@ import AppError from '../utils/AppError.js';
 import { recordActivity } from './activity.service.js';
 import { withTargetProgress, withTargetProgressOne } from './goalTarget.service.js';
 import { sameTargetScope } from '../utils/goalTarget.js';
+import { deleteNotificationsForSubject } from './notification.service.js';
 
 export async function createGoalLogic(userId, goalData) {
     const {
@@ -147,6 +148,7 @@ export async function deleteGoalLogic(userId, goalId) {
     await Promise.all([
         JournalEntry.updateMany({ owner: userId, goal: goal._id }, { $set: { goal: null } }),
         Project.updateMany({ owner: userId, goal: goal._id }, { $set: { goal: null } }),
+        deleteNotificationsForSubject(userId, goal._id),
     ]);
 
     return goal;

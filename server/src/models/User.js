@@ -7,6 +7,14 @@ const userSchema = new mongoose.Schema({
   role: { type: String, enum: ['user', 'admin'], default: 'user', required: true },
   accountStatus: { type: String, enum: ['active', 'suspended'], default: 'active', required: true },
   passwordChangedAt: { type: Date, default: null },
+  // In-app reminder preferences. Defaults keep the dashboard's 14-day stall rule.
+  reminders: {
+    enabled: { type: Boolean, default: true },
+    stalledAfterDays: { type: Number, default: 14, min: 3, max: 60 },
+    deadlineAlerts: { type: Boolean, default: true },
+  },
+  // Last time reminders were generated; used to throttle regeneration per user.
+  remindersCheckedAt: { type: Date, default: null },
 }, { timestamps: true });
 
 userSchema.index({ email: 1 }, { unique: true });
