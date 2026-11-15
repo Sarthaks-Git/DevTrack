@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { createGoal, updateGoal } from "../../services/goalService";
+import GoalTargetFields from "./GoalTargetFields";
 
 const initialFormData = {
   title: "",
@@ -8,6 +9,13 @@ const initialFormData = {
   priority: "medium",
   deadline: "",
 };
+
+const emptyTarget = { enabled: false, count: "10", pattern: "", difficulty: "" };
+
+function targetFormFrom(target) {
+  if (!target) return emptyTarget;
+  return { enabled: true, count: String(target.count), pattern: target.pattern || "", difficulty: target.difficulty || "" };
+}
 
 function GoalForm({ editingGoal, onGoalCreated, onGoalUpdated, onCancelEdit }) {
   // The parent remounts this form (key) when switching goals, so props seed state once.
@@ -22,6 +30,7 @@ function GoalForm({ editingGoal, onGoalCreated, onGoalUpdated, onCancelEdit }) {
         }
       : initialFormData,
   );
+  const [targetForm, setTargetForm] = useState(() => targetFormFrom(editingGoal?.target));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -45,6 +54,12 @@ function GoalForm({ editingGoal, onGoalCreated, onGoalUpdated, onCancelEdit }) {
       return;
     }
 
+    const count = Number(targetForm.count);
+    if (targetForm.enabled && (!Number.isInteger(count) || count < 1 || count > 1000)) {
+      setError("Target must be a whole number of problems from 1 to 1000");
+      return;
+    }
+
     try {
       setLoading(true);
 
@@ -56,6 +71,17 @@ function GoalForm({ editingGoal, onGoalCreated, onGoalUpdated, onCancelEdit }) {
         deadline: formData.deadline || null,
       };
 
+      if (targetForm.enabled) {
+        goalData.target = {
+          kind: "leetcode_solved",
+          pattern: targetForm.pattern || null,
+          difficulty: targetForm.difficulty || null,
+          count,
+        };
+      } else if (editingGoal?.target) {
+        goalData.target = null;
+      }
+
       if (editingGoal) {
         const data = await updateGoal(editingGoal._id, goalData);
 
@@ -66,6 +92,7 @@ function GoalForm({ editingGoal, onGoalCreated, onGoalUpdated, onCancelEdit }) {
         onGoalCreated(data.goal);
 
         setFormData(initialFormData);
+        setTargetForm(emptyTarget);
       }
     } catch (error) {
       setError(error.message);
@@ -367,6 +394,7 @@ function GoalForm({ editingGoal, onGoalCreated, onGoalUpdated, onCancelEdit }) {
                             "
             />
           </div>
+          <GoalTargetFields value={targetForm} onChange={setTargetForm} />
         </div>
 
         {/* Actions */}

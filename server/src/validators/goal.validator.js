@@ -1,3 +1,5 @@
+import { parseGoalTarget } from '../utils/goalTarget.js';
+
 const allowedStatuses = [
     'not_started',
     'in_progress',
@@ -41,10 +43,18 @@ export function validateCreateGoal(req, res, next) {
         description,
         status,
         priority,
-        deadline
+        deadline,
+        target
     } = req.body ?? {};
 
     const errors = {};
+
+    // Verified target validation (since is always server-set)
+    if (target !== undefined) {
+        const parsed = parseGoalTarget(target);
+        if (parsed.error) errors.target = parsed.error;
+        else req.body.target = parsed.target;
+    }
 
     // Title validation
     if (typeof title !== 'string') {
@@ -113,7 +123,8 @@ export function validateUpdateGoal(req, res, next) {
         description,
         status,
         priority,
-        deadline
+        deadline,
+        target
     } = req.body ?? {};
 
     const errors = {};
@@ -122,8 +133,17 @@ export function validateUpdateGoal(req, res, next) {
         'description',
         'status',
         'priority',
-        'deadline'
+        'deadline',
+        'target'
     ];
+
+    // Verified target validation (since is always server-set)
+    if (target !== undefined) {
+        const parsed = parseGoalTarget(target);
+        if (parsed.error) errors.target = parsed.error;
+        else req.body.target = parsed.target;
+    }
+
 
     const receivedFields = Object.keys(req.body ?? {});
 

@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import MilestoneList from "../milestones/MilestoneList";
+import GoalTargetProgress from "./GoalTargetProgress";
 
 function GoalCard({ goal, number, linkedProjects = [], milestoneHandlers, onEdit, onDelete }) {
     const statusConfig = {
@@ -139,6 +140,8 @@ function GoalCard({ goal, number, linkedProjects = [], milestoneHandlers, onEdit
                             </span>
                         )}
                     </div>
+
+                    <GoalTargetProgress target={goal.target} progress={goal.targetProgress} />
 
                     {/* Linked projects */}
                     {linkedProjects.length > 0 && (

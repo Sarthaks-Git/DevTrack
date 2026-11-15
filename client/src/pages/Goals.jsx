@@ -96,10 +96,13 @@ function Goals() {
     }, 100);
   }
 
+  // Milestone responses carry the goal without computed target progress, so keep the last value.
   function replaceGoal(updatedGoal) {
     setGoals((previousGoals) =>
       previousGoals.map((goal) =>
-        goal._id === updatedGoal._id ? updatedGoal : goal,
+        goal._id === updatedGoal._id
+          ? { ...updatedGoal, targetProgress: updatedGoal.targetProgress ?? goal.targetProgress }
+          : goal,
       ),
     );
   }

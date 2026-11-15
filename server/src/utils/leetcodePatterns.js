@@ -45,6 +45,9 @@ const PATTERN_PRIORITY = [
   ['array', 'Array'],
 ];
 
+// Every pattern label DevTrack can assign, for validating goal targets.
+export const PATTERN_LABELS = Object.freeze([...new Set(PATTERN_PRIORITY.map(([, label]) => label))]);
+
 const RANK = new Map(PATTERN_PRIORITY.map(([slug, label], index) => [slug, { label, index }]));
 
 // Returns the pattern label and the slug of the tag it came from (so the UI can avoid

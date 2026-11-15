@@ -3,6 +3,8 @@ import JournalEntry from '../models/JournalEntry.js';
 import Project from '../models/Project.js';
 import AppError from '../utils/AppError.js';
 import { recordActivity } from './activity.service.js';
+import { withTargetProgress, withTargetProgressOne } from './goalTarget.service.js';
+import { sameTargetScope } from '../utils/goalTarget.js';
 
 export async function createGoalLogic(userId, goalData) {
     const {
@@ -10,7 +12,8 @@ export async function createGoalLogic(userId, goalData) {
         description,
         status,
         priority,
-        deadline
+        deadline,
+        target
     } = goalData;
 
     const goal = await Goal.create({
@@ -19,6 +22,7 @@ export async function createGoalLogic(userId, goalData) {
         status,
         priority,
         deadline,
+        target: target ? { ...target, since: new Date() } : null,
         completedAt: status === 'completed' ? new Date() : null,
         owner: userId
     });
@@ -30,7 +34,7 @@ export async function createGoalLogic(userId, goalData) {
         title: goal.title,
     });
 
-    return goal;
+    return withTargetProgressOne(userId, goal);
 }
 
 export async function getUserGoalsLogic(userId) {
@@ -40,7 +44,7 @@ export async function getUserGoalsLogic(userId) {
         createdAt: -1
     });
 
-    return goals;
+    return withTargetProgress(userId, goals);
 }
 
 export async function getSingleGoalLogic(userId, goalId) {
@@ -53,7 +57,7 @@ export async function getSingleGoalLogic(userId, goalId) {
         throw new AppError('Goal not found', 404);
     }
 
-    return goal;
+    return withTargetProgressOne(userId, goal);
 }
 
 export async function updateGoalLogic(
@@ -66,7 +70,8 @@ export async function updateGoalLogic(
         'description',
         'status',
         'priority',
-        'deadline'
+        'deadline',
+        'target'
     ];
 
     const safeUpdates = {};
@@ -88,6 +93,14 @@ export async function updateGoalLogic(
 
     const completing = safeUpdates.status === 'completed' && existing.status !== 'completed';
     const reopening = safeUpdates.status !== undefined && safeUpdates.status !== 'completed' && existing.status === 'completed';
+
+    // A new target scope starts counting now; changing only the count keeps earlier progress.
+    if (safeUpdates.target) {
+        safeUpdates.target = {
+            ...safeUpdates.target,
+            since: sameTargetScope(existing.target, safeUpdates.target) ? existing.target.since : new Date()
+        };
+    }
 
     if (completing) safeUpdates.completedAt = new Date();
     if (reopening) safeUpdates.completedAt = null;
@@ -117,7 +130,7 @@ export async function updateGoalLogic(
         });
     }
 
-    return goal;
+    return withTargetProgressOne(userId, goal);
 }
 
 export async function deleteGoalLogic(userId, goalId) {
