@@ -104,7 +104,7 @@ export const AI_MODEL_PRICES = {
 };
 // Owner rule: every AI feature uses the cheapest model unless the owner chooses otherwise.
 const DEFAULT_AI_MODEL = 'claude-haiku-5-5';
-export const AI_FEATURES = ['securityReview'];
+export const AI_FEATURES = ['securityReview', 'codeReview'];
 
 function buildAiConfig(env, { nodeEnv }) {
   const isTest = nodeEnv === 'test';

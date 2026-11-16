@@ -94,6 +94,11 @@ const projectSchema = new mongoose.Schema(
                 linkedAt: { type: Date, default: () => new Date() },
                 syncedAt: { type: Date, default: null },
                 lastCommitAt: { type: Date, default: null },
+                // Opt-in per repository: changed lines of new commits are sent to the AI for review.
+                codeReview: {
+                    enabled: { type: Boolean, default: false },
+                    changedAt: { type: Date, default: null },
+                },
             }, { _id: false }),
             default: null,
         },

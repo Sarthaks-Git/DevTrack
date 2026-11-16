@@ -30,7 +30,7 @@ export const COMMON_AREAS = [
 
 const AREA_KEY = /^[a-z0-9]+(-[a-z0-9]+){0,5}$/;
 // Files that cannot change runtime behaviour: commits touching only these are not sent to the AI.
-const NON_CODE_FILE = /(^|\/)(docs?|screenshots?)\/|\.(md|mdx|txt|rst|png|jpe?g|gif|svg|webp|ico|bmp|pdf)$/i;
+export const NON_CODE_FILE = /(^|\/)(docs?|screenshots?)\/|\.(md|mdx|txt|rst|png|jpe?g|gif|svg|webp|ico|bmp|pdf)$/i;
 
 function assertUserId(userId) {
   if (!mongoose.isValidObjectId(userId)) throw new AppError('Authentication is required', 401, 'UNAUTHENTICATED');

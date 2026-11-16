@@ -1,6 +1,7 @@
-import { useEffect, useId, useRef, useState } from "react";
+import { useState } from "react";
 import { createPortal } from "react-dom";
 import ConfirmModal from "../common/ConfirmModal";
+import OverlayDialog from "../common/OverlayDialog";
 import { setSecurityReviewStatus, updateSecurityItem } from "../../services/aiService";
 
 const STATE_LABELS = { handled: "Handled", not_applicable: "Not applicable" };
@@ -79,8 +80,6 @@ function ReviewCard({ review, busy, error, onAnswer, onReopen, onDismissRequest 
 
 // Overlay with the project's checks; it scrolls on its own so the project grid stays put.
 function ChecksDialog({ projectTitle, reviews, onChange, onClose }) {
-  const titleId = useId();
-  const closeRef = useRef(null);
   const [busyId, setBusyId] = useState("");
   const [errors, setErrors] = useState({});
   const [showClosed, setShowClosed] = useState(false);
@@ -89,35 +88,13 @@ function ChecksDialog({ projectTitle, reviews, onChange, onClose }) {
   const openReviews = reviews.filter(review => review.status === "open");
   const closed = reviews.filter(review => review.status !== "open");
 
-  useEffect(() => {
-    const previouslyFocused = document.activeElement;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    closeRef.current?.focus();
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      previouslyFocused?.focus?.();
-    };
-  }, []);
-
-  useEffect(() => {
-    function handleKeyDown(event) {
-      // While the dismiss confirmation is up, Escape belongs to it.
-      if (event.key === "Escape" && !dismissing && !busyId) onClose();
-    }
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [dismissing, busyId, onClose]);
-
   async function run(reviewId, action) {
     setBusyId(reviewId);
     setErrors(current => ({ ...current, [reviewId]: "" }));
     try {
       onChange(await action());
-      return true;
     } catch (failure) {
       setErrors(current => ({ ...current, [reviewId]: failure.message }));
-      return false;
     } finally {
       setBusyId("");
     }
@@ -135,75 +112,46 @@ function ChecksDialog({ projectTitle, reviews, onChange, onClose }) {
     />
   );
 
-  return createPortal(
+  return (
     <>
-      <div
-        className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 px-4 py-6 backdrop-blur-[2px]"
-        onMouseDown={event => {
-          if (event.target === event.currentTarget && !busyId) onClose();
-        }}
+      <OverlayDialog
+        eyebrow="Security checks"
+        title={projectTitle}
+        subtitle={`${openReviews.length ? `${openReviews.length} open` : "All done"}${closed.length ? ` · ${closed.length} closed` : ""}`}
+        locked={Boolean(dismissing || busyId)}
+        onClose={onClose}
       >
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby={titleId}
-          className="flex max-h-full w-full max-w-2xl flex-col border border-[var(--dt-border-strong)] bg-[var(--dt-surface)] shadow-2xl"
+        {openReviews.length ? openReviews.map(card) : (
+          <p className="text-sm text-[var(--dt-text-secondary)]">No open checks. New ones appear after commits that touch security-relevant code.</p>
+        )}
+        {closed.length ? (
+          <button type="button" onClick={() => setShowClosed(value => !value)} aria-expanded={showClosed} className="text-[var(--dt-text-muted)] hover:text-[var(--dt-text-primary)]">
+            {showClosed ? "Hide closed checks" : `Show ${closed.length} closed`}
+          </button>
+        ) : null}
+        {showClosed ? closed.map(card) : null}
+      </OverlayDialog>
+
+      {createPortal(
+        <ConfirmModal
+          open={Boolean(dismissing)}
+          title={dismissing ? `Dismiss "${dismissing.area}"?` : ""}
+          confirmLabel="Dismiss"
+          busyLabel="Dismissing..."
+          destructive
+          busy={Boolean(busyId)}
+          onConfirm={async () => {
+            const target = dismissing;
+            await run(target.id, () => setSecurityReviewStatus(target.id, "dismissed"));
+            setDismissing(null);
+          }}
+          onCancel={() => setDismissing(null)}
         >
-          <div className="flex items-start justify-between gap-4 border-b border-[var(--dt-border)] p-5 md:p-6">
-            <div className="min-w-0">
-              <p className="text-[10px] font-medium uppercase tracking-[0.3em] text-[var(--dt-text-muted)]">Security checks</p>
-              <h2 id={titleId} className="mt-2 break-words font-[family-name:var(--dt-font-display)] text-2xl leading-tight text-[var(--dt-text-primary)]">
-                {projectTitle}
-              </h2>
-              <p className="mt-1 text-xs text-[var(--dt-text-secondary)]">
-                {openReviews.length ? `${openReviews.length} open` : "All done"}
-                {closed.length ? ` · ${closed.length} closed` : ""}
-              </p>
-            </div>
-            <button
-              ref={closeRef}
-              type="button"
-              onClick={onClose}
-              disabled={Boolean(busyId)}
-              aria-label="Close security checks"
-              className="px-2 py-1 text-xs uppercase tracking-[0.18em] text-[var(--dt-text-secondary)] hover:text-[var(--dt-text-primary)] disabled:opacity-40"
-            >
-              Close
-            </button>
-          </div>
-
-          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-5 text-xs md:p-6">
-            {openReviews.length ? openReviews.map(card) : (
-              <p className="text-sm text-[var(--dt-text-secondary)]">No open checks. New ones appear after commits that touch security-relevant code.</p>
-            )}
-            {closed.length ? (
-              <button type="button" onClick={() => setShowClosed(value => !value)} aria-expanded={showClosed} className="text-[var(--dt-text-muted)] hover:text-[var(--dt-text-primary)]">
-                {showClosed ? "Hide closed checks" : `Show ${closed.length} closed`}
-              </button>
-            ) : null}
-            {showClosed ? closed.map(card) : null}
-          </div>
-        </div>
-      </div>
-
-      <ConfirmModal
-        open={Boolean(dismissing)}
-        title={dismissing ? `Dismiss "${dismissing.area}"?` : ""}
-        confirmLabel="Dismiss"
-        busyLabel="Dismissing..."
-        destructive
-        busy={Boolean(busyId)}
-        onConfirm={async () => {
-          const target = dismissing;
-          await run(target.id, () => setSecurityReviewStatus(target.id, "dismissed"));
-          setDismissing(null);
-        }}
-        onCancel={() => setDismissing(null)}
-      >
-        The whole check closes, including unanswered items. You can reopen it later from the closed checks.
-      </ConfirmModal>
-    </>,
-    document.body,
+          The whole check closes, including unanswered items. You can reopen it later from the closed checks.
+        </ConfirmModal>,
+        document.body,
+      )}
+    </>
   );
 }
 

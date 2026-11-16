@@ -10,7 +10,9 @@ import {
 } from '../controllers/project.controller.js';
 
 import { authMiddleware } from '../middlewares/auth.middleware.js';
-import { githubReadRateLimit, limitWrites } from '../middlewares/rateLimit.middleware.js';
+import { aiSettingsRateLimit, githubReadRateLimit, limitWrites } from '../middlewares/rateLimit.middleware.js';
+import { setCodeReview } from '../controllers/ai.controller.js';
+import { validateCodeReviewToggle } from '../validators/ai.validator.js';
 import { linkRepository, listProjectCommits, unlinkRepository } from '../controllers/github.controller.js';
 import { validateLinkRepository } from '../validators/github.validator.js';
 import { requireCsrf } from '../middlewares/csrf.middleware.js';
@@ -90,6 +92,7 @@ projectRouter.delete(
 // Linked GitHub repository and its synced commits (docs/API.md, GitHub).
 projectRouter.put('/:id/repository', githubReadRateLimit, requireCsrf, validateObjectId('id'), validateLinkRepository, linkRepository);
 projectRouter.delete('/:id/repository', requireCsrf, validateObjectId('id'), unlinkRepository);
+projectRouter.put('/:id/repository/code-review', aiSettingsRateLimit, requireCsrf, validateObjectId('id'), validateCodeReviewToggle, setCodeReview);
 projectRouter.get('/:id/commits', validateObjectId('id'), listProjectCommits);
 
 export default projectRouter;

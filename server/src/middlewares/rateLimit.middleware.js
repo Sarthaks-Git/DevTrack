@@ -61,3 +61,4 @@ export const githubSyncRateLimit = createRateLimit({ name: 'githubSync', limit: 
 // AI settings and security checks: reads are cheap; turning AI on starts a background scan.
 export const aiSettingsRateLimit = createRateLimit({ name: 'aiSettings', limit: 30, keyGenerator: byUser });
 export const securityReviewRateLimit = createRateLimit({ name: 'securityReviews', limit: 300, keyGenerator: byUser });
+export const codeFindingRateLimit = createRateLimit({ name: 'codeFindings', limit: 300, keyGenerator: byUser });

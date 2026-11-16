@@ -16,6 +16,7 @@ const TYPE_LABELS = {
   target_reached: "Verified win",
   weekly_review: "Weekly review",
   security_review: "Security check",
+  code_review: "Code review",
 };
 
 function Notifications() {

@@ -1,5 +1,16 @@
 import mongoose from 'mongoose';
 
+// Background AI scan bookkeeping. null = not scanned yet; claim lets parallel scans skip each other.
+const scanSchema = () =>
+  new mongoose.Schema(
+    {
+      status: { type: String, enum: ['pending', 'reviewed', 'skipped', 'failed'], required: true },
+      claim: { type: String, default: null, maxlength: 32 },
+      at: { type: Date, required: true },
+    },
+    { _id: false, strict: 'throw' }
+  );
+
 // A commit the user authored on a repository linked to one of their projects.
 // Only metadata is kept: the first line of the message and changed file paths. Never code or diffs.
 const gitHubCommitSchema = new mongoose.Schema(
@@ -13,18 +24,10 @@ const gitHubCommitSchema = new mongoose.Schema(
     url: { type: String, required: true, maxlength: 300 },
     committedAt: { type: Date, required: true },
     files: { type: [{ type: String, maxlength: 300 }], default: [] },
-    // AI security scan bookkeeping. null = not scanned yet; claim lets parallel scans skip each other.
-    securityScan: {
-      type: new mongoose.Schema(
-        {
-          status: { type: String, enum: ['pending', 'reviewed', 'skipped', 'failed'], required: true },
-          claim: { type: String, default: null, maxlength: 32 },
-          at: { type: Date, required: true },
-        },
-        { _id: false, strict: 'throw' }
-      ),
-      default: null,
-    },
+    // Commit-message security checks.
+    securityScan: { type: scanSchema(), default: null },
+    // Opt-in code review of the commit's changed lines (the code itself is never stored).
+    codeScan: { type: scanSchema(), default: null },
   },
   { timestamps: { createdAt: true, updatedAt: false }, strict: 'throw' }
 );

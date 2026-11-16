@@ -1,13 +1,14 @@
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import api, { ensureCsrfToken, errorMessage } from "../services/api";
 import { getGoals } from "../services/goalService";
 import MilestoneList from "../components/milestones/MilestoneList";
 import PageHeader from "../components/common/PageHeader";
+import ProjectCodeReview from "../components/projects/ProjectCodeReview";
 import ProjectRepository from "../components/projects/ProjectRepository";
 import ProjectSecurityChecks from "../components/projects/ProjectSecurityChecks";
-import { listSecurityReviews } from "../services/aiService";
+import { listCodeFindings, listSecurityReviews } from "../services/aiService";
 import { getGitHubStatus, syncGitHub } from "../services/githubService";
 
 const STATUS_OPTIONS = [
@@ -91,7 +92,7 @@ function StatusLabel({ status }) {
   );
 }
 
-function ProjectCard({ project, goal, milestoneHandlers, githubConnected, securityReviews, onSecurityReviewChange, onReplace, onEdit, onDelete }) {
+function ProjectCard({ project, goal, milestoneHandlers, githubConnected, securityReviews, onSecurityReviewChange, codeFindings, onCodeFindingChange, onCodeReviewToggle, onReplace, onEdit, onDelete }) {
   return (
     <article className="group flex h-full flex-col border border-[var(--dt-border)] bg-[var(--dt-surface)] p-5 transition-colors duration-200 hover:border-[var(--dt-border-strong)] sm:p-6">
       <div className="flex items-start justify-between gap-3">
@@ -163,6 +164,12 @@ function ProjectCard({ project, goal, milestoneHandlers, githubConnected, securi
 
       <ProjectRepository project={project} githubConnected={githubConnected} onChange={onReplace} />
       <ProjectSecurityChecks projectTitle={project.title} reviews={securityReviews} onChange={onSecurityReviewChange} />
+      <ProjectCodeReview
+        project={project}
+        findings={codeFindings}
+        onFindingChange={onCodeFindingChange}
+        onToggle={enabled => onCodeReviewToggle(project, enabled)}
+      />
 
       <div className="mt-auto mt-6 flex flex-wrap items-center gap-4 border-t border-[var(--dt-border)] pt-5">
         {project.githubUrl && (
@@ -575,6 +582,16 @@ function Projects() {
   const [filter, setFilter] = useState("all");
   const [githubConnected, setGithubConnected] = useState(false);
   const [securityReviews, setSecurityReviews] = useState([]);
+  const [codeFindings, setCodeFindings] = useState([]);
+  const findingsTimer = useRef(null);
+
+  // AI results (message checks and code findings) are produced in the background after a sync.
+  const loadAiResults = useCallback(() => Promise.all([
+    listSecurityReviews().then(setSecurityReviews).catch(() => {}),
+    listCodeFindings().then(setCodeFindings).catch(() => {}),
+  ]), []);
+
+  useEffect(() => () => clearTimeout(findingsTimer.current), []);
 
   const fetchProjects = useCallback(
     () => requestProjects().then(data => data.projects || []),
@@ -600,25 +617,42 @@ function Projects() {
   useEffect(() => {
     let active = true;
     let reviewTimer;
+    let lateTimer;
     getGitHubStatus()
       .then(async (status) => {
         const connected = status.connection?.status === "connected";
         if (!active) return;
         setGithubConnected(connected);
         if (!connected) return;
-        const loadReviews = () => listSecurityReviews().then(reviews => active && setSecurityReviews(reviews)).catch(() => {});
+        const loadReviews = () => active && loadAiResults();
         await loadReviews();
         const result = await syncGitHub();
         if (active && result.newCommits > 0) setProjects(await fetchProjects());
         // AI security review runs in the background after a sync; pick up its results shortly after.
-        if (active && result.status === "synced") reviewTimer = setTimeout(loadReviews, 8000);
+        // Code review fetches each commit from GitHub, so it finishes later than the message checks.
+        if (active && result.status === "synced") {
+          reviewTimer = setTimeout(loadReviews, 8000);
+          lateTimer = setTimeout(loadReviews, 30000);
+        }
       })
       .catch(() => {});
     return () => {
       active = false;
       clearTimeout(reviewTimer);
+      clearTimeout(lateTimer);
     };
-  }, [fetchProjects]);
+  }, [fetchProjects, loadAiResults]);
+
+  function replaceCodeFinding(updated) {
+    setCodeFindings(previous => previous.map(finding => (finding.id === updated.id ? updated : finding)));
+  }
+
+  function handleCodeReviewToggle(project, enabled) {
+    replaceProject({ ...project, repository: { ...project.repository, codeReview: { enabled } } });
+    // Turning it on reviews the past week's commits in the background; fetch the findings shortly after.
+    clearTimeout(findingsTimer.current);
+    if (enabled) findingsTimer.current = setTimeout(loadAiResults, 20000);
+  }
 
   function replaceSecurityReview(updated) {
     setSecurityReviews(previous => previous.map(review => (review.id === updated.id ? updated : review)));
@@ -927,6 +961,9 @@ function Projects() {
                     githubConnected={githubConnected}
                     securityReviews={securityReviews.filter(review => review.project.id === project._id)}
                     onSecurityReviewChange={replaceSecurityReview}
+                    codeFindings={codeFindings.filter(finding => finding.project === project._id)}
+                    onCodeFindingChange={replaceCodeFinding}
+                    onCodeReviewToggle={handleCodeReviewToggle}
                     onReplace={replaceProject}
                     onEdit={openEditForm}
                     onDelete={openDeleteModal}

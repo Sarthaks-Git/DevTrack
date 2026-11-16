@@ -15,6 +15,7 @@ import Notification from '../models/Notification.js';
 import GitHubConnection from '../models/GitHubConnection.js';
 import GitHubCommit from '../models/GitHubCommit.js';
 import OAuthState from '../models/OAuthState.js';
+import CodeFinding from '../models/CodeFinding.js';
 import SecurityReview from '../models/SecurityReview.js';
 import AiUsage from '../models/AiUsage.js';
 import AiAllowance from '../models/AiAllowance.js';
@@ -24,7 +25,7 @@ import { SALT_ROUNDS, publicUser } from './auth.service.js';
 import { passwordProblem } from '../validators/account.validator.js';
 
 // Every collection holding user-owned data. Account deletion must cover all of them.
-const OWNED_MODELS = [Goal, Project, CodingProfile, VerificationChallenge, JournalEntry, Activity, CodingSubmission, SolvedProblem, Notification, GitHubConnection, GitHubCommit, OAuthState, SecurityReview, AiUsage, AiAllowance, AuthSession];
+const OWNED_MODELS = [Goal, Project, CodingProfile, VerificationChallenge, JournalEntry, Activity, CodingSubmission, SolvedProblem, Notification, GitHubConnection, GitHubCommit, OAuthState, SecurityReview, CodeFinding, AiUsage, AiAllowance, AuthSession];
 
 function assertUserId(userId) {
   if (!mongoose.isValidObjectId(userId)) throw new AppError('Authentication is required', 401, 'UNAUTHENTICATED');

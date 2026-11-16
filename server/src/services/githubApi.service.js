@@ -154,6 +154,17 @@ export async function getCommitFiles(token, fullName, sha) {
   return (data?.files || []).map(file => String(file?.filename || '')).filter(Boolean).slice(0, MAX_FILES).map(path => path.slice(0, 300));
 }
 
+// Changed lines of one commit for the opt-in code review. Returned in memory only: callers must
+// never store or log them. Binary or very large files have no patch and come back with patch null.
+export async function getCommitPatches(token, fullName, sha) {
+  if (!/^[0-9a-f]{40}$/.test(sha)) throw new GitHubApiError('not_found');
+  const data = await send(`${API_URL}/repos/${assertRepoName(fullName)}/commits/${sha}`, { token });
+  return (data?.files || []).slice(0, MAX_FILES).map(file => ({
+    path: String(file?.filename || '').slice(0, 300),
+    patch: typeof file?.patch === 'string' ? file.patch : null,
+  })).filter(file => file.path);
+}
+
 // Revokes the user's authorization of the app (all tokens). Basic auth with the app credentials.
 export async function revokeGrant(accessToken) {
   const { clientId, clientSecret } = config.GITHUB;

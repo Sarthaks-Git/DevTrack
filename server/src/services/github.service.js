@@ -10,6 +10,7 @@ import { decryptSecret, encryptSecret, randomToken, sha256 } from '../utils/toke
 import * as github from './githubApi.service.js';
 import { recordActivity } from './activity.service.js';
 import { aiConsentGiven } from './ai/aiClient.js';
+import { deleteCodeFindings, startCodeReview } from './codeReview.service.js';
 import { deleteSecurityReviews, startSecurityScan } from './securityReview.service.js';
 
 export const GITHUB_RULES = {
@@ -64,7 +65,16 @@ function publicConnection(connection) {
 function publicRepository(repository) {
   if (!repository) return null;
   const { githubId, fullName, url, linkedAt, syncedAt, lastCommitAt } = repository;
-  return { githubId, fullName, url, private: Boolean(repository.private), linkedAt, syncedAt, lastCommitAt };
+  return {
+    githubId,
+    fullName,
+    url,
+    private: Boolean(repository.private),
+    linkedAt,
+    syncedAt,
+    lastCommitAt,
+    codeReview: { enabled: Boolean(repository.codeReview?.enabled) },
+  };
 }
 
 // First line only, control characters removed: commit messages are untrusted text.
@@ -151,6 +161,7 @@ async function forgetRepositories(owner) {
   await Promise.all([
     GitHubCommit.deleteMany({ owner }),
     deleteSecurityReviews(owner),
+    deleteCodeFindings(owner),
     Project.updateMany({ owner, repository: { $ne: null } }, { $set: { repository: null } }, { timestamps: false }),
   ]);
 }
@@ -278,7 +289,11 @@ export async function linkRepositoryLogic(userId, projectId, repoId) {
       throw new AppError(`You can link up to ${GITHUB_RULES.maxLinkedProjects} repositories`, 409, 'RECORD_LIMIT');
     }
   } else if (project.repository.githubId !== repoId) {
-    await GitHubCommit.deleteMany({ owner: userId, project: project._id });
+    await Promise.all([
+      GitHubCommit.deleteMany({ owner: userId, project: project._id }),
+      deleteSecurityReviews(userId, project._id),
+      deleteCodeFindings(userId, project._id),
+    ]);
   }
 
   if (project.repository?.githubId !== repoId) {
@@ -297,6 +312,7 @@ export async function unlinkRepositoryLogic(userId, projectId) {
   await Promise.all([
     GitHubCommit.deleteMany({ owner: userId, project: project._id }),
     deleteSecurityReviews(userId, project._id),
+    deleteCodeFindings(userId, project._id),
   ]);
 }
 
@@ -395,7 +411,10 @@ export async function syncGitHubLogic(userId, { manual = false } = {}) {
       }
     }
     // AI security review of new commits runs in the background, only for users who turned AI on.
-    if (config.AI.enabled && (await aiConsentGiven(userId))) startSecurityScan(userId);
+    if (config.AI.enabled && (await aiConsentGiven(userId))) {
+      startSecurityScan(userId);
+      startCodeReview(userId);
+    }
     return { status: 'synced', newCommits, unavailable, lastSyncAt: now };
   });
 }
@@ -453,5 +472,24 @@ export async function disconnectGitHubLogic(userId) {
 }
 
 export async function deleteProjectCommits(owner, projectId) {
-  await Promise.all([GitHubCommit.deleteMany({ owner, project: projectId }), deleteSecurityReviews(owner, projectId)]);
+  await Promise.all([
+    GitHubCommit.deleteMany({ owner, project: projectId }),
+    deleteSecurityReviews(owner, projectId),
+    deleteCodeFindings(owner, projectId),
+  ]);
+}
+
+// Changed lines of one commit for the opt-in code review. The caller keeps them in memory only.
+// Returns null when the commit no longer exists on GitHub (for example after a force push).
+export async function fetchCommitPatches(userId, fullName, sha) {
+  assertUserId(userId);
+  assertEnabled();
+  return withGitHub(userId, async token => {
+    try {
+      return await github.getCommitPatches(token, fullName, sha);
+    } catch (error) {
+      if (error?.kind === 'not_found') return null;
+      throw error;
+    }
+  });
 }

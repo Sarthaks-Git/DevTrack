@@ -12,6 +12,8 @@ function issueText({ code, reason }) {
     if (reason === "rate_limited") return `The AI service was busy. ${QUEUED}`;
     return `The AI service could not be reached. ${QUEUED}`;
   }
+  if (code === "GITHUB_REAUTH_REQUIRED") return "GitHub access expired. Reconnect GitHub below to resume code review.";
+  if (code === "GITHUB_UNAVAILABLE") return `GitHub could not be reached for code review. ${QUEUED}`;
   if (code === "AI_QUOTA_REACHED") return "You've used this month's AI actions. Remaining commits will be reviewed after the 1st.";
   if (code === "AI_BUDGET_REACHED") return "AI is paused on this server for the rest of the month. Commits stay queued.";
   return "The AI could not answer for some commits, so they were skipped.";
@@ -65,7 +67,7 @@ function AISection() {
       number="05"
       label="AI"
       title="AI features"
-      description="Optional. When on, DevTrack asks an AI model to suggest security checks for your commits. Suggestions are labelled AI and never count as verified progress."
+      description="Optional. When on, DevTrack asks an AI model to suggest security checks for your commits. Code review of changed lines is a separate switch on each linked repository. Suggestions are labelled AI and never count as verified progress."
     >
       {state.loading ? (
         <p className="text-sm text-[var(--dt-text-secondary)]">Loading AI settings...</p>
