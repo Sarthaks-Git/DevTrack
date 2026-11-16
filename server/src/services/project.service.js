@@ -5,6 +5,7 @@ import Project from '../models/Project.js';
 import Goal from '../models/Goal.js';
 import JournalEntry from '../models/JournalEntry.js';
 import AppError from '../utils/AppError.js';
+import { assertBelowRecordLimit } from '../utils/recordLimits.js';
 import { recordActivity } from './activity.service.js';
 
 const STATUS_LABELS = {
@@ -77,6 +78,8 @@ export async function createProjectLogic(userId, projectData) {
 
     validateDateRange(safeData.startDate, safeData.endDate);
     await assertOwnedGoal(userId, safeData.goal);
+
+    await assertBelowRecordLimit(Project, userId, 'projects');
 
     const project = await Project.create({
         ...safeData,

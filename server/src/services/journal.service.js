@@ -3,6 +3,7 @@ import JournalEntry from '../models/JournalEntry.js';
 import Goal from '../models/Goal.js';
 import Project from '../models/Project.js';
 import AppError from '../utils/AppError.js';
+import { assertBelowRecordLimit } from '../utils/recordLimits.js';
 import { recordActivity } from './activity.service.js';
 
 const PUBLIC_FIELDS = '-owner -__v';
@@ -33,6 +34,7 @@ function populateLinks(query) {
 export async function createJournalEntryLogic(userId, data) {
   assertUserId(userId);
   await assertOwnedLinks(userId, data);
+  await assertBelowRecordLimit(JournalEntry, userId, 'journalEntries');
   const entry = await JournalEntry.create({ ...data, owner: userId });
 
   await recordActivity(userId, {

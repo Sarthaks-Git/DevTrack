@@ -12,7 +12,7 @@ import {
 
 import { authMiddleware } from '../middlewares/auth.middleware.js';
 import { requireCsrf } from '../middlewares/csrf.middleware.js';
-import { verificationRateLimit, statsRefreshRateLimit, codingSyncRateLimit } from '../middlewares/rateLimit.middleware.js';
+import { verificationRateLimit, statsRefreshRateLimit, codingSyncRateLimit, limitWrites } from '../middlewares/rateLimit.middleware.js';
 import { syncLeetCode, listSolvedProblems, listProblemDays } from '../controllers/problemTracking.controller.js';
 import { validateSyncRequest, validateProblemListQuery, validateProblemDaysQuery } from '../validators/problemTracking.validator.js';
 import { validateCodingProfile } from '../validators/codingProfile.validator.js';
@@ -22,7 +22,7 @@ import { getSkills } from '../controllers/skills.controller.js';
 
 const codingProfileRouter = Router();
 
-codingProfileRouter.use(authMiddleware);
+codingProfileRouter.use(authMiddleware, limitWrites);
 
 codingProfileRouter.get('/', getUserCodingProfiles);
 

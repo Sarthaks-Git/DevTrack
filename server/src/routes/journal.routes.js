@@ -7,12 +7,13 @@ import {
   deleteJournalEntry,
 } from '../controllers/journal.controller.js';
 import { authMiddleware } from '../middlewares/auth.middleware.js';
+import { limitWrites } from '../middlewares/rateLimit.middleware.js';
 import { requireCsrf } from '../middlewares/csrf.middleware.js';
 import { validateObjectId } from '../middlewares/validateObjectId.middleware.js';
 import { validateCreateJournalEntry, validateUpdateJournalEntry, validateJournalQuery } from '../validators/journal.validator.js';
 
 const journalRouter = Router();
-journalRouter.use(authMiddleware);
+journalRouter.use(authMiddleware, limitWrites);
 journalRouter.get('/', validateJournalQuery, listJournalEntries);
 journalRouter.post('/', requireCsrf, validateCreateJournalEntry, createJournalEntry);
 journalRouter.get('/:id', validateObjectId('id'), getJournalEntry);

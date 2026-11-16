@@ -10,6 +10,7 @@ import {
 } from '../controllers/project.controller.js';
 
 import { authMiddleware } from '../middlewares/auth.middleware.js';
+import { limitWrites } from '../middlewares/rateLimit.middleware.js';
 import { requireCsrf } from '../middlewares/csrf.middleware.js';
 import { validateObjectId } from '../middlewares/validateObjectId.middleware.js';
 import { validateCreateMilestone, validateUpdateMilestone } from '../validators/milestone.validator.js';
@@ -22,7 +23,7 @@ import {
 
 const projectRouter = Router();
 
-projectRouter.use(authMiddleware);
+projectRouter.use(authMiddleware, limitWrites);
 
 projectRouter.post(
     '/',

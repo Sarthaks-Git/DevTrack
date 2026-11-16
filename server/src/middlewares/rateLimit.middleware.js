@@ -36,3 +36,14 @@ export const statsRefreshRateLimit = createRateLimit({ name: 'statsRefresh', lim
 // Bell polling is about 1 request per 2 minutes per tab; this leaves room for several tabs.
 export const notificationRateLimit = createRateLimit({ name: 'notifications', limit: 300, keyGenerator: byUser });
 export const codingSyncRateLimit = createRateLimit({ name: 'codingSync', limit: 60, keyGenerator: byUser });
+// Account creation counts every attempt, successful or not, so one IP cannot mass-register.
+export const registerRateLimit = createRateLimit({ name: 'register', limit: 20, windowMs: 60 * 60 * 1000 });
+// Per-user cap on create/update/delete so one account cannot hammer the database from many IPs.
+export const writeRateLimit = createRateLimit({ name: 'writes', limit: 300, keyGenerator: byUser });
+
+const READ_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
+// Mount after authMiddleware: applies writeRateLimit to mutations only.
+export function limitWrites(req, res, next) {
+  if (READ_METHODS.has(req.method)) return next();
+  return writeRateLimit(req, res, next);
+}

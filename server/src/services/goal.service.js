@@ -2,6 +2,7 @@ import Goal from '../models/Goal.js';
 import JournalEntry from '../models/JournalEntry.js';
 import Project from '../models/Project.js';
 import AppError from '../utils/AppError.js';
+import { assertBelowRecordLimit } from '../utils/recordLimits.js';
 import { recordActivity } from './activity.service.js';
 import { withTargetProgress, withTargetProgressOne } from './goalTarget.service.js';
 import { sameTargetScope } from '../utils/goalTarget.js';
@@ -16,6 +17,8 @@ export async function createGoalLogic(userId, goalData) {
         deadline,
         target
     } = goalData;
+
+    await assertBelowRecordLimit(Goal, userId, 'goals');
 
     const goal = await Goal.create({
         title,
