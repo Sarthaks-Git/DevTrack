@@ -162,7 +162,7 @@ function ProjectCard({ project, goal, milestoneHandlers, githubConnected, securi
       />
 
       <ProjectRepository project={project} githubConnected={githubConnected} onChange={onReplace} />
-      <ProjectSecurityChecks reviews={securityReviews} onChange={onSecurityReviewChange} />
+      <ProjectSecurityChecks projectTitle={project.title} reviews={securityReviews} onChange={onSecurityReviewChange} />
 
       <div className="mt-auto mt-6 flex flex-wrap items-center gap-4 border-t border-[var(--dt-border)] pt-5">
         {project.githubUrl && (
@@ -910,7 +910,7 @@ function Projects() {
               )}
             </div>
           ) : (
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <div className="grid items-start gap-4 md:grid-cols-2 xl:grid-cols-3">
               {filteredProjects.map((project) => (
                 <div
                   key={project._id}
