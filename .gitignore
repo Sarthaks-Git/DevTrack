@@ -14,5 +14,6 @@ coverage/
 # Local planning/agent notes and design drafts (not published)
 /*.md
 !/README.md
+!/SECURITY.md
 /docs/
 /.design-themes/
