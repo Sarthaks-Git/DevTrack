@@ -4,6 +4,13 @@ import AppError from '../utils/AppError.js';
 
 const MAX_PAGE = 50;
 
+function parseCursor(value) {
+  const match = typeof value === 'string' ? /^(\d{1,15})\.([0-9a-f]{24})$/.exec(value) : null;
+  if (!match) return null;
+  const at = new Date(Number(match[1]));
+  return Number.isNaN(at.getTime()) ? null : { at, id: new mongoose.Types.ObjectId(match[2]) };
+}
+
 // Best effort: the user's action already succeeded, so a timeline write failure must not undo it.
 export async function recordActivity(owner, { type, subjectType, subjectId = null, title, detail = '', source = 'manual', occurredAt }) {
   try {
@@ -28,10 +35,12 @@ export async function listActivityLogic(userId, { limit, before, type } = {}) {
   const pageSize = Math.min(Math.max(Number.parseInt(limit, 10) || 20, 1), MAX_PAGE);
   const filter = { owner: userId };
 
-  // Cursor is the last seen _id: unique and creation-ordered, so pages never skip or repeat rows.
+  // Newest event first. Cursor is "<occurredAt ms>.<_id>" of the last row seen; _id breaks ties,
+  // so pages never skip or repeat rows even when synced items arrive with older dates.
   if (before !== undefined) {
-    if (!mongoose.isValidObjectId(before)) throw new AppError('Invalid pagination cursor', 400, 'VALIDATION_ERROR');
-    filter._id = { $lt: new mongoose.Types.ObjectId(before) };
+    const cursor = parseCursor(before);
+    if (!cursor) throw new AppError('Invalid pagination cursor', 400, 'VALIDATION_ERROR');
+    filter.$or = [{ occurredAt: { $lt: cursor.at } }, { occurredAt: cursor.at, _id: { $lt: cursor.id } }];
   }
   if (type !== undefined) {
     if (!ACTIVITY_TYPES.includes(type)) throw new AppError('Invalid activity type', 400, 'VALIDATION_ERROR');
@@ -40,7 +49,7 @@ export async function listActivityLogic(userId, { limit, before, type } = {}) {
 
   // Fetch one extra row to know whether another page exists.
   const rows = await Activity.find(filter)
-    .sort({ _id: -1 })
+    .sort({ occurredAt: -1, _id: -1 })
     .limit(pageSize + 1)
     .select('-owner -__v')
     .lean();
@@ -49,7 +58,7 @@ export async function listActivityLogic(userId, { limit, before, type } = {}) {
   const items = hasMore ? rows.slice(0, pageSize) : rows;
   return {
     items,
-    nextCursor: hasMore ? items[items.length - 1]._id.toString() : null,
+    nextCursor: hasMore ? `${new Date(items[items.length - 1].occurredAt).getTime()}.${items[items.length - 1]._id}` : null,
   };
 }
 

@@ -29,9 +29,9 @@ const activitySchema = new mongoose.Schema(
 );
 
 activitySchema.index({ owner: 1, _id: -1 });
-activitySchema.index({ owner: 1, occurredAt: -1 });
-// Timeline type filter pages by _id, so the type index must end in _id too.
-activitySchema.index({ owner: 1, type: 1, _id: -1 });
+// Timeline pages by (occurredAt, _id): synced items such as commits are recorded after they happened.
+activitySchema.index({ owner: 1, occurredAt: -1, _id: -1 });
+activitySchema.index({ owner: 1, type: 1, occurredAt: -1, _id: -1 });
 
 const Activity = mongoose.models.Activity || mongoose.model('Activity', activitySchema);
 export default Activity;

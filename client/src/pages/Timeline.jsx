@@ -4,6 +4,7 @@ import StateMessage from "../components/common/StateMessage";
 import ActivityItem from "../components/activity/ActivityItem";
 import { ACTIVITY_FILTERS } from "../components/activity/activityMeta";
 import { getActivity } from "../services/activityService";
+import { getGitHubStatus, syncGitHub } from "../services/githubService";
 
 const PAGE_SIZE = 30;
 
@@ -46,6 +47,21 @@ function Timeline() {
       active = false;
     };
   }, [type, requestKey]);
+
+  // When GitHub is connected, pull new commits (server-throttled) and reload if any arrived.
+  useEffect(() => {
+    let active = true;
+    getGitHubStatus()
+      .then(async status => {
+        if (!active || status.connection?.status !== "connected") return;
+        const result = await syncGitHub();
+        if (active && result.newCommits > 0) setReloadToken(token => token + 1);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
 
   async function loadMore() {
     setLoadingMore(true);

@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import request from 'supertest';
 import app from '../src/app.js';
 import { createSession } from './helpers.js';
+import { recordActivity } from '../src/services/activity.service.js';
 
 const types = res => res.body.data.items.map(item => item.type);
 
@@ -55,6 +56,36 @@ describe('Activity timeline API', () => {
 
     expect((await s.get('/api/activity?type=not_a_type')).status).toBe(400);
     expect((await s.get('/api/activity?before=garbage')).status).toBe(400);
+  });
+
+  it('orders by when things happened, so synced older items fall in place, and pages through ties', async () => {
+    const s = await createSession('activity');
+    await s.post('/api/journal').send({ title: 'Today note' });
+    const day = new Date(Date.now() - 3 * 86_400_000);
+    // Recorded now, happened three days ago (like a synced commit); three share one timestamp.
+    for (let i = 0; i < 3; i += 1) {
+      await recordActivity(s.userId, { type: 'commit_pushed', subjectType: 'github', title: `Old ${i}`, source: 'verified', occurredAt: day });
+    }
+    await recordActivity(s.userId, { type: 'commit_pushed', subjectType: 'github', title: 'Older', source: 'verified', occurredAt: new Date(day.getTime() - 60_000) });
+
+    const all = await s.get('/api/activity');
+    expect(types(all)[0]).toBe('journal_created');
+    expect(all.body.data.items.at(-1).title).toBe('Older');
+
+    const seen = [];
+    let cursor;
+    do {
+      const page = await s.get(`/api/activity?limit=2${cursor ? `&before=${cursor}` : ''}`);
+      expect(page.status).toBe(200);
+      seen.push(...page.body.data.items.map(item => item._id));
+      cursor = page.body.data.nextCursor;
+    } while (cursor);
+    expect(seen).toEqual(all.body.data.items.map(item => item._id));
+
+    const commits = await s.get('/api/activity?type=commit_pushed&limit=3');
+    const rest = await s.get(`/api/activity?type=commit_pushed&limit=3&before=${commits.body.data.nextCursor}`);
+    expect(rest.body.data.items.map(item => item.title)).toEqual(['Older']);
+    expect((await s.get('/api/activity?before=123.nothex')).status).toBe(400);
   });
 
   it('never shows another user\'s activity', async () => {
