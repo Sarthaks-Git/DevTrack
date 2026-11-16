@@ -10,7 +10,9 @@ import {
 } from '../controllers/project.controller.js';
 
 import { authMiddleware } from '../middlewares/auth.middleware.js';
-import { limitWrites } from '../middlewares/rateLimit.middleware.js';
+import { githubReadRateLimit, limitWrites } from '../middlewares/rateLimit.middleware.js';
+import { linkRepository, listProjectCommits, unlinkRepository } from '../controllers/github.controller.js';
+import { validateLinkRepository } from '../validators/github.validator.js';
 import { requireCsrf } from '../middlewares/csrf.middleware.js';
 import { validateObjectId } from '../middlewares/validateObjectId.middleware.js';
 import { validateCreateMilestone, validateUpdateMilestone } from '../validators/milestone.validator.js';
@@ -84,5 +86,10 @@ projectRouter.delete(
     validateObjectId('milestoneId'),
     milestones.remove
 );
+
+// Linked GitHub repository and its synced commits (docs/API.md, GitHub).
+projectRouter.put('/:id/repository', githubReadRateLimit, requireCsrf, validateObjectId('id'), validateLinkRepository, linkRepository);
+projectRouter.delete('/:id/repository', requireCsrf, validateObjectId('id'), unlinkRepository);
+projectRouter.get('/:id/commits', validateObjectId('id'), listProjectCommits);
 
 export default projectRouter;

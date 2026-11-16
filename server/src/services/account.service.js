@@ -12,12 +12,16 @@ import Activity from '../models/Activity.js';
 import CodingSubmission from '../models/CodingSubmission.js';
 import SolvedProblem from '../models/SolvedProblem.js';
 import Notification from '../models/Notification.js';
+import GitHubConnection from '../models/GitHubConnection.js';
+import GitHubCommit from '../models/GitHubCommit.js';
+import OAuthState from '../models/OAuthState.js';
+import { revokeGitHubAccess } from './github.service.js';
 import AppError from '../utils/AppError.js';
 import { SALT_ROUNDS, publicUser } from './auth.service.js';
 import { passwordProblem } from '../validators/account.validator.js';
 
 // Every collection holding user-owned data. Account deletion must cover all of them.
-const OWNED_MODELS = [Goal, Project, CodingProfile, VerificationChallenge, JournalEntry, Activity, CodingSubmission, SolvedProblem, Notification, AuthSession];
+const OWNED_MODELS = [Goal, Project, CodingProfile, VerificationChallenge, JournalEntry, Activity, CodingSubmission, SolvedProblem, Notification, GitHubConnection, GitHubCommit, OAuthState, AuthSession];
 
 function assertUserId(userId) {
   if (!mongoose.isValidObjectId(userId)) throw new AppError('Authentication is required', 401, 'UNAUTHENTICATED');
@@ -109,6 +113,8 @@ export async function revokeSessionByIdLogic(userId, sessionId) {
 
 export async function deleteAccountLogic(userId, { currentPassword }) {
   const user = await loadUserWithPassword(userId, currentPassword);
+  // Withdraw DevTrack's GitHub access at GitHub before the encrypted token is deleted.
+  await revokeGitHubAccess(user._id);
   // Remove owned data first so a partial failure never leaves orphans behind a deleted user.
   await Promise.all(OWNED_MODELS.map(Model => Model.deleteMany({ owner: user._id })));
   await User.deleteOne({ _id: user._id });

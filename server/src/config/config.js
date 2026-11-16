@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -42,6 +43,46 @@ function assertProductionSafe({ mongoUri, jwtSecret, clientOrigin, env }) {
   if (new URL(clientOrigin).protocol !== 'https:') {
     throw new Error('CLIENT_ORIGIN must use https in production');
   }
+}
+
+// 32-byte key for encrypting third-party tokens at rest (AES-256-GCM), base64 or base64url.
+function parseEncryptionKey(value) {
+  if (!value) return null;
+  const key = Buffer.from(value, 'base64');
+  if (key.length !== 32 || new Set(key).size < 16) {
+    throw new Error('TOKEN_ENCRYPTION_KEY must be 32 random bytes encoded as base64');
+  }
+  return key;
+}
+
+// GitHub App (user-to-server OAuth). Disabled unless every value is present.
+function buildGitHubConfig(env, { nodeEnv, clientOrigin }) {
+  const isTest = nodeEnv === 'test';
+  const clientId = env.GITHUB_APP_CLIENT_ID || (isTest ? 'Iv-test-client' : '');
+  const clientSecret = env.GITHUB_APP_CLIENT_SECRET || (isTest ? crypto.randomBytes(20).toString('hex') : '');
+  const appSlug = env.GITHUB_APP_SLUG || (isTest ? 'devtrack-test' : '');
+  // Tests get a per-run random key so no key literal ever lives in the repo.
+  const encryptionKey = parseEncryptionKey(env.TOKEN_ENCRYPTION_KEY) || (isTest ? crypto.randomBytes(32) : null);
+  const enabled = Boolean(clientId && clientSecret && appSlug);
+
+  if (!enabled) return { enabled: false, encryptionKey };
+  if (!encryptionKey) throw new Error('TOKEN_ENCRYPTION_KEY is required when the GitHub App is configured');
+  if (!/^[a-z0-9-]{1,100}$/i.test(appSlug)) throw new Error('GITHUB_APP_SLUG is invalid');
+
+  const callbackUrl = env.GITHUB_CALLBACK_URL || `${clientOrigin}/api/integrations/github/callback`;
+  let callback;
+  try {
+    callback = new URL(callbackUrl);
+  } catch {
+    throw new Error('GITHUB_CALLBACK_URL must be a valid absolute URL');
+  }
+
+  if (nodeEnv === 'production') {
+    if (callback.protocol !== 'https:') throw new Error('GITHUB_CALLBACK_URL must use https in production');
+    if (PLACEHOLDER_PATTERN.test(clientSecret)) throw new Error('GITHUB_APP_CLIENT_SECRET is a placeholder');
+  }
+
+  return { enabled: true, clientId, clientSecret, appSlug, callbackUrl: callback.toString(), encryptionKey };
 }
 
 export function buildConfig(env) {
@@ -116,6 +157,8 @@ export function buildConfig(env) {
 
     // memory: per-process counters (single instance). mongo: shared across instances.
     RATE_LIMIT_STORE: rateLimitStore,
+
+    GITHUB: buildGitHubConfig(env, { nodeEnv, clientOrigin }),
   };
 }
 

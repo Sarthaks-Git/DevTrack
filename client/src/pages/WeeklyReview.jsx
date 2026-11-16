@@ -196,6 +196,15 @@ function WeeklyReview() {
             <div>
               <SectionTitle>Verified practice</SectionTitle>
               <Practice verified={data.verified} previous={data.previous} partial={partial} />
+              {data.code?.connected ? (
+                <div className="mt-6 border-t border-[var(--dt-border)] pt-4">
+                  <p className="text-sm text-[var(--dt-text-secondary)]">
+                    {data.code.commits} {data.code.commits === 1 ? "commit" : "commits"} on linked repositories
+                    <span className="ml-2 text-xs text-[var(--dt-text-muted)]">{compareText(data.code.commits, data.code.previousCommits, { partial })}</span>
+                  </p>
+                  <span className="dt-badge dt-badge-verified mt-3 inline-block">Verified from GitHub</span>
+                </div>
+              ) : null}
             </div>
           </div>
 

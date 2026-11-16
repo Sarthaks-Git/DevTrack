@@ -5,6 +5,8 @@ import api, { ensureCsrfToken, errorMessage } from "../services/api";
 import { getGoals } from "../services/goalService";
 import MilestoneList from "../components/milestones/MilestoneList";
 import PageHeader from "../components/common/PageHeader";
+import ProjectRepository from "../components/projects/ProjectRepository";
+import { getGitHubStatus, syncGitHub } from "../services/githubService";
 
 const STATUS_OPTIONS = [
   { value: "planning", label: "Planning" },
@@ -87,7 +89,7 @@ function StatusLabel({ status }) {
   );
 }
 
-function ProjectCard({ project, goal, milestoneHandlers, onEdit, onDelete }) {
+function ProjectCard({ project, goal, milestoneHandlers, githubConnected, onReplace, onEdit, onDelete }) {
   return (
     <article className="group flex h-full flex-col border border-[var(--dt-border)] bg-[var(--dt-surface)] p-5 transition-colors duration-200 hover:border-[var(--dt-border-strong)] sm:p-6">
       <div className="flex items-start justify-between gap-3">
@@ -156,6 +158,8 @@ function ProjectCard({ project, goal, milestoneHandlers, onEdit, onDelete }) {
         onUpdate={(milestoneId, changes) => milestoneHandlers.update(project._id, milestoneId, changes)}
         onRemove={(milestoneId) => milestoneHandlers.remove(project._id, milestoneId)}
       />
+
+      <ProjectRepository project={project} githubConnected={githubConnected} onChange={onReplace} />
 
       <div className="mt-auto mt-6 flex flex-wrap items-center gap-4 border-t border-[var(--dt-border)] pt-5">
         {project.githubUrl && (
@@ -566,6 +570,7 @@ function Projects() {
   const [deletingId, setDeletingId] = useState(null);
   const [projectToDelete, setProjectToDelete] = useState(null);
   const [filter, setFilter] = useState("all");
+  const [githubConnected, setGithubConnected] = useState(false);
 
   const fetchProjects = useCallback(
     () => requestProjects().then(data => data.projects || []),
@@ -582,6 +587,24 @@ function Projects() {
       .then(list => active && setProjects(list))
       .catch(error => active && setPageError(error.message || "Unable to load projects."))
       .finally(() => active && setLoading(false));
+    return () => {
+      active = false;
+    };
+  }, [fetchProjects]);
+
+  // GitHub is optional: when connected, pull new commits and refresh cards if any arrived.
+  useEffect(() => {
+    let active = true;
+    getGitHubStatus()
+      .then(async (status) => {
+        const connected = status.connection?.status === "connected";
+        if (!active) return;
+        setGithubConnected(connected);
+        if (!connected) return;
+        const result = await syncGitHub();
+        if (active && result.newCommits > 0) setProjects(await fetchProjects());
+      })
+      .catch(() => {});
     return () => {
       active = false;
     };
@@ -887,6 +910,8 @@ function Projects() {
                     project={project}
                     goal={goalsById.get(project.goal)}
                     milestoneHandlers={milestoneHandlers}
+                    githubConnected={githubConnected}
+                    onReplace={replaceProject}
                     onEdit={openEditForm}
                     onDelete={openDeleteModal}
                   />

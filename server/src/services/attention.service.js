@@ -101,7 +101,7 @@ export async function computeAttention(userId, todayDate, { stalledDays } = {}) 
   for (const project of projects) {
     if (!project.goal) continue;
     const key = String(project.goal);
-    projectTouchByGoal.set(key, Math.max(projectTouchByGoal.get(key) || 0, time(project.updatedAt)));
+    projectTouchByGoal.set(key, Math.max(projectTouchByGoal.get(key) || 0, time(project.updatedAt), time(project.repository?.lastCommitAt) || 0));
   }
 
   const latest = (...values) => new Date(Math.max(...values.map(time).filter(value => value !== null)));
@@ -117,7 +117,8 @@ export async function computeAttention(userId, todayDate, { stalledDays } = {}) 
       kind: 'project',
       deadline: project.endDate,
       active: project.status === 'in_progress',
-      lastActivityAt: latest(project.updatedAt, projectJournal.get(String(project._id))),
+      // A verified commit on the linked repository counts as work on the project.
+      lastActivityAt: latest(project.updatedAt, projectJournal.get(String(project._id)), project.repository?.lastCommitAt),
     }, today, threshold)),
   ].filter(Boolean);
 

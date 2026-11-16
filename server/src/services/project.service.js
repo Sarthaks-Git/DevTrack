@@ -7,6 +7,7 @@ import JournalEntry from '../models/JournalEntry.js';
 import AppError from '../utils/AppError.js';
 import { assertBelowRecordLimit } from '../utils/recordLimits.js';
 import { recordActivity } from './activity.service.js';
+import { deleteProjectCommits } from './github.service.js';
 
 const STATUS_LABELS = {
     planning: 'Planning',
@@ -193,6 +194,7 @@ export async function deleteProjectLogic(userId, projectId) {
     await Promise.all([
         JournalEntry.updateMany({ owner: userId, project: project._id }, { $set: { project: null } }),
         deleteNotificationsForSubject(userId, project._id),
+        deleteProjectCommits(userId, project._id),
     ]);
 
     return project;

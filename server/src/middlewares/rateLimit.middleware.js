@@ -50,3 +50,10 @@ export function limitWrites(req, res, next) {
   if (READ_METHODS.has(req.method)) return next();
   return writeRateLimit(req, res, next);
 }
+
+// GitHub: starting a connection, the OAuth callback (unauthenticated, so per IP), repo listing
+// (several GitHub calls each) and sync (auto on app open plus "Sync now").
+export const githubConnectRateLimit = createRateLimit({ name: 'githubConnect', limit: 20, keyGenerator: byUser });
+export const githubCallbackRateLimit = createRateLimit({ name: 'githubCallback', limit: 30 });
+export const githubReadRateLimit = createRateLimit({ name: 'githubRead', limit: 60, keyGenerator: byUser });
+export const githubSyncRateLimit = createRateLimit({ name: 'githubSync', limit: 60, keyGenerator: byUser });

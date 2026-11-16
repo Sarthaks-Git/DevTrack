@@ -9,6 +9,9 @@ export const ACTIVITY_META = {
   journal_created: { label: "Journal entry", marker: "✎" },
   platform_verified: { label: "Account verified", marker: "✓" },
   platform_disconnected: { label: "Account disconnected", marker: "×" },
+  github_connected: { label: "GitHub connected", marker: "✓" },
+  github_disconnected: { label: "GitHub disconnected", marker: "×" },
+  commit_pushed: { label: "Commit", marker: "⎇" },
   // Older events from before problem tracking; kept so history still renders.
   stats_synced: { label: "Coding progress", marker: "↑" },
   problem_solved: { label: "Problem solved", marker: "✓" },
@@ -20,6 +23,7 @@ export const ACTIVITY_FILTERS = [
   { value: "project_completed", label: "Shipped projects" },
   { value: "journal_created", label: "Journal entries" },
   { value: "problem_solved", label: "Problems solved" },
+  { value: "commit_pushed", label: "Commits" },
 ];
 
 export function activityLabel(type) {

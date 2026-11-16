@@ -82,6 +82,21 @@ const projectSchema = new mongoose.Schema(
 
         // Managed only through the milestone endpoints, never through project create/update.
         milestones: milestonesField,
+
+        // Linked GitHub repository. Set only through the repository endpoints, after the server
+        // confirms the user's GitHub App installation can see the repo.
+        repository: {
+            type: new mongoose.Schema({
+                githubId: { type: Number, required: true },
+                fullName: { type: String, required: true, maxlength: 140 },
+                url: { type: String, required: true, maxlength: 300 },
+                private: { type: Boolean, default: false },
+                linkedAt: { type: Date, default: () => new Date() },
+                syncedAt: { type: Date, default: null },
+                lastCommitAt: { type: Date, default: null },
+            }, { _id: false }),
+            default: null,
+        },
     },
     {
         timestamps: true,

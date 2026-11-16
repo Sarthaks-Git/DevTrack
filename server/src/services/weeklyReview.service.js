@@ -1,6 +1,8 @@
 import mongoose from 'mongoose';
 import Activity from '../models/Activity.js';
 import CodingProfile from '../models/CodingProfile.js';
+import GitHubCommit from '../models/GitHubCommit.js';
+import GitHubConnection from '../models/GitHubConnection.js';
 import Goal from '../models/Goal.js';
 import JournalEntry from '../models/JournalEntry.js';
 import Project from '../models/Project.js';
@@ -13,7 +15,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 export const REVIEW_RULES = Object.freeze({ maxFocus: 3, maxListed: 10, topPatterns: 3 });
 
 // Events the system writes on its own; they are not effort, so they never count as an active day.
-const PASSIVE_ACTIVITY = ['stats_synced', 'platform_verified', 'platform_disconnected'];
+const PASSIVE_ACTIVITY = ['stats_synced', 'platform_verified', 'platform_disconnected', 'github_connected', 'github_disconnected'];
 const OPEN_GOAL = ['not_started', 'in_progress'];
 const OPEN_PROJECT = ['planning', 'in_progress'];
 
@@ -55,7 +57,7 @@ async function collectWeek(owner, window) {
   const range = { $gte: window.start, $lt: window.end };
   const milestoneMatch = { milestones: { $elemMatch: { done: true, completedAt: range } } };
 
-  const [goals, projectEvents, goalMilestones, projectMilestones, solves, journals, activity] = await Promise.all([
+  const [goals, projectEvents, goalMilestones, projectMilestones, solves, journals, activity, commits] = await Promise.all([
     Goal.find({ owner, status: 'completed', completedAt: range }).select('title completedAt').sort({ completedAt: -1 }).lean(),
     Activity.find({ owner, type: 'project_completed', occurredAt: range }).select('subjectId').lean(),
     Goal.find({ owner, ...milestoneMatch }).select('title milestones').lean(),
@@ -63,6 +65,7 @@ async function collectWeek(owner, window) {
     SolvedProblem.find({ owner, firstAcceptedAt: range }).select('difficulty pattern firstAcceptedAt').lean(),
     JournalEntry.find({ owner, createdAt: range }).select('createdAt').lean(),
     Activity.find({ owner, occurredAt: range, type: { $nin: PASSIVE_ACTIVITY } }).select('occurredAt').limit(5000).lean(),
+    GitHubCommit.countDocuments({ owner, committedAt: range }),
   ]);
 
   // Only projects that are still completed: a project reopened later is not "shipped".
@@ -97,6 +100,7 @@ async function collectWeek(owner, window) {
       .slice(0, REVIEW_RULES.topPatterns)
       .map(([pattern, count]) => ({ pattern, count })),
     journalEntries: journals.length,
+    commits,
   };
 }
 
@@ -140,13 +144,14 @@ export async function getWeeklyReviewLogic(userId, { today, tzOffset = 0, week =
   const window = weekWindow(today, tzOffset, weeksBack);
   const previous = weekWindow(today, tzOffset, weeksBack + 1);
 
-  const [current, before, slipped, attention, skills, profile] = await Promise.all([
+  const [current, before, slipped, attention, skills, profile, githubConnection] = await Promise.all([
     collectWeek(owner, window),
     collectWeek(owner, previous),
     slippedDeadlines(owner, window),
     computeAttention(owner, today),
     getSkillsLogic(owner, today),
     CodingProfile.exists({ owner, platform: 'leetcode', connectionStatus: 'verified' }),
+    GitHubConnection.exists({ owner }),
   ]);
 
   const stalled = week === 'current'
@@ -172,6 +177,12 @@ export async function getWeeklyReviewLogic(userId, { today, tzOffset = 0, week =
       solved: current.solved,
       ...current.byDifficulty,
       topPatterns: current.topPatterns,
+    },
+    // Commits the user authored on linked repositories, verified by GitHub.
+    code: {
+      connected: Boolean(githubConnection),
+      commits: current.commits,
+      previousCommits: before.commits,
     },
     consistency: {
       days: current.days.slice(0, window.daysElapsed),

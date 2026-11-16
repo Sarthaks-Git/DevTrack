@@ -31,7 +31,7 @@ function DangerSection({ onDeleted }) {
   }
 
   return (
-    <SettingsSection number="05" label="Danger zone" tone="danger" title="Delete account" description="Permanently deletes your account and everything in it: goals, projects, journal, timeline, and connected platforms. This cannot be undone.">
+    <SettingsSection number="06" label="Danger zone" tone="danger" title="Delete account" description="Permanently deletes your account and everything in it: goals, projects, journal, timeline, and connected platforms. This cannot be undone.">
       <button type="button" onClick={() => setOpen(true)} className="border border-red-400/40 px-4 py-2.5 text-[10px] font-medium uppercase tracking-[0.16em] text-red-400 hover:bg-red-400/10">
         Delete my account
       </button>

@@ -51,6 +51,19 @@ describe('Configuration guards', () => {
     }
   });
 
+  it('keeps GitHub off unless fully configured, and requires an encryption key when on', () => {
+    expect(buildConfig(production()).GITHUB.enabled).toBe(false);
+    const github = { GITHUB_APP_CLIENT_ID: 'Iv23abc', GITHUB_APP_CLIENT_SECRET: randomBytes(20).toString('hex'), GITHUB_APP_SLUG: 'devtrack' };
+    expect(() => buildConfig(production(github))).toThrow(/TOKEN_ENCRYPTION_KEY/);
+    expect(() => buildConfig(production({ ...github, TOKEN_ENCRYPTION_KEY: randomBytes(16).toString('base64') }))).toThrow(/32 random bytes/);
+    expect(() => buildConfig(production({ ...github, TOKEN_ENCRYPTION_KEY: Buffer.alloc(32, 7).toString('base64') }))).toThrow(/32 random bytes/);
+
+    const key = randomBytes(32).toString('base64');
+    const config = buildConfig(production({ ...github, TOKEN_ENCRYPTION_KEY: key }));
+    expect(config.GITHUB).toMatchObject({ enabled: true, callbackUrl: 'https://devtrack.app/api/integrations/github/callback' });
+    expect(() => buildConfig(production({ ...github, TOKEN_ENCRYPTION_KEY: key, GITHUB_CALLBACK_URL: 'http://devtrack.app/cb' }))).toThrow(/https/);
+  });
+
   it('keeps development permissive so the app runs locally', () => {
     const config = buildConfig({ NODE_ENV: 'development', MONGODB_URI: 'mongodb://127.0.0.1:27017/devtrack', JWT_SECRET: 'replace-with-at-least-32-random-characters' });
     expect(config.COOKIE_SECURE).toBe(false);

@@ -68,3 +68,16 @@ export {
   REFRESH_COOKIE,
   CSRF_COOKIE,
 };
+
+// Pins a GitHub OAuth handshake to the browser that started it. Always SameSite=Lax: the callback
+// is a top-level navigation from github.com, which a Strict cookie would not accompany.
+export const GITHUB_STATE_COOKIE = 'devtrack_github_state';
+const GITHUB_STATE_PATH = '/api/integrations/github';
+
+export function setGitHubStateCookie(res, state, maxAgeMs) {
+  res.cookie(GITHUB_STATE_COOKIE, state, { secure: config.COOKIE_SECURE, sameSite: 'lax', httpOnly: true, maxAge: maxAgeMs, path: GITHUB_STATE_PATH });
+}
+
+export function clearGitHubStateCookie(res) {
+  res.clearCookie(GITHUB_STATE_COOKIE, { secure: config.COOKIE_SECURE, sameSite: 'lax', httpOnly: true, path: GITHUB_STATE_PATH });
+}
