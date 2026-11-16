@@ -83,6 +83,17 @@ function RemindersSection() {
             <span>Alert me about overdue and upcoming deadlines</span>
           </label>
 
+          <label className="flex items-start gap-3 text-sm text-[var(--dt-text-secondary)]">
+            <input
+              type="checkbox"
+              checked={settings.weeklyReview}
+              disabled={saving || !settings.enabled}
+              onChange={(event) => save({ weeklyReview: event.target.checked }, event.target.checked ? "Weekly review reminders are on." : "Weekly review reminders are off.")}
+              className="mt-1"
+            />
+            <span>Tell me when last week's review is ready</span>
+          </label>
+
           <form onSubmit={saveDays} className="flex flex-wrap items-end gap-4">
             <div>
               <label htmlFor="stalled-days" className="mb-2 block text-xs uppercase tracking-[0.2em] text-[var(--dt-text-muted)]">

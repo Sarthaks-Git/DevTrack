@@ -36,9 +36,10 @@ export function validateReminderSettings(req, res, next) {
   const errors = {};
   const keys = Object.keys(body);
   if (keys.length === 0) errors.body = 'At least one field is required';
-  if (!onlyKeys(body, ['enabled', 'stalledAfterDays', 'deadlineAlerts'])) errors.fields = 'Request contains invalid fields';
+  if (!onlyKeys(body, ['enabled', 'stalledAfterDays', 'deadlineAlerts', 'weeklyReview'])) errors.fields = 'Request contains invalid fields';
   if (body.enabled !== undefined && typeof body.enabled !== 'boolean') errors.enabled = 'enabled must be true or false';
   if (body.deadlineAlerts !== undefined && typeof body.deadlineAlerts !== 'boolean') errors.deadlineAlerts = 'deadlineAlerts must be true or false';
+  if (body.weeklyReview !== undefined && typeof body.weeklyReview !== 'boolean') errors.weeklyReview = 'weeklyReview must be true or false';
   if (body.stalledAfterDays !== undefined && (!Number.isInteger(body.stalledAfterDays) || body.stalledAfterDays < 3 || body.stalledAfterDays > 60)) {
     errors.stalledAfterDays = 'stalledAfterDays must be a whole number from 3 to 60';
   }

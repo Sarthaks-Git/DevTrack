@@ -12,6 +12,7 @@ const userSchema = new mongoose.Schema({
     enabled: { type: Boolean, default: true },
     stalledAfterDays: { type: Number, default: 14, min: 3, max: 60 },
     deadlineAlerts: { type: Boolean, default: true },
+    weeklyReview: { type: Boolean, default: true },
   },
   // Last time reminders were generated; used to throttle regeneration per user.
   remindersCheckedAt: { type: Date, default: null },

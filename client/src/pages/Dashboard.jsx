@@ -6,6 +6,7 @@ import { getProjects } from "../services/projectService";
 import DashboardPulse from "../components/dashboard/DashboardPulse";
 import UpcomingMilestones from "../components/dashboard/UpcomingMilestones";
 import NeedsAttention from "../components/dashboard/NeedsAttention";
+import WeeklySnapshot from "../components/dashboard/WeeklySnapshot";
 import { useDayPeriod } from "../components/dashboard/useDayPeriod";
 import TechTip from "../components/dashboard/TechTip";
 import PageHeader from "../components/common/PageHeader";
@@ -474,6 +475,8 @@ function Dashboard() {
             </section>
 
             <NeedsAttention />
+
+            <WeeklySnapshot />
 
             <DashboardPulse />
         </section>

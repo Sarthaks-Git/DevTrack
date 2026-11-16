@@ -109,14 +109,14 @@ describe('Notifications and reminders', () => {
 
   it('applies settings: custom stall threshold (also on the dashboard), deadline alerts off, and disabled', async () => {
     const session = await createSession('nt_settings');
-    expect((await session.get('/api/notifications/settings')).body.data).toEqual({ enabled: true, stalledAfterDays: 14, deadlineAlerts: true });
+    expect((await session.get('/api/notifications/settings')).body.data).toEqual({ enabled: true, stalledAfterDays: 14, deadlineAlerts: true, weeklyReview: true });
 
     const idle = await goal(session, { title: 'Idle five days', status: 'in_progress' });
     await backdate(idle._id, 5);
     await goal(session, { title: 'Late but muted', deadline: dayKey(-1) });
 
     const saved = await session.patch('/api/notifications/settings').send({ stalledAfterDays: 4, deadlineAlerts: false });
-    expect(saved.body.data).toEqual({ enabled: true, stalledAfterDays: 4, deadlineAlerts: false });
+    expect(saved.body.data).toEqual({ enabled: true, stalledAfterDays: 4, deadlineAlerts: false, weeklyReview: true });
 
     const types = (await list(session)).body.data.items.map(item => item.type);
     expect(types).toEqual(['stalled']);

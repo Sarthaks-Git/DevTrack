@@ -14,6 +14,7 @@ const TYPE_LABELS = {
   due_soon: "Due soon",
   stalled: "Stalled",
   target_reached: "Verified win",
+  weekly_review: "Weekly review",
 };
 
 function Notifications() {
@@ -57,7 +58,8 @@ function Notifications() {
         refreshUnread?.();
       }
     }
-    navigate(item.subjectType === "goal" ? "/app/goals" : "/app/projects", { viewTransition: true });
+    const destination = { goal: "/app/goals", project: "/app/projects", review: "/app/review?week=last" }[item.subjectType] || "/app/dashboard";
+    navigate(destination, { viewTransition: true });
   }
 
   async function markAll() {

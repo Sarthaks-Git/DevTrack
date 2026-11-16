@@ -41,6 +41,9 @@ export const registerRateLimit = createRateLimit({ name: 'register', limit: 20, 
 // Per-user cap on create/update/delete so one account cannot hammer the database from many IPs.
 export const writeRateLimit = createRateLimit({ name: 'writes', limit: 300, keyGenerator: byUser });
 
+// The weekly review runs about a dozen queries; cap it per user well above normal use.
+export const reviewRateLimit = createRateLimit({ name: 'review', limit: 120, keyGenerator: byUser });
+
 const READ_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 // Mount after authMiddleware: applies writeRateLimit to mutations only.
 export function limitWrites(req, res, next) {

@@ -1,34 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getAttention } from "../../services/dashboardService";
-import { formatMilestoneDue } from "../../utils/milestoneUtils";
-
-const plural = (count, word) => `${count} ${word}${count === 1 ? "" : "s"}`;
-
-function describeReason(reason) {
-  switch (reason.code) {
-    case "overdue":
-      return { text: `Overdue since ${formatMilestoneDue(reason.date)}`, urgent: true };
-    case "due_soon":
-      return { text: `Due ${formatMilestoneDue(reason.date)}`, urgent: false };
-    case "milestone_overdue":
-      return { text: `${plural(reason.count, "milestone")} overdue`, urgent: true };
-    case "milestone_due_soon":
-      return { text: `${plural(reason.count, "milestone")} due this week`, urgent: false };
-    case "stalled":
-      return { text: `No progress in ${reason.days} days`, urgent: false };
-    default:
-      return null;
-  }
-}
-
-function describeNextStep(step) {
-  if (step.code === "milestone") {
-    return `Next: ${step.title}${step.dueDate ? ` (${formatMilestoneDue(step.dueDate)})` : ""}`;
-  }
-  if (step.code === "add_milestones") return "Next: break it into milestones";
-  return "Next: all milestones are done, review its status";
-}
+import { describeNextStep, describeReason, subjectPath } from "../../utils/attentionUtils";
 
 // Server-ranked list of goals and projects with a concrete reason to act now.
 function NeedsAttention() {
@@ -85,7 +58,7 @@ function NeedsAttention() {
 
               <div className="min-w-0">
                 <Link
-                  to={item.kind === "goal" ? "/app/goals" : "/app/projects"}
+                  to={subjectPath(item.kind)}
                   className="inline-block break-words text-base font-medium tracking-tight text-[var(--dt-text-primary)] transition-colors duration-200 hover:text-[var(--dt-accent-soft)]"
                 >
                   {item.title}
