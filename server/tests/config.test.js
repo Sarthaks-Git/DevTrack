@@ -1,7 +1,9 @@
 import { describe, it, expect } from 'vitest';
+import { randomBytes } from 'node:crypto';
 import { buildConfig } from '../src/config/config.js';
 
-const STRONG_SECRET = 'kQ3v9Zp1Lw7Xc2Rt8Yb4Nm6Hs0Dj5Gf1Ae9Uo3Ii7Pl2Kx8Wq';
+// Generated per run so the repository never contains a secret-looking literal (scanners flag those).
+const STRONG_SECRET = randomBytes(48).toString('base64url');
 
 const production = (overrides = {}) => ({
   NODE_ENV: 'production',
