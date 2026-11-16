@@ -55,7 +55,7 @@ function FindingCard({ finding, busy, error, onStatus }) {
   );
 }
 
-function CodeReviewDialog({ project, findings, onFindingChange, onToggle, onClose }) {
+function CodeReviewDialog({ project, allowed, findings, onFindingChange, onToggle, onClose }) {
   const enabled = Boolean(project.repository?.codeReview?.enabled);
   const [busyId, setBusyId] = useState("");
   const [errors, setErrors] = useState({});
@@ -91,7 +91,15 @@ function CodeReviewDialog({ project, findings, onFindingChange, onToggle, onClos
   const toolbar = (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
       <div className="min-w-0 text-xs leading-5 text-[var(--dt-text-secondary)]">
-        <p className="text-sm text-[var(--dt-text-primary)]">{enabled ? "On for this repository" : "Off for this repository"}</p>
+        <p className="text-sm text-[var(--dt-text-primary)]">
+          {!allowed ? "Part of the Pro plan" : enabled ? "On for this repository" : "Off for this repository"}
+        </p>
+        {!allowed ? (
+          <p className="mt-1">
+            Pro reviews the changed lines of your commits with Claude Sonnet 5.5. Upgrades are coming soon.{" "}
+            <Link to="/app/settings" className="dt-link-button">See plans</Link>
+          </p>
+        ) : null}
         <p className="mt-1">
           When on, the changed lines of your new commits are sent to Anthropic for a security review. Secrets are removed first; env files, keys and lockfiles are never sent; the code is not stored.
         </p>
@@ -102,7 +110,7 @@ function CodeReviewDialog({ project, findings, onFindingChange, onToggle, onClos
           </p>
         ) : null}
       </div>
-      <button
+      {!allowed && !enabled ? null : <button
         type="button"
         onClick={() => (enabled ? changeEnabled(false) : setToggle(current => ({ ...current, confirm: true, error: "" })))}
         disabled={toggle.busy}
@@ -110,7 +118,7 @@ function CodeReviewDialog({ project, findings, onFindingChange, onToggle, onClos
         className={enabled ? "shrink-0 border border-[var(--dt-border)] px-4 py-2.5 text-[10px] font-medium uppercase tracking-[0.16em] text-[var(--dt-text-primary)] hover:border-[var(--dt-border-strong)] disabled:opacity-50" : "dt-primary-button shrink-0"}
       >
         {toggle.busy && !toggle.confirm ? "Saving..." : enabled ? "Turn off" : "Turn on"}
-      </button>
+      </button>}
     </div>
   );
 
@@ -130,7 +138,7 @@ function CodeReviewDialog({ project, findings, onFindingChange, onToggle, onClos
       >
         {openFindings.length ? openFindings.map(card) : (
           <p className="text-sm text-[var(--dt-text-secondary)]">
-            {enabled ? "No open findings. New commits are reviewed after each sync." : "Turn on code review to have new commits checked for security issues."}
+            {!allowed ? "No findings." : enabled ? "No open findings. New commits are reviewed after each sync." : "Turn on code review to have new commits checked for security issues."}
           </p>
         )}
         {closed.length ? (
@@ -160,7 +168,7 @@ function CodeReviewDialog({ project, findings, onFindingChange, onToggle, onClos
 }
 
 // Opt-in AI review of a linked repository's changed lines: a small button on the card that opens an overlay.
-function ProjectCodeReview({ project, findings, onFindingChange, onToggle }) {
+function ProjectCodeReview({ project, allowed, findings, onFindingChange, onToggle }) {
   const [open, setOpen] = useState(false);
   if (!project.repository) return null;
 
@@ -174,10 +182,10 @@ function ProjectCodeReview({ project, findings, onFindingChange, onToggle }) {
         {openCount ? (
           <span className="dt-badge border-amber-400/50 text-amber-300">{openCount} open</span>
         ) : (
-          <span className="text-[var(--dt-text-muted)]">{enabled ? "on" : "off"}</span>
+          <span className="text-[var(--dt-text-muted)]">{!allowed ? "Pro" : enabled ? "on" : "off"}</span>
         )}
       </button>
-      {open ? <CodeReviewDialog project={project} findings={findings} onFindingChange={onFindingChange} onToggle={onToggle} onClose={() => setOpen(false)} /> : null}
+      {open ? <CodeReviewDialog project={project} allowed={allowed} findings={findings} onFindingChange={onFindingChange} onToggle={onToggle} onClose={() => setOpen(false)} /> : null}
     </div>
   );
 }

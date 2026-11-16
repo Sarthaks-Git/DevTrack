@@ -3,7 +3,12 @@ import SettingsSection, { Notice } from "./SettingsSection";
 import ConfirmModal from "../common/ConfirmModal";
 import { getAiStatus, setAiConsent } from "../../services/aiService";
 
-const QUEUED = "Your commits are queued and will be reviewed on the next sync.";
+const PLAN_FEATURES = {
+  securityReview: "Security checks from commit messages",
+  codeReview: "Code review of changed lines",
+};
+
+const QUEUED ="Your commits are queued and will be reviewed on the next sync.";
 
 // Plain wording for the code words the server stores about the last background AI run.
 function issueText({ code, reason }) {
@@ -67,7 +72,7 @@ function AISection() {
       number="05"
       label="AI"
       title="AI features"
-      description="Optional. When on, DevTrack asks an AI model to suggest security checks for your commits. Code review of changed lines is a separate switch on each linked repository. Suggestions are labelled AI and never count as verified progress."
+      description="Optional. When on, DevTrack asks an AI model to suggest security checks for your commits. Code review of changed lines (Pro) is a separate switch on each linked repository. Suggestions are labelled AI and never count as verified progress."
     >
       {state.loading ? (
         <p className="text-sm text-[var(--dt-text-secondary)]">Loading AI settings...</p>
@@ -93,18 +98,27 @@ function AISection() {
             </button>
           </div>
 
-          <div className="mt-6 grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label="AI model">
+          <div className="mt-6 grid gap-3 sm:grid-cols-2" aria-label="Plans">
             {status.tiers.map(tier => (
               <div
                 key={tier.id}
-                role="radio"
-                aria-checked={status.plan === tier.id}
-                aria-disabled={!tier.available}
-                className={`border p-4 ${status.plan === tier.id ? "border-[var(--dt-accent)]" : "border-[var(--dt-border)] opacity-60"}`}
+                aria-current={tier.current ? "true" : undefined}
+                className={`border p-4 ${tier.current ? "border-[var(--dt-accent)]" : "border-[var(--dt-border)]"}`}
               >
-                <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--dt-text-muted)]">{tier.label}</p>
-                <p className="mt-1 text-sm text-[var(--dt-text-primary)]">{tier.model || "Stronger model"}</p>
-                <p className="mt-1 text-xs text-[var(--dt-text-secondary)]">{tier.available ? "Included" : "Paid plan, coming later"}</p>
+                <div className="flex items-baseline justify-between gap-2">
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--dt-text-muted)]">{tier.label}</p>
+                  {tier.current ? <span className="dt-badge">Your plan</span> : null}
+                </div>
+                <p className="mt-1 text-sm text-[var(--dt-text-primary)]">{tier.model}</p>
+                <ul className="mt-2 space-y-1 text-xs text-[var(--dt-text-secondary)]">
+                  <li>{tier.monthlyActions} AI actions a month</li>
+                  {tier.features.map(feature => <li key={feature}>{PLAN_FEATURES[feature] || feature}</li>)}
+                </ul>
+                <p className="mt-3 text-xs text-[var(--dt-text-muted)]">
+                  {tier.current
+                    ? tier.id === "pro" && status.planUntil ? `Active until ${new Date(status.planUntil).toLocaleDateString()}` : "Active"
+                    : tier.available ? "Included" : "Upgrade coming soon"}
+                </p>
               </div>
             ))}
           </div>

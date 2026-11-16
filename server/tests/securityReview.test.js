@@ -74,9 +74,9 @@ describe('AI settings', () => {
     const s = await createSession('aiset');
     const status = await s.get('/api/ai');
     expect(status.status).toBe(200);
-    expect(status.body.data).toMatchObject({ available: true, enabled: false, plan: 'standard', usage: { used: 0, limit: 100 } });
-    expect(status.body.data.tiers.map(t => [t.id, t.available])).toEqual([['standard', true], ['pro', false]]);
-    expect(status.body.data.tiers[0].model).toBe('Claude Haiku 5.5');
+    expect(status.body.data).toMatchObject({ available: true, enabled: false, plan: 'free', planUntil: null, usage: { used: 0, limit: 100 } });
+    expect(status.body.data.tiers.map(t => [t.id, t.available, t.current])).toEqual([['free', true, true], ['pro', false, false]]);
+    expect(status.body.data.tiers.map(t => [t.model, t.monthlyActions])).toEqual([['Claude Haiku 5.5', 100], ['Claude Sonnet 5.5', 300]]);
 
     expect((await s.put('/api/ai/consent').send({ enabled: 'yes' })).status).toBe(400);
     expect((await s.put('/api/ai/consent').send({ enabled: true, plan: 'pro' })).status).toBe(400);
@@ -88,8 +88,9 @@ describe('AI settings', () => {
     await settleSecurityScans();
   });
 
-  it('defaults every AI feature to the cheapest model', () => {
-    expect(Object.values(config.AI.models).every(model => model === 'claude-haiku-5-5')).toBe(true);
+  it('puts Free on the cheapest model and keeps code review for Pro', () => {
+    expect(config.AI.plans.free).toMatchObject({ model: 'claude-haiku-5-5', monthlyActions: 100, features: ['securityReview'] });
+    expect(config.AI.plans.pro).toMatchObject({ model: 'claude-sonnet-5-5', monthlyActions: 300, features: ['securityReview', 'codeReview'] });
   });
 });
 
@@ -105,7 +106,7 @@ describe('AI client guards', () => {
   it('enforces the monthly per-user limit atomically', async () => {
     const { s } = await setup();
     await settleSecurityScans();
-    await AiAllowance.create({ scope: 'user', owner: s.userId, month: monthKey(), actions: config.AI.userMonthlyLimit });
+    await AiAllowance.create({ scope: 'user', owner: s.userId, month: monthKey(), actions: config.AI.plans.free.monthlyActions });
     await expect(call(s.userId)).rejects.toMatchObject({ code: 'AI_QUOTA_REACHED', statusCode: 429 });
     expect(createMessage).not.toHaveBeenCalled();
   });

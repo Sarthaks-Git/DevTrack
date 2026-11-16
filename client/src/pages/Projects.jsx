@@ -8,7 +8,7 @@ import PageHeader from "../components/common/PageHeader";
 import ProjectCodeReview from "../components/projects/ProjectCodeReview";
 import ProjectRepository from "../components/projects/ProjectRepository";
 import ProjectSecurityChecks from "../components/projects/ProjectSecurityChecks";
-import { listCodeFindings, listSecurityReviews } from "../services/aiService";
+import { getAiStatus, listCodeFindings, listSecurityReviews } from "../services/aiService";
 import { getGitHubStatus, syncGitHub } from "../services/githubService";
 
 const STATUS_OPTIONS = [
@@ -92,7 +92,7 @@ function StatusLabel({ status }) {
   );
 }
 
-function ProjectCard({ project, goal, milestoneHandlers, githubConnected, securityReviews, onSecurityReviewChange, codeFindings, onCodeFindingChange, onCodeReviewToggle, onReplace, onEdit, onDelete }) {
+function ProjectCard({ project, goal, milestoneHandlers, githubConnected, securityReviews, onSecurityReviewChange, codeFindings, codeReviewAllowed, onCodeFindingChange, onCodeReviewToggle, onReplace, onEdit, onDelete }) {
   return (
     <article className="group flex h-full flex-col border border-[var(--dt-border)] bg-[var(--dt-surface)] p-5 transition-colors duration-200 hover:border-[var(--dt-border-strong)] sm:p-6">
       <div className="flex items-start justify-between gap-3">
@@ -166,6 +166,7 @@ function ProjectCard({ project, goal, milestoneHandlers, githubConnected, securi
       <ProjectSecurityChecks projectTitle={project.title} reviews={securityReviews} onChange={onSecurityReviewChange} />
       <ProjectCodeReview
         project={project}
+        allowed={codeReviewAllowed}
         findings={codeFindings}
         onFindingChange={onCodeFindingChange}
         onToggle={enabled => onCodeReviewToggle(project, enabled)}
@@ -584,6 +585,21 @@ function Projects() {
   const [securityReviews, setSecurityReviews] = useState([]);
   const [codeFindings, setCodeFindings] = useState([]);
   const findingsTimer = useRef(null);
+  // The server enforces the plan; this only decides what the card offers.
+  const [codeReviewAllowed, setCodeReviewAllowed] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    getAiStatus()
+      .then(status => {
+        const current = status.tiers.find(tier => tier.current);
+        if (active) setCodeReviewAllowed(Boolean(status.available && current?.features.includes("codeReview")));
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
 
   // AI results (message checks and code findings) are produced in the background after a sync.
   const loadAiResults = useCallback(() => Promise.all([
@@ -962,6 +978,7 @@ function Projects() {
                     securityReviews={securityReviews.filter(review => review.project.id === project._id)}
                     onSecurityReviewChange={replaceSecurityReview}
                     codeFindings={codeFindings.filter(finding => finding.project === project._id)}
+                    codeReviewAllowed={codeReviewAllowed}
                     onCodeFindingChange={replaceCodeFinding}
                     onCodeReviewToggle={handleCodeReviewToggle}
                     onReplace={replaceProject}

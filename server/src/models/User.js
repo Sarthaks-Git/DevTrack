@@ -25,6 +25,14 @@ const userSchema = new mongoose.Schema({
       at: { type: Date, default: null },
     },
   },
+  // Subscription plan. Only the server sets it: an owner script now, the payment webhook later.
+  // Pro with a past `until` counts as Free.
+  plan: {
+    tier: { type: String, enum: ['free', 'pro'], default: 'free' },
+    source: { type: String, enum: ['admin', 'payment', null], default: null },
+    since: { type: Date, default: null },
+    until: { type: Date, default: null },
+  },
   // Last time reminders were generated; used to throttle regeneration per user.
   remindersCheckedAt: { type: Date, default: null },
 }, { timestamps: true });

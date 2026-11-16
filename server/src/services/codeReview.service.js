@@ -7,7 +7,7 @@ import Notification from '../models/Notification.js';
 import Project from '../models/Project.js';
 import AppError from '../utils/AppError.js';
 import { scrubSecrets } from '../utils/secretScrub.js';
-import { aiConsentGiven, clearAiIssue, generateJson, recordAiIssue } from './ai/aiClient.js';
+import { aiAccess, clearAiIssue, generateJson, planAllows, recordAiIssue } from './ai/aiClient.js';
 import { fetchCommitPatches } from './github.service.js';
 import { NON_CODE_FILE } from './securityReview.service.js';
 
@@ -232,7 +232,11 @@ async function notifyFindings(owner, commit, count) {
 export async function reviewCodeLogic(userId) {
   assertUserId(userId);
   const owner = new mongoose.Types.ObjectId(String(userId));
-  if (!config.AI.enabled || !(await aiConsentGiven(owner))) return { reviewed: 0, stopped: 'AI_CONSENT_REQUIRED' };
+  if (!config.AI.enabled) return { reviewed: 0, stopped: 'AI_NOT_CONFIGURED' };
+  const access = await aiAccess(owner);
+  if (!access.consent) return { reviewed: 0, stopped: 'AI_CONSENT_REQUIRED' };
+  // Pro-only: a Free (or expired Pro) user's switched-on repositories simply wait; nothing is claimed.
+  if (!planAllows(access.plan, 'codeReview')) return { reviewed: 0, stopped: 'AI_PLAN_REQUIRED' };
   const projects = await enabledProjects(owner);
   if (!projects.length) return { reviewed: 0 };
   const repoByProject = new Map(projects.map(project => [String(project._id), project.repository]));
@@ -340,7 +344,9 @@ export async function setCodeReviewLogic(userId, projectId, enabled) {
   if (!project.repository) throw new AppError('Link a GitHub repository to this project first', 404, 'REPOSITORY_NOT_LINKED');
   if (enabled) {
     if (!config.AI.enabled) throw new AppError('AI features are not set up on this server', 503, 'AI_NOT_CONFIGURED');
-    if (!(await aiConsentGiven(userId))) throw new AppError('Turn on AI features in Settings first', 409, 'AI_CONSENT_REQUIRED');
+    const access = await aiAccess(userId);
+    if (!access.consent) throw new AppError('Turn on AI features in Settings first', 409, 'AI_CONSENT_REQUIRED');
+    if (!planAllows(access.plan, 'codeReview')) throw new AppError('Code review is part of the Pro plan', 403, 'AI_PLAN_REQUIRED');
   }
   await Project.updateOne(
     { _id: project._id, owner: userId },

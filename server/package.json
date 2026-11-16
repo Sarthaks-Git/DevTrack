@@ -9,7 +9,8 @@
     "test": "vitest",
     "test:run": "vitest run",
     "start": "node src/server.js",
-    "db:indexes": "node scripts/check-indexes.js"
+    "db:indexes": "node scripts/check-indexes.js",
+    "plan:set": "node scripts/set-plan.js"
   },
   "keywords": [],
   "author": "",

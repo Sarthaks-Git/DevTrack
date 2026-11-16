@@ -32,6 +32,7 @@ import GitHubCommit from '../src/models/GitHubCommit.js';
 import GitHubConnection from '../src/models/GitHubConnection.js';
 import Notification from '../src/models/Notification.js';
 import Project from '../src/models/Project.js';
+import User from '../src/models/User.js';
 import { createSession } from './helpers.js';
 
 const hex = bytes => randomBytes(bytes).toString('hex');
@@ -55,8 +56,13 @@ const KEY_HEADER = ['-----BEGIN RSA', 'PRIVATE KEY-----'].join(' ');
 let nextGitHubId = 9000;
 let repoId = 70000;
 
-async function setup({ consent = true, codeReview = true } = {}) {
+const setPlan = (userId, tier, until = null) =>
+  User.updateOne({ _id: userId }, { $set: { plan: { tier, source: tier === 'pro' ? 'admin' : null, since: new Date(), until } } });
+
+// Code review is Pro-only, so these users are Pro unless a test says otherwise.
+async function setup({ consent = true, codeReview = true, plan = 'pro' } = {}) {
   const s = await createSession('codereview');
+  await setPlan(s.userId, plan);
   const created = await s.post('/api/projects').send({ title: 'Reviewed app', description: 'x', status: 'in_progress' });
   const projectId = created.body.project?._id || created.body.data?.project?._id;
   if (consent) await s.put('/api/ai/consent').send({ enabled: true });
@@ -214,6 +220,31 @@ describe('preparing a diff', () => {
   });
 });
 
+describe('code review is Pro-only', () => {
+  it('refuses Free and expired Pro users, and their switched-on repositories wait without any call', async () => {
+    const ctx = await setup({ plan: 'free', codeReview: false });
+    const url = `/api/projects/${ctx.projectId}/repository/code-review`;
+    const refused = await ctx.s.put(url).send({ enabled: true });
+    expect(refused.status).toBe(403);
+    expect(refused.body.code || refused.body.error?.code).toBe('AI_PLAN_REQUIRED');
+
+    // A repository switched on while Pro keeps its commits queued after the plan lapses.
+    await Project.updateOne({ _id: ctx.projectId }, { $set: { 'repository.codeReview': { enabled: true, changedAt: new Date() } } });
+    const commit = await seedCommit(ctx);
+    await setPlan(ctx.s.userId, 'pro', new Date(Date.now() - 1000));
+    expect(await reviewCodeLogic(ctx.s.userId)).toEqual({ reviewed: 0, stopped: 'AI_PLAN_REQUIRED' });
+    expect(gh.getCommitPatches).not.toHaveBeenCalled();
+    expect(createMessage).not.toHaveBeenCalled();
+    expect((await GitHubCommit.findById(commit._id).lean()).codeScan).toBeNull();
+
+    // Pro again: the queued commit is reviewed.
+    await setPlan(ctx.s.userId, 'pro', new Date(Date.now() + 86_400_000));
+    gh.getCommitPatches.mockResolvedValueOnce([{ path: 'src/routes/auth.js', patch: patch([' a', '+b']) }]);
+    createMessage.mockResolvedValueOnce(aiFindings([]));
+    expect(await reviewCodeLogic(ctx.s.userId)).toEqual({ reviewed: 1 });
+  });
+});
+
 describe('code review toggle', () => {
   it('requires auth, a linked repository, AI consent and valid input; never crosses users', async () => {
     const ctx = await setup({ codeReview: false });
@@ -276,7 +307,9 @@ describe('reviewing code', () => {
     expect(request_.system).toMatch(/hypothetical future callers/);
     expect(request_.system).toMatch(/already validate/);
     expect(JSON.stringify(request_.output_config.format.schema)).not.toContain('"low"');
-    expect(request_.model).toBe('claude-haiku-5-5');
+    // Pro runs on Sonnet 5.5, whose thinking-off switch differs from Haiku's.
+    expect(request_.model).toBe('claude-sonnet-5-5');
+    expect(request_.thinking).toEqual({ type: 'between_tools' });
 
     const stored = await CodeFinding.find({ owner: ctx.s.userId }).lean();
     expect(stored).toHaveLength(1);

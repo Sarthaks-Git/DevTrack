@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import mongoose from 'mongoose';
-import config, { AI_MODEL_PRICES } from '../../config/config.js';
+import config, { AI_FEATURES, AI_MODEL_PRICES } from '../../config/config.js';
 import AiAllowance from '../../models/AiAllowance.js';
 import AiUsage from '../../models/AiUsage.js';
 import User from '../../models/User.js';
@@ -46,10 +46,25 @@ function assertUserId(userId) {
   if (!mongoose.isValidObjectId(userId)) throw new AppError('Authentication is required', 401, 'UNAUTHENTICATED');
 }
 
-export async function aiConsentGiven(userId) {
-  const user = await User.findById(userId).select('ai accountStatus').lean();
-  return Boolean(user && user.accountStatus === 'active' && user.ai?.enabled);
+// The plan in effect now: Pro only while it has not expired. Never read from the client.
+export function effectivePlan(user, now = new Date()) {
+  const pro = user?.plan?.tier === 'pro' && (!user.plan.until || user.plan.until > now);
+  return config.AI.plans[pro ? 'pro' : 'free'];
 }
+
+// Consent and plan in one read, for every AI call and every background scan.
+export async function aiAccess(userId) {
+  const user = await User.findById(userId).select('ai plan accountStatus').lean();
+  return { consent: Boolean(user && user.accountStatus === 'active' && user.ai?.enabled), plan: effectivePlan(user) };
+}
+
+export async function aiConsentGiven(userId) {
+  return (await aiAccess(userId)).consent;
+}
+
+export const planAllows = (plan, feature) => plan.features.includes(feature);
+
+export const planRequiredError = () => new AiUnavailableError('Code review is part of the Pro plan', 403, 'AI_PLAN_REQUIRED');
 
 // Conditional upsert: succeeds only while the counter is below the limit, so parallel calls cannot overshoot.
 async function reserve(filter, condition, inc) {
@@ -64,8 +79,8 @@ async function reserve(filter, condition, inc) {
   }
 }
 
-const reserveUserAction = (owner, month) =>
-  reserve({ scope: 'user', owner, month }, { actions: { $lt: config.AI.userMonthlyLimit } }, { actions: 1 });
+const reserveUserAction = (owner, month, limit) =>
+  reserve({ scope: 'user', owner, month }, { actions: { $lt: limit } }, { actions: 1 });
 
 const releaseUserAction = (owner, month) =>
   AiAllowance.updateOne({ scope: 'user', owner, month, actions: { $gt: 0 } }, { $inc: { actions: -1 } });
@@ -91,18 +106,21 @@ function readJson(response) {
 
 /**
  * Sends one request and returns the parsed JSON answer.
- * Checks, in order: configured → user consent → user's monthly allowance → global monthly budget.
+ * Checks, in order: configured → user consent → plan includes the feature → the plan's monthly
+ * allowance → global monthly budget. The model comes from the user's plan.
  * `content` is the user-turn text; the caller must already have wrapped untrusted data as data.
  */
 export async function generateJson({ userId, feature, system, content, schema, maxTokens = 2000 }) {
   assertUserId(userId);
   if (!config.AI.enabled) throw new AiUnavailableError('AI features are not set up on this server', 503, 'AI_NOT_CONFIGURED');
-  const model = config.AI.models[feature];
-  if (!model) throw new Error(`Unknown AI feature: ${feature}`);
-  if (!(await aiConsentGiven(userId))) throw new AiUnavailableError('Turn on AI features in Settings first', 403, 'AI_CONSENT_REQUIRED');
+  if (!AI_FEATURES.includes(feature)) throw new Error(`Unknown AI feature: ${feature}`);
+  const { consent, plan } = await aiAccess(userId);
+  if (!consent) throw new AiUnavailableError('Turn on AI features in Settings first', 403, 'AI_CONSENT_REQUIRED');
+  if (!planAllows(plan, feature)) throw planRequiredError();
+  const { model } = plan;
 
   const month = monthKey();
-  if (!(await reserveUserAction(userId, month))) {
+  if (!(await reserveUserAction(userId, month, plan.monthlyActions))) {
     throw new AiUnavailableError('Monthly AI limit reached. It resets on the 1st.', 429, 'AI_QUOTA_REACHED');
   }
 
@@ -120,8 +138,8 @@ export async function generateJson({ userId, feature, system, content, schema, m
       max_tokens: maxTokens,
       system,
       messages: [{ role: 'user', content }],
-      // Cheapest path: no extended thinking, low effort, schema-constrained JSON.
-      thinking: { type: 'disabled' },
+      // Cheapest path: no extended thinking (the off switch differs per model), low effort, schema-constrained JSON.
+      thinking: AI_MODEL_PRICES[model].thinking,
       output_config: { effort: 'low', format: { type: 'json_schema', schema } },
       // Opaque per-user id for abuse tracing at the provider; never the email or the raw id.
       metadata: { user_id: crypto.createHash('sha256').update(`devtrack:${userId}`).digest('hex').slice(0, 32) },
@@ -157,14 +175,25 @@ export async function generateJson({ userId, feature, system, content, schema, m
   return { data, model, costMicroUsd: cost };
 }
 
+const publicTier = (plan, current) => ({
+  id: plan.id,
+  label: plan.label,
+  model: AI_MODEL_PRICES[plan.model].label,
+  monthlyActions: plan.monthlyActions,
+  features: plan.features,
+  current,
+  // Pro can be chosen once payments exist; until then it is granted by the owner only.
+  available: plan.id === 'free' || current,
+});
+
 export async function getAiStatusLogic(userId) {
   assertUserId(userId);
   const month = monthKey();
   const [user, allowance] = await Promise.all([
-    User.findById(userId).select('ai').lean(),
+    User.findById(userId).select('ai plan').lean(),
     AiAllowance.findOne({ scope: 'user', owner: userId, month }).lean(),
   ]);
-  const model = config.AI.models.securityReview;
+  const plan = effectivePlan(user);
   return {
     available: config.AI.enabled,
     enabled: Boolean(user?.ai?.enabled),
@@ -172,13 +201,10 @@ export async function getAiStatusLogic(userId) {
     lastIssue: user?.ai?.lastIssue?.code
       ? { code: user.ai.lastIssue.code, reason: user.ai.lastIssue.reason || null, at: user.ai.lastIssue.at }
       : null,
-    plan: 'standard',
-    // Pro (a stronger model on a paid plan) is shown but not available until payments exist.
-    tiers: [
-      { id: 'standard', label: 'Standard', model: AI_MODEL_PRICES[model].label, available: true },
-      { id: 'pro', label: 'Pro', model: null, available: false },
-    ],
-    usage: { month, used: allowance?.actions || 0, limit: config.AI.userMonthlyLimit },
+    plan: plan.id,
+    planUntil: plan.id === 'pro' ? user?.plan?.until || null : null,
+    tiers: Object.values(config.AI.plans).map(tier => publicTier(tier, tier.id === plan.id)),
+    usage: { month, used: allowance?.actions || 0, limit: plan.monthlyActions },
   };
 }
 
