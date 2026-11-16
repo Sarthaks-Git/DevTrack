@@ -21,10 +21,21 @@ export const costMicroUsd = (model, inputTokens, outputTokens) => {
 // Thrown when AI cannot run for this user right now (off, limit, budget, provider down).
 // Background work treats it as "try later" rather than a failure of the item.
 export class AiUnavailableError extends AppError {
-  constructor(message, statusCode, code) {
+  constructor(message, statusCode, code, reason = null) {
     super(message, statusCode, code);
     this.aiUnavailable = true;
+    // Transport kind (rate_limited, misconfigured, rejected, unavailable) when the provider call failed.
+    this.reason = reason;
   }
+}
+
+// Remembers why the last background AI run stopped, so Settings can say so. Only code words are stored.
+export async function recordAiIssue(userId, code, reason = null) {
+  await User.updateOne({ _id: userId }, { $set: { 'ai.lastIssue': { code, reason, at: new Date() } } });
+}
+
+export async function clearAiIssue(userId) {
+  await User.updateOne({ _id: userId, 'ai.lastIssue.code': { $ne: null } }, { $set: { 'ai.lastIssue': { code: null, reason: null, at: null } } });
 }
 
 function logFailure(what, kind) {
@@ -118,8 +129,9 @@ export async function generateJson({ userId, feature, system, content, schema, m
   } catch (error) {
     // Nothing billable came back: give both reservations back.
     await Promise.all([releaseUserAction(userId, month), adjustBudget(month, -reserved)]);
+    const kind = error?.kind || 'unavailable';
     logFailure(feature, error?.kind || error?.name || 'Error');
-    throw new AiUnavailableError('The AI service is unavailable. Try again later.', 502, 'AI_UNAVAILABLE');
+    throw new AiUnavailableError('The AI service is unavailable. Try again later.', 502, 'AI_UNAVAILABLE', kind);
   }
 
   const usage = response?.usage || {};
@@ -157,6 +169,9 @@ export async function getAiStatusLogic(userId) {
     available: config.AI.enabled,
     enabled: Boolean(user?.ai?.enabled),
     changedAt: user?.ai?.changedAt || null,
+    lastIssue: user?.ai?.lastIssue?.code
+      ? { code: user.ai.lastIssue.code, reason: user.ai.lastIssue.reason || null, at: user.ai.lastIssue.at }
+      : null,
     plan: 'standard',
     // Pro (a stronger model on a paid plan) is shown but not available until payments exist.
     tiers: [
@@ -169,6 +184,10 @@ export async function getAiStatusLogic(userId) {
 
 export async function setAiConsentLogic(userId, enabled) {
   assertUserId(userId);
-  await User.updateOne({ _id: userId }, { $set: { 'ai.enabled': enabled, 'ai.changedAt': new Date() } });
+  // A fresh start either way: the next run decides whether there is still a problem.
+  await User.updateOne(
+    { _id: userId },
+    { $set: { 'ai.enabled': enabled, 'ai.changedAt': new Date(), 'ai.lastIssue': { code: null, reason: null, at: null } } },
+  );
   return getAiStatusLogic(userId);
 }

@@ -18,6 +18,12 @@ const userSchema = new mongoose.Schema({
   ai: {
     enabled: { type: Boolean, default: false },
     changedAt: { type: Date, default: null },
+    // Why the last background AI run did not finish (a code word, never provider text). Cleared on success.
+    lastIssue: {
+      code: { type: String, default: null, maxlength: 40 },
+      reason: { type: String, default: null, maxlength: 40 },
+      at: { type: Date, default: null },
+    },
   },
   // Last time reminders were generated; used to throttle regeneration per user.
   remindersCheckedAt: { type: Date, default: null },

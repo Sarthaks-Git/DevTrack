@@ -3,6 +3,20 @@ import SettingsSection, { Notice } from "./SettingsSection";
 import ConfirmModal from "../common/ConfirmModal";
 import { getAiStatus, setAiConsent } from "../../services/aiService";
 
+const QUEUED = "Your commits are queued and will be reviewed on the next sync.";
+
+// Plain wording for the code words the server stores about the last background AI run.
+function issueText({ code, reason }) {
+  if (code === "AI_UNAVAILABLE") {
+    if (reason === "misconfigured" || reason === "rejected") return `The AI service rejected the request (server setup). ${QUEUED}`;
+    if (reason === "rate_limited") return `The AI service was busy. ${QUEUED}`;
+    return `The AI service could not be reached. ${QUEUED}`;
+  }
+  if (code === "AI_QUOTA_REACHED") return "You've used this month's AI actions. Remaining commits will be reviewed after the 1st.";
+  if (code === "AI_BUDGET_REACHED") return "AI is paused on this server for the rest of the month. Commits stay queued.";
+  return "The AI could not answer for some commits, so they were skipped.";
+}
+
 function AISection() {
   const [state, setState] = useState({ loading: true, status: null });
   const [notice, setNotice] = useState({ kind: "", text: "" });
@@ -92,6 +106,13 @@ function AISection() {
               </div>
             ))}
           </div>
+
+          {status.enabled && status.lastIssue ? (
+            <p role="status" className="mt-4 border-l-2 border-amber-400/60 pl-3 text-xs leading-5 text-amber-200">
+              Last review did not finish: {issueText(status.lastIssue)}
+              {status.lastIssue.at ? <span className="text-[var(--dt-text-muted)]"> ({new Date(status.lastIssue.at).toLocaleString()})</span> : null}
+            </p>
+          ) : null}
 
           {usage ? (
             <p className="mt-4 text-xs text-[var(--dt-text-muted)]">

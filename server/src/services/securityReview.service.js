@@ -6,7 +6,7 @@ import Project from '../models/Project.js';
 import SecurityReview, { SECURITY_ITEM_STATES } from '../models/SecurityReview.js';
 import AppError from '../utils/AppError.js';
 import { recordActivity } from './activity.service.js';
-import { generateJson } from './ai/aiClient.js';
+import { clearAiIssue, generateJson, recordAiIssue } from './ai/aiClient.js';
 
 export const SECURITY_RULES = {
   commitsPerCall: 10,
@@ -286,9 +286,12 @@ export async function scanCommitsLogic(userId) {
     } catch (error) {
       if (error?.aiUnavailable) {
         await releaseClaims(reviewable.slice(start).map(commit => commit._id));
+        // Turned off is the user's choice, not a problem to report.
+        if (error.code !== 'AI_CONSENT_REQUIRED') await recordAiIssue(userId, error.code, error.reason);
         return { reviewed, skipped: skipped.length, stopped: error.code };
       }
       await markScanned(ids, 'failed');
+      await recordAiIssue(userId, error?.code || 'AI_FAILED');
       continue;
     }
 
@@ -301,6 +304,7 @@ export async function scanCommitsLogic(userId) {
       }
     }
     await markScanned(ids, 'reviewed');
+    await clearAiIssue(userId);
     reviewed += batch.length;
   }
   return { reviewed, skipped: skipped.length };

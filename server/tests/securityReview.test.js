@@ -241,6 +241,31 @@ describe('Security review scan', () => {
     expect(await GitHubCommit.countDocuments({ owner: s.userId, 'securityScan.status': 'failed' })).toBe(1);
   });
 
+  it('shows why the last run stopped, without provider text, and clears it on success', async () => {
+    const { s, projectId } = await setup();
+    await settleSecurityScans();
+    await seedCommit(s, projectId);
+    createMessage.mockRejectedValueOnce(new AiTransportError('rejected'));
+    expect(await scanCommitsLogic(s.userId)).toMatchObject({ reviewed: 0, stopped: 'AI_UNAVAILABLE' });
+    expect(await GitHubCommit.countDocuments({ owner: s.userId, securityScan: null })).toBe(1);
+
+    const failed = (await s.get('/api/ai')).body.data.lastIssue;
+    expect(failed).toMatchObject({ code: 'AI_UNAVAILABLE', reason: 'rejected' });
+    expect(Object.keys(failed).sort()).toEqual(['at', 'code', 'reason']);
+
+    createMessage.mockResolvedValueOnce(aiAnswer([authFinding(0)]));
+    expect(await scanCommitsLogic(s.userId)).toMatchObject({ reviewed: 1 });
+    expect((await s.get('/api/ai')).body.data.lastIssue).toBeNull();
+
+    // Turning AI off and on starts fresh.
+    await seedCommit(s, projectId);
+    createMessage.mockResolvedValueOnce({ stop_reason: 'refusal', usage: { input_tokens: 5, output_tokens: 0 }, content: [] });
+    await scanCommitsLogic(s.userId);
+    expect((await s.get('/api/ai')).body.data.lastIssue).toMatchObject({ code: 'AI_REFUSED' });
+    await s.put('/api/ai/consent').send({ enabled: false });
+    expect((await s.get('/api/ai')).body.data.lastIssue).toBeNull();
+  });
+
   it('lets the user work through a check and records completion', async () => {
     const { s, projectId } = await setup();
     await settleSecurityScans();
