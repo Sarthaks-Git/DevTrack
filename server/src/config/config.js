@@ -57,12 +57,22 @@ function parseEncryptionKey(value) {
 
 // GitHub App (user-to-server OAuth). Disabled unless every value is present.
 function buildGitHubConfig(env, { nodeEnv, clientOrigin }) {
-  const isTest = nodeEnv === 'test';
-  const clientId = env.GITHUB_APP_CLIENT_ID || (isTest ? 'Iv-test-client' : '');
-  const clientSecret = env.GITHUB_APP_CLIENT_SECRET || (isTest ? crypto.randomBytes(20).toString('hex') : '');
-  const appSlug = env.GITHUB_APP_SLUG || (isTest ? 'devtrack-test' : '');
-  // Tests get a per-run random key so no key literal ever lives in the repo.
-  const encryptionKey = parseEncryptionKey(env.TOKEN_ENCRYPTION_KEY) || (isTest ? crypto.randomBytes(32) : null);
+  // Tests always use fake app values and a per-run random key, even when .env holds the real
+  // GitHub App, so real credentials never reach a test run and no key literal lives in the repo.
+  if (nodeEnv === 'test') {
+    return {
+      enabled: true,
+      clientId: 'Iv-test-client',
+      clientSecret: crypto.randomBytes(20).toString('hex'),
+      appSlug: 'devtrack-test',
+      callbackUrl: `${clientOrigin}/api/integrations/github/callback`,
+      encryptionKey: crypto.randomBytes(32),
+    };
+  }
+  const clientId = env.GITHUB_APP_CLIENT_ID || '';
+  const clientSecret = env.GITHUB_APP_CLIENT_SECRET || '';
+  const appSlug = env.GITHUB_APP_SLUG || '';
+  const encryptionKey = parseEncryptionKey(env.TOKEN_ENCRYPTION_KEY);
   const enabled = Boolean(clientId && clientSecret && appSlug);
 
   if (!enabled) return { enabled: false, encryptionKey };

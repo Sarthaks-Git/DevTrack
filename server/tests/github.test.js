@@ -44,7 +44,8 @@ async function connect(session, { githubId = (nextGitHubId += 1), login = `octo$
   const stateCookie = started.headers['set-cookie'].map(c => c.split(';')[0]).find(c => c.startsWith('devtrack_github_state='));
   gh.exchangeCode.mockResolvedValueOnce(tokens(accessToken));
   gh.getAuthenticatedUser.mockResolvedValueOnce({ id: githubId, login });
-  const callback = await request(app).get(`${BASE}/callback?code=abc123&state=${state}`).set('Cookie', stateCookie);
+  // Real GitHub appends the RFC 9207 issuer.
+  const callback = await request(app).get(`${BASE}/callback?code=abc123&state=${state}&iss=${encodeURIComponent('https://github.com/login/oauth')}`).set('Cookie', stateCookie);
   return { callback, state, stateCookie, githubId, login, accessToken };
 }
 
@@ -152,6 +153,7 @@ describe('GitHub connection', () => {
     ({ state, cookie } = await begin());
     expect(outcome(await request(app).get(`${BASE}/callback?code=a%20b&state=${state}`).set('Cookie', cookie))).toBe('failed');
     expect(outcome(await request(app).get(`${BASE}/callback?code=abc&state=${state}&next=https://evil.example`).set('Cookie', cookie))).toBe('failed');
+    expect(outcome(await request(app).get(`${BASE}/callback?code=abc&state=${state}&iss=${encodeURIComponent('https://evil.example/login/oauth')}`).set('Cookie', cookie))).toBe('failed');
     expect(gh.exchangeCode).not.toHaveBeenCalled();
     expect(await GitHubConnection.exists({ owner: s.userId })).toBeNull();
   });

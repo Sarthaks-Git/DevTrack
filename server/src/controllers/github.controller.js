@@ -33,6 +33,14 @@ export async function startGitHubConnect(req, res, next) {
   }
 }
 
+// Reason words only: never the code, state, token or any query value.
+function logCallbackProblem(reason) {
+  if (process.env.NODE_ENV !== 'test') process.stderr.write(`GitHub callback failed: ${reason}
+`);
+}
+
+const callbackKeyNames = query => Object.keys(query || {}).slice(0, 10).map(key => (/^[a-z_]{1,32}$/.test(key) ? key : '?')).join(', ');
+
 // Browser lands here from GitHub. Always redirects back to Settings with an outcome word only;
 // no code, state or token ever appears in the client URL.
 export async function githubCallback(req, res) {
@@ -40,8 +48,11 @@ export async function githubCallback(req, res) {
   try {
     if (req.githubCallback) {
       outcome = await completeGitHubConnectLogic({ ...req.githubCallback, browserState: req.cookies?.[GITHUB_STATE_COOKIE] });
+    } else {
+      logCallbackProblem(`invalid parameters (${callbackKeyNames(req.query)})`);
     }
-  } catch {
+  } catch (error) {
+    logCallbackProblem(`unexpected ${error?.name || 'Error'}`);
     outcome = 'failed';
   }
   clearGitHubStateCookie(res);

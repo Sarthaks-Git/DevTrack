@@ -65,7 +65,10 @@ const assertRepoName = fullName => {
 
 function readTokens(data) {
   if (!data || typeof data.access_token !== 'string' || !data.access_token) {
-    throw new GitHubApiError(data?.error === 'bad_refresh_token' ? 'unauthorized' : 'rejected');
+    const failure = new GitHubApiError(data?.error === 'bad_refresh_token' ? 'unauthorized' : 'rejected');
+    // GitHub's error word (e.g. incorrect_client_credentials) is a fixed code, safe to log.
+    if (typeof data?.error === 'string' && /^[a-z_]{1,64}$/.test(data.error)) failure.detail = data.error;
+    throw failure;
   }
   const seconds = value => (Number.isInteger(value) && value > 0 ? value : null);
   return {

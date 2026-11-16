@@ -43,7 +43,7 @@ function providerError(error) {
 }
 
 function logFailure(what, error) {
-  if (process.env.NODE_ENV !== 'test') process.stderr.write(`GitHub ${what} failed: ${error?.kind || error?.name || 'Error'}\n`);
+  if (process.env.NODE_ENV !== 'test') process.stderr.write(`GitHub ${what} failed: ${error?.kind || error?.name || 'Error'}${error?.detail ? ` (${error.detail})` : ''}\n`);
 }
 
 const installUrl = () => (config.GITHUB.enabled ? `https://github.com/apps/${config.GITHUB.appSlug}/installations/new` : null);
@@ -199,12 +199,21 @@ function sameState(a, b) {
 // not whoever happens to be signed in when the callback arrives.
 export async function completeGitHubConnectLogic({ code, state, error, browserState }) {
   if (!config.GITHUB.enabled) return 'failed';
-  if (!state || !sameState(state, browserState)) return 'expired';
+  if (!state || !sameState(state, browserState)) {
+    logFailure('connect', { kind: !state ? 'no_state' : browserState ? 'state_mismatch' : 'no_state_cookie' });
+    return 'expired';
+  }
 
   const record = await OAuthState.findOneAndDelete({ stateHash: sha256(state), provider: 'github', expiresAt: { $gt: new Date() } });
-  if (!record) return 'expired';
+  if (!record) {
+    logFailure('connect', { kind: 'state_not_found' });
+    return 'expired';
+  }
   if (error) return 'denied';
-  if (!code) return 'failed';
+  if (!code) {
+    logFailure('connect', { kind: 'no_code' });
+    return 'failed';
+  }
 
   const owner = record.owner;
   try {
