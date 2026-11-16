@@ -199,6 +199,7 @@ describe('preparing a diff', () => {
           sqlFinding({ file: 'src/other.js' }), // not sent
           sqlFinding({ line: 999, title: 'Line not sent' }), // kept, line dropped
           sqlFinding({ severity: 'critical', title: 'Bad severity' }),
+          sqlFinding({ severity: 'low', title: 'Only hardening' }),
           sqlFinding({ title: '', detail: 'x' }),
           sqlFinding({ title: 'Has\u0000control‮chars', line: 10 }),
         ],
@@ -270,6 +271,11 @@ describe('reviewing code', () => {
     expect(sent).not.toContain('.env');
     expect(sent).not.toContain('lockfileVersion');
     expect(request_.system).toMatch(/untrusted data/);
+    // Only real, visible problems: no speculation about unseen code or already-validated input.
+    expect(request_.system).toMatch(/exploitable or clearly missing/);
+    expect(request_.system).toMatch(/hypothetical future callers/);
+    expect(request_.system).toMatch(/already validate/);
+    expect(JSON.stringify(request_.output_config.format.schema)).not.toContain('"low"');
     expect(request_.model).toBe('claude-haiku-5-5');
 
     const stored = await CodeFinding.find({ owner: ctx.s.userId }).lean();
@@ -347,7 +353,7 @@ describe('code findings API', () => {
     const ctx = await setup();
     await seedCommit(ctx);
     gh.getCommitPatches.mockResolvedValueOnce([{ path: 'src/routes/auth.js', patch: patch([' a', '+b']) }]);
-    createMessage.mockResolvedValueOnce(aiFindings([sqlFinding(), sqlFinding({ title: 'Missing rate limit', severity: 'low', line: 0 })]));
+    createMessage.mockResolvedValueOnce(aiFindings([sqlFinding(), sqlFinding({ title: 'Missing rate limit', severity: 'medium', line: 0 })]));
     await reviewCodeLogic(ctx.s.userId);
 
     expect((await request(app).get('/api/code-findings')).status).toBe(401);
