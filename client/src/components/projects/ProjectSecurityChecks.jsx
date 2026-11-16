@@ -1,4 +1,5 @@
 import { useState } from "react";
+import ConfirmModal from "../common/ConfirmModal";
 import { setSecurityReviewStatus, updateSecurityItem } from "../../services/aiService";
 
 const STATE_LABELS = { handled: "Handled", not_applicable: "Not applicable" };
@@ -37,6 +38,7 @@ function ChecklistItem({ item, disabled, onAnswer }) {
 function ReviewCard({ review, onChange }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [confirmDismiss, setConfirmDismiss] = useState(false);
   const open = review.status === "open";
   const answered = review.items.filter(item => item.state !== "unchecked").length;
   const latest = review.triggers[0];
@@ -79,12 +81,27 @@ function ReviewCard({ review, onChange }) {
         <span className="dt-badge">AI-suggested</span>
         <a href="https://cheatsheetseries.owasp.org/" target="_blank" rel="noopener noreferrer" className="text-[var(--dt-text-muted)] hover:text-[var(--dt-accent-soft)]">OWASP cheat sheets ↗</a>
         {open ? (
-          <button type="button" disabled={busy} onClick={() => run(() => setSecurityReviewStatus(review.id, "dismissed"))} className="ml-auto text-[var(--dt-text-muted)] hover:text-red-300">Dismiss</button>
+          <button type="button" disabled={busy} onClick={() => setConfirmDismiss(true)} className="ml-auto text-[var(--dt-text-muted)] hover:text-red-300">Dismiss</button>
         ) : (
           <button type="button" disabled={busy} onClick={() => run(() => setSecurityReviewStatus(review.id, "open"))} className="ml-auto text-[var(--dt-text-muted)] hover:text-[var(--dt-text-primary)]">Reopen</button>
         )}
       </div>
       {error ? <p role="alert" className="mt-2 text-xs text-red-300">{error}</p> : null}
+      <ConfirmModal
+        open={confirmDismiss}
+        title={`Dismiss "${review.area}"?`}
+        confirmLabel="Dismiss"
+        busyLabel="Dismissing..."
+        destructive
+        busy={busy}
+        onConfirm={async () => {
+          await run(() => setSecurityReviewStatus(review.id, "dismissed"));
+          setConfirmDismiss(false);
+        }}
+        onCancel={() => setConfirmDismiss(false)}
+      >
+        The whole check closes, including unanswered items. You can reopen it later from the closed checks.
+      </ConfirmModal>
     </div>
   );
 }
