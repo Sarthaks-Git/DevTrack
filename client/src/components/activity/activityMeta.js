@@ -12,6 +12,8 @@ export const ACTIVITY_META = {
   github_connected: { label: "GitHub connected", marker: "✓" },
   github_disconnected: { label: "GitHub disconnected", marker: "×" },
   commit_pushed: { label: "Commit", marker: "⎇" },
+  security_review_completed: { label: "Security check done", marker: "✓" },
+  security_review_dismissed: { label: "Security check dismissed", marker: "×" },
   // Older events from before problem tracking; kept so history still renders.
   stats_synced: { label: "Coding progress", marker: "↑" },
   problem_solved: { label: "Problem solved", marker: "✓" },

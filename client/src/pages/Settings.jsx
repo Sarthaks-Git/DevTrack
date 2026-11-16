@@ -8,6 +8,7 @@ import PlatformsSection from "../components/settings/PlatformsSection";
 import DangerSection from "../components/settings/DangerSection";
 import RemindersSection from "../components/settings/RemindersSection";
 import GitHubSection from "../components/settings/GitHubSection";
+import AISection from "../components/settings/AISection";
 
 export default function Settings() {
   const { user, refreshUser, clearSession } = useContext(AuthContext);
@@ -26,6 +27,7 @@ export default function Settings() {
       <SecuritySection user={user} onSignedOut={signedOut} />
       <PlatformsSection />
       <GitHubSection />
+      <AISection />
       <RemindersSection />
       <DangerSection onDeleted={signedOut} />
     </section>

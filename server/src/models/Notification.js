@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-export const NOTIFICATION_TYPES = ['goal_overdue', 'project_overdue', 'due_soon', 'milestone_overdue', 'stalled', 'target_reached', 'weekly_review'];
+export const NOTIFICATION_TYPES = ['goal_overdue', 'project_overdue', 'due_soon', 'milestone_overdue', 'stalled', 'target_reached', 'weekly_review', 'security_review'];
 const RETENTION_DAYS = 60;
 
 // In-app reminders. Written only by the server; the client can only read and mark them read.

@@ -13,6 +13,18 @@ const gitHubCommitSchema = new mongoose.Schema(
     url: { type: String, required: true, maxlength: 300 },
     committedAt: { type: Date, required: true },
     files: { type: [{ type: String, maxlength: 300 }], default: [] },
+    // AI security scan bookkeeping. null = not scanned yet; claim lets parallel scans skip each other.
+    securityScan: {
+      type: new mongoose.Schema(
+        {
+          status: { type: String, enum: ['pending', 'reviewed', 'skipped', 'failed'], required: true },
+          claim: { type: String, default: null, maxlength: 32 },
+          at: { type: Date, required: true },
+        },
+        { _id: false, strict: 'throw' }
+      ),
+      default: null,
+    },
   },
   { timestamps: { createdAt: true, updatedAt: false }, strict: 'throw' }
 );
@@ -20,6 +32,7 @@ const gitHubCommitSchema = new mongoose.Schema(
 gitHubCommitSchema.index({ owner: 1, repoId: 1, sha: 1 }, { unique: true });
 gitHubCommitSchema.index({ owner: 1, project: 1, committedAt: -1 });
 gitHubCommitSchema.index({ owner: 1, committedAt: -1 });
+gitHubCommitSchema.index({ owner: 1, 'securityScan.status': 1, committedAt: -1 });
 
 const GitHubCommit = mongoose.models.GitHubCommit || mongoose.model('GitHubCommit', gitHubCommitSchema);
 export default GitHubCommit;

@@ -14,6 +14,11 @@ const userSchema = new mongoose.Schema({
     deadlineAlerts: { type: Boolean, default: true },
     weeklyReview: { type: Boolean, default: true },
   },
+  // AI features are off until the user turns them on (they send commit text to the AI provider).
+  ai: {
+    enabled: { type: Boolean, default: false },
+    changedAt: { type: Date, default: null },
+  },
   // Last time reminders were generated; used to throttle regeneration per user.
   remindersCheckedAt: { type: Date, default: null },
 }, { timestamps: true });

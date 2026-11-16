@@ -39,6 +39,7 @@ export async function createSession(prefix) {
     get: url => request(app).get(url).set('Cookie', cookie()),
     post: url => send('post', url),
     patch: url => send('patch', url),
+    put: url => send('put', url),
     del: url => send('delete', url),
   };
 }

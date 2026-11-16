@@ -9,6 +9,7 @@ export const ACTIVITY_TYPES = [
   'problem_solved',
   'platform_verified', 'platform_disconnected', 'stats_synced',
   'github_connected', 'github_disconnected', 'commit_pushed',
+  'security_review_completed', 'security_review_dismissed',
 ];
 export const ACTIVITY_SUBJECTS = ['goal', 'project', 'journal', 'coding_profile', 'problem', 'github'];
 // Evidence principle: "verified" comes from a provider; "manual" is user-recorded.

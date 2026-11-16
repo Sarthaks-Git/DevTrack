@@ -6,6 +6,8 @@ import { getGoals } from "../services/goalService";
 import MilestoneList from "../components/milestones/MilestoneList";
 import PageHeader from "../components/common/PageHeader";
 import ProjectRepository from "../components/projects/ProjectRepository";
+import ProjectSecurityChecks from "../components/projects/ProjectSecurityChecks";
+import { listSecurityReviews } from "../services/aiService";
 import { getGitHubStatus, syncGitHub } from "../services/githubService";
 
 const STATUS_OPTIONS = [
@@ -89,7 +91,7 @@ function StatusLabel({ status }) {
   );
 }
 
-function ProjectCard({ project, goal, milestoneHandlers, githubConnected, onReplace, onEdit, onDelete }) {
+function ProjectCard({ project, goal, milestoneHandlers, githubConnected, securityReviews, onSecurityReviewChange, onReplace, onEdit, onDelete }) {
   return (
     <article className="group flex h-full flex-col border border-[var(--dt-border)] bg-[var(--dt-surface)] p-5 transition-colors duration-200 hover:border-[var(--dt-border-strong)] sm:p-6">
       <div className="flex items-start justify-between gap-3">
@@ -160,6 +162,7 @@ function ProjectCard({ project, goal, milestoneHandlers, githubConnected, onRepl
       />
 
       <ProjectRepository project={project} githubConnected={githubConnected} onChange={onReplace} />
+      <ProjectSecurityChecks reviews={securityReviews} onChange={onSecurityReviewChange} />
 
       <div className="mt-auto mt-6 flex flex-wrap items-center gap-4 border-t border-[var(--dt-border)] pt-5">
         {project.githubUrl && (
@@ -571,6 +574,7 @@ function Projects() {
   const [projectToDelete, setProjectToDelete] = useState(null);
   const [filter, setFilter] = useState("all");
   const [githubConnected, setGithubConnected] = useState(false);
+  const [securityReviews, setSecurityReviews] = useState([]);
 
   const fetchProjects = useCallback(
     () => requestProjects().then(data => data.projects || []),
@@ -595,20 +599,30 @@ function Projects() {
   // GitHub is optional: when connected, pull new commits and refresh cards if any arrived.
   useEffect(() => {
     let active = true;
+    let reviewTimer;
     getGitHubStatus()
       .then(async (status) => {
         const connected = status.connection?.status === "connected";
         if (!active) return;
         setGithubConnected(connected);
         if (!connected) return;
+        const loadReviews = () => listSecurityReviews().then(reviews => active && setSecurityReviews(reviews)).catch(() => {});
+        await loadReviews();
         const result = await syncGitHub();
         if (active && result.newCommits > 0) setProjects(await fetchProjects());
+        // AI security review runs in the background after a sync; pick up its results shortly after.
+        if (active && result.status === "synced") reviewTimer = setTimeout(loadReviews, 8000);
       })
       .catch(() => {});
     return () => {
       active = false;
+      clearTimeout(reviewTimer);
     };
   }, [fetchProjects]);
+
+  function replaceSecurityReview(updated) {
+    setSecurityReviews(previous => previous.map(review => (review.id === updated.id ? updated : review)));
+  }
 
   async function retryLoadProjects() {
     setLoading(true);
@@ -911,6 +925,8 @@ function Projects() {
                     goal={goalsById.get(project.goal)}
                     milestoneHandlers={milestoneHandlers}
                     githubConnected={githubConnected}
+                    securityReviews={securityReviews.filter(review => review.project.id === project._id)}
+                    onSecurityReviewChange={replaceSecurityReview}
                     onReplace={replaceProject}
                     onEdit={openEditForm}
                     onDelete={openDeleteModal}

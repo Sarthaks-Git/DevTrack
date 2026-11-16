@@ -9,6 +9,8 @@ import AppError from '../utils/AppError.js';
 import { decryptSecret, encryptSecret, randomToken, sha256 } from '../utils/tokenCrypto.js';
 import * as github from './githubApi.service.js';
 import { recordActivity } from './activity.service.js';
+import { aiConsentGiven } from './ai/aiClient.js';
+import { deleteSecurityReviews, startSecurityScan } from './securityReview.service.js';
 
 export const GITHUB_RULES = {
   stateTtlMs: 10 * 60 * 1000,
@@ -148,6 +150,7 @@ async function findOwnedProject(owner, projectId) {
 async function forgetRepositories(owner) {
   await Promise.all([
     GitHubCommit.deleteMany({ owner }),
+    deleteSecurityReviews(owner),
     Project.updateMany({ owner, repository: { $ne: null } }, { $set: { repository: null } }, { timestamps: false }),
   ]);
 }
@@ -291,7 +294,10 @@ export async function unlinkRepositoryLogic(userId, projectId) {
   if (!project.repository) throw new AppError('This project has no linked repository', 404);
   project.repository = null;
   await project.save();
-  await GitHubCommit.deleteMany({ owner: userId, project: project._id });
+  await Promise.all([
+    GitHubCommit.deleteMany({ owner: userId, project: project._id }),
+    deleteSecurityReviews(userId, project._id),
+  ]);
 }
 
 async function syncProject(owner, project, connection, token) {
@@ -388,6 +394,8 @@ export async function syncGitHubLogic(userId, { manual = false } = {}) {
         throw error;
       }
     }
+    // AI security review of new commits runs in the background, only for users who turned AI on.
+    if (config.AI.enabled && (await aiConsentGiven(userId))) startSecurityScan(userId);
     return { status: 'synced', newCommits, unavailable, lastSyncAt: now };
   });
 }
@@ -445,5 +453,5 @@ export async function disconnectGitHubLogic(userId) {
 }
 
 export async function deleteProjectCommits(owner, projectId) {
-  await GitHubCommit.deleteMany({ owner, project: projectId });
+  await Promise.all([GitHubCommit.deleteMany({ owner, project: projectId }), deleteSecurityReviews(owner, projectId)]);
 }

@@ -95,6 +95,40 @@ function buildGitHubConfig(env, { nodeEnv, clientOrigin }) {
   return { enabled: true, clientId, clientSecret, appSlug, callbackUrl: callback.toString(), encryptionKey };
 }
 
+// USD per million tokens (input, output), from Anthropic's published prices. The budget guard
+// needs a price for every model it may call, so an unknown model is a startup error.
+export const AI_MODEL_PRICES = {
+  'claude-haiku-5-5': { input: 0.1, output: 0.5, label: 'Claude Haiku 5.5' },
+  'claude-sonnet-5-5': { input: 2, output: 10, label: 'Claude Sonnet 5.5' },
+  'claude-opus-5-5': { input: 4, output: 20, label: 'Claude Opus 5.5' },
+};
+// Owner rule: every AI feature uses the cheapest model unless the owner chooses otherwise.
+const DEFAULT_AI_MODEL = 'claude-haiku-5-5';
+export const AI_FEATURES = ['securityReview'];
+
+function buildAiConfig(env, { nodeEnv }) {
+  const isTest = nodeEnv === 'test';
+  // Tests never see the real key; the network module is mocked there.
+  const apiKey = isTest ? 'test-key-never-sent' : env.ANTHROPIC_API_KEY || '';
+  const models = {};
+  for (const feature of AI_FEATURES) {
+    const variable = `AI_MODEL_${feature.replace(/[A-Z]/g, letter => `_${letter}`).toUpperCase()}`;
+    const model = (!isTest && env[variable]) || DEFAULT_AI_MODEL;
+    if (!AI_MODEL_PRICES[model]) throw new Error(`${variable} must be one of ${Object.keys(AI_MODEL_PRICES).join(', ')}`);
+    models[feature] = model;
+  }
+  const budget = Number(isTest ? 4 : env.AI_MONTHLY_BUDGET_USD || 4);
+  if (!Number.isFinite(budget) || budget < 0 || budget > 1000) throw new Error('AI_MONTHLY_BUDGET_USD must be between 0 and 1000');
+  if (nodeEnv === 'production' && apiKey && PLACEHOLDER_PATTERN.test(apiKey)) throw new Error('ANTHROPIC_API_KEY is a placeholder');
+  return {
+    enabled: Boolean(apiKey),
+    apiKey,
+    models,
+    monthlyBudgetMicroUsd: Math.round(budget * 1_000_000),
+    userMonthlyLimit: isTest ? 100 : positiveInt(env.AI_USER_MONTHLY_LIMIT, 100, 10_000),
+  };
+}
+
 export function buildConfig(env) {
   const nodeEnv = env.NODE_ENV || 'development';
 
@@ -169,6 +203,8 @@ export function buildConfig(env) {
     RATE_LIMIT_STORE: rateLimitStore,
 
     GITHUB: buildGitHubConfig(env, { nodeEnv, clientOrigin }),
+
+    AI: buildAiConfig(env, { nodeEnv }),
   };
 }
 

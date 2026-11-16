@@ -16,7 +16,15 @@ vi.mock('../src/services/githubApi.service.js', async importOriginal => {
   };
 });
 
+vi.mock('../src/services/ai/anthropic.transport.js', async importOriginal => {
+  const actual = await importOriginal();
+  return { ...actual, createMessage: vi.fn() };
+});
+
 import app from '../src/app.js';
+import { createMessage } from '../src/services/ai/anthropic.transport.js';
+import { settleSecurityScans } from '../src/services/securityReview.service.js';
+import SecurityReview from '../src/models/SecurityReview.js';
 import config from '../src/config/config.js';
 import * as gh from '../src/services/githubApi.service.js';
 import Activity from '../src/models/Activity.js';
@@ -247,6 +255,34 @@ describe('Repositories and commit sync', () => {
 
     const review = await s.get(`/api/dashboard/weekly?today=${new Date().toISOString().slice(0, 10)}`);
     expect(review.body.data.code).toMatchObject({ connected: true });
+  });
+
+  it('reviews new commits with AI in the background only when the user turned AI on', async () => {
+    const s = await createSession('github');
+    const { githubId } = await connect(s);
+    const p = await project(s);
+    gh.listInstallationRepos.mockResolvedValue([repo(23, 'octo/ai')]);
+    await request(app).put(`/api/projects/${p}/repository`).set('Cookie', s.cookie()).set('x-csrf-token', s.csrfToken).send({ repoId: 23 });
+
+    gh.listCommits.mockResolvedValueOnce([{ sha: sha(), message: 'Add password reset', committedAt: new Date(), authorId: githubId }]);
+    await s.post(`${BASE}/sync`).send({ manual: true });
+    await settleSecurityScans();
+    expect(createMessage).not.toHaveBeenCalled();
+
+    createMessage.mockResolvedValue({
+      stop_reason: 'end_turn',
+      usage: { input_tokens: 900, output_tokens: 250 },
+      content: [{ type: 'text', text: JSON.stringify({ commits: [{ ref: 0, relevant: true, area: 'Password reset', areaKey: 'authentication', checks: [{ text: 'Reset tokens expire and are single use', why: 'Old links could take over accounts.' }] }] }) }],
+    });
+    // Turning AI on reviews the commit that synced while it was off.
+    await s.put('/api/ai/consent').send({ enabled: true });
+    await settleSecurityScans();
+    expect(createMessage).toHaveBeenCalledTimes(1);
+    expect(await SecurityReview.countDocuments({ owner: s.userId, project: p })).toBe(1);
+
+    // Unlinking the repository removes its checks along with its commits.
+    expect((await request(app).delete(`/api/projects/${p}/repository`).set('Cookie', s.cookie()).set('x-csrf-token', s.csrfToken)).status).toBeLessThan(300);
+    expect(await SecurityReview.countDocuments({ owner: s.userId })).toBe(0);
   });
 
   it('rejects bad sync bodies and reports a user without GitHub', async () => {

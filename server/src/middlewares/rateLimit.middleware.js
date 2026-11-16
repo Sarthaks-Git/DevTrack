@@ -57,3 +57,7 @@ export const githubConnectRateLimit = createRateLimit({ name: 'githubConnect', l
 export const githubCallbackRateLimit = createRateLimit({ name: 'githubCallback', limit: 30 });
 export const githubReadRateLimit = createRateLimit({ name: 'githubRead', limit: 60, keyGenerator: byUser });
 export const githubSyncRateLimit = createRateLimit({ name: 'githubSync', limit: 60, keyGenerator: byUser });
+
+// AI settings and security checks: reads are cheap; turning AI on starts a background scan.
+export const aiSettingsRateLimit = createRateLimit({ name: 'aiSettings', limit: 30, keyGenerator: byUser });
+export const securityReviewRateLimit = createRateLimit({ name: 'securityReviews', limit: 300, keyGenerator: byUser });

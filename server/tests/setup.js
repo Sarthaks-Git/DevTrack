@@ -16,6 +16,9 @@ beforeAll(async () => {
     await mongoose.connect(process.env.MONGODB_TEST_URI);
 
     await mongoose.connection.db.dropDatabase();
+    // Index builds started at model load can race the drop above; rebuild them so unique
+    // indexes (which atomic limits and dedupe rely on) exist before any test runs.
+    await Promise.all(Object.values(mongoose.models).map(model => model.createIndexes()));
 });
 
 afterAll(async () => {
