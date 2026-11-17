@@ -19,7 +19,9 @@ function formatWhen(value) {
   return new Date(value).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
 }
 
-function SecuritySection({ user, onSignedOut }) {
+function SecuritySection({ user, onSignedOut, onPasswordSet }) {
+  // Accounts made through Google, GitHub or LinkedIn set their first password here, confirmed by a recent sign-in.
+  const needsPassword = user?.hasPassword !== false;
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -59,12 +61,13 @@ function SecuritySection({ user, onSignedOut }) {
     setSaving(true);
     setPasswordStatus({ kind: "", text: "" });
     try {
-      const result = await changePassword({ currentPassword, newPassword });
+      const result = await changePassword(needsPassword ? { currentPassword, newPassword } : { newPassword });
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
-      setPasswordStatus({ kind: "ok", text: result.message });
+      setPasswordStatus({ kind: "ok", text: needsPassword ? result.message : "Password set. You can now also sign in with your email and password." });
       await loadSessions();
+      if (!needsPassword) await onPasswordSet?.();
     } catch (error) {
       const detail = error.response?.data?.errors?.newPassword;
       setPasswordStatus({ kind: "error", text: detail || error.message });
@@ -104,10 +107,14 @@ function SecuritySection({ user, onSignedOut }) {
   return (
     <SettingsSection number="02" label="Security" title="Password and sessions" description="Changing your password signs out every other device. Review where you are signed in and end sessions you do not recognize.">
       <form onSubmit={handlePassword} className="grid max-w-2xl gap-5 sm:grid-cols-2">
-        <label className="dt-label sm:col-span-2">
-          Current password
-          <input className="dt-input" type="password" value={currentPassword} onChange={event => setCurrentPassword(event.target.value)} autoComplete="current-password" required />
-        </label>
+        {needsPassword ? (
+          <label className="dt-label sm:col-span-2">
+            Current password
+            <input className="dt-input" type="password" value={currentPassword} onChange={event => setCurrentPassword(event.target.value)} autoComplete="current-password" required />
+          </label>
+        ) : (
+          <p className="text-sm text-[var(--dt-text-secondary)] sm:col-span-2">Your account has no password yet. Set one to also sign in with your email; this needs a sign-in within the last 10 minutes.</p>
+        )}
         <label className="dt-label">
           New password
           <input className="dt-input" type="password" value={newPassword} onChange={event => setNewPassword(event.target.value)} autoComplete="new-password" aria-invalid={Boolean(hint)} aria-describedby="new-password-hint" required />
@@ -120,8 +127,8 @@ function SecuritySection({ user, onSignedOut }) {
           {hint || (mismatch ? "Passwords do not match." : "Use 12+ characters. A long passphrase is easiest to remember.")}
         </p>
         <div className="sm:col-span-2">
-          <button type="submit" className="dt-primary-button" disabled={saving || !currentPassword || !newPassword || Boolean(hint) || mismatch}>
-            {saving ? "Updating..." : "Update password"}
+          <button type="submit" className="dt-primary-button" disabled={saving || (needsPassword && !currentPassword) || !newPassword || Boolean(hint) || mismatch}>
+            {saving ? "Updating..." : needsPassword ? "Update password" : "Set password"}
           </button>
         </div>
       </form>

@@ -46,7 +46,7 @@ export async function revokeSessionById(req, res, next) {
 
 export async function deleteAccount(req, res, next) {
   try {
-    await deleteAccountLogic(req.auth.userId, req.body);
+    await deleteAccountLogic(req.auth.userId, req.auth.sessionId, req.body);
     clearAuthCookies(res);
     return res.status(204).send();
   } catch (error) {

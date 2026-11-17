@@ -95,7 +95,7 @@ function GitHubSection() {
   return (
     <div id="github" className="scroll-mt-24">
       <SettingsSection
-        number="04"
+        number="05"
         label="Connected accounts"
         title="GitHub"
         description="Link repositories to projects so your commits count as verified progress. DevTrack reads commit messages and file names only, never your code, and only from repositories you choose."

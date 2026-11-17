@@ -65,3 +65,29 @@ export async function logoutEverywhere() {
 export async function deleteAccount(details) {
   await api.delete('/auth/account', { data: details });
 }
+
+// Social sign-in. The server returns the provider URL; the browser goes there and comes back to /api.
+export async function listSocialProviders() {
+  const { data } = await api.get('/auth/oauth/providers');
+  return data.data.providers.filter(provider => provider.enabled);
+}
+
+export async function startSocialSignIn(provider, returnTo = 'app') {
+  await ensureCsrfToken();
+  const { data } = await api.post(`/auth/oauth/${encodeURIComponent(provider)}/login`, { returnTo });
+  window.location.assign(data.data.authorizeUrl);
+}
+
+export async function startSocialLink(provider) {
+  const { data } = await api.post(`/auth/oauth/${encodeURIComponent(provider)}/link`, {});
+  window.location.assign(data.data.authorizeUrl);
+}
+
+export async function listIdentities() {
+  const { data } = await api.get('/auth/identities');
+  return data.data.identities;
+}
+
+export async function unlinkIdentity(provider, currentPassword) {
+  await api.delete(`/auth/identities/${encodeURIComponent(provider)}`, { data: currentPassword ? { currentPassword } : {} });
+}

@@ -3,7 +3,8 @@ import SettingsSection from "./SettingsSection";
 import ConfirmModal from "../common/ConfirmModal";
 import { deleteAccount } from "../../services/authService";
 
-function DangerSection({ onDeleted }) {
+function DangerSection({ user, onDeleted }) {
+  const needsPassword = user?.hasPassword !== false;
   const [open, setOpen] = useState(false);
   const [password, setPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
@@ -22,7 +23,7 @@ function DangerSection({ onDeleted }) {
     setBusy(true);
     setError("");
     try {
-      await deleteAccount({ currentPassword: password, confirmation });
+      await deleteAccount(needsPassword ? { currentPassword: password, confirmation } : { confirmation });
       onDeleted();
     } catch (requestError) {
       setError(requestError.message);
@@ -31,7 +32,7 @@ function DangerSection({ onDeleted }) {
   }
 
   return (
-    <SettingsSection number="07" label="Danger zone" tone="danger" title="Delete account" description="Permanently deletes your account and everything in it: goals, projects, journal, timeline, and connected platforms. This cannot be undone.">
+    <SettingsSection number="08" label="Danger zone" tone="danger" title="Delete account" description="Permanently deletes your account and everything in it: goals, projects, journal, timeline, and connected platforms. This cannot be undone.">
       <button type="button" onClick={() => setOpen(true)} className="border border-red-400/40 px-4 py-2.5 text-[10px] font-medium uppercase tracking-[0.16em] text-red-400 hover:bg-red-400/10">
         Delete my account
       </button>
@@ -44,15 +45,19 @@ function DangerSection({ onDeleted }) {
         busyLabel="Deleting..."
         destructive
         busy={busy}
-        confirmDisabled={!password || confirmation !== "DELETE"}
+        confirmDisabled={(needsPassword && !password) || confirmation !== "DELETE"}
         onConfirm={handleDelete}
         onCancel={close}
       >
         <p>All of your DevTrack data will be erased immediately.</p>
-        <label className="dt-label mt-5">
-          Current password
-          <input className="dt-input" type="password" value={password} onChange={event => setPassword(event.target.value)} autoComplete="current-password" />
-        </label>
+        {needsPassword ? (
+          <label className="dt-label mt-5">
+            Current password
+            <input className="dt-input" type="password" value={password} onChange={event => setPassword(event.target.value)} autoComplete="current-password" />
+          </label>
+        ) : (
+          <p className="mt-4 text-xs">This needs a sign-in within the last 10 minutes (Account section above).</p>
+        )}
         <label className="dt-label mt-4">
           Type DELETE to confirm
           <input className="dt-input" value={confirmation} onChange={event => setConfirmation(event.target.value)} autoComplete="off" spellCheck={false} />

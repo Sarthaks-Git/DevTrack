@@ -100,7 +100,7 @@ function PlatformsSection() {
   }
 
   return (
-    <SettingsSection number="03" label="Connected accounts" title="Coding platforms" description="Connect and verify accounts here. Ownership is proven with a one-time token, so nobody can claim your profile. The Coding page only shows statistics.">
+    <SettingsSection number="04" label="Connected accounts" title="Coding platforms" description="Connect and verify accounts here. Ownership is proven with a one-time token, so nobody can claim your profile. The Coding page only shows statistics.">
       {loading ? (
         <p className="text-sm text-[var(--dt-text-secondary)]">Loading connections...</p>
       ) : (

@@ -95,6 +95,34 @@ function buildGitHubConfig(env, { nodeEnv, clientOrigin }) {
   return { enabled: true, clientId, clientSecret, appSlug, callbackUrl: callback.toString(), encryptionKey };
 }
 
+// "Sign in with Google / GitHub / LinkedIn". Each provider is on only when both its values are set.
+// The callback goes through the client origin (the dev server and production both proxy /api), so
+// the state cookie and the session cookies stay first-party.
+export const SOCIAL_PROVIDERS = ['google', 'github', 'linkedin'];
+const SOCIAL_ENV = {
+  google: ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET'],
+  github: ['GITHUB_LOGIN_CLIENT_ID', 'GITHUB_LOGIN_CLIENT_SECRET'],
+  linkedin: ['LINKEDIN_CLIENT_ID', 'LINKEDIN_CLIENT_SECRET'],
+};
+
+function buildSocialConfig(env, { nodeEnv, clientOrigin }) {
+  const isTest = nodeEnv === 'test';
+  const providers = {};
+  for (const provider of SOCIAL_PROVIDERS) {
+    const [idVar, secretVar] = SOCIAL_ENV[provider];
+    // Tests always use fake values so real credentials never reach a test run.
+    const clientId = isTest ? `test-${provider}-client` : env[idVar] || '';
+    const clientSecret = isTest ? crypto.randomBytes(20).toString('hex') : env[secretVar] || '';
+    const callbackUrl = `${clientOrigin}/api/auth/oauth/${provider}/callback`;
+    if (nodeEnv === 'production' && clientId && clientSecret) {
+      if (!callbackUrl.startsWith('https://')) throw new Error('CLIENT_ORIGIN must use https for social sign-in in production');
+      if (PLACEHOLDER_PATTERN.test(clientSecret)) throw new Error(`${secretVar} is a placeholder`);
+    }
+    providers[provider] = { enabled: Boolean(clientId && clientSecret), clientId, clientSecret, callbackUrl };
+  }
+  return providers;
+}
+
 // USD per million tokens (input, output), from Anthropic's published prices. The budget guard
 // needs a price for every model it may call, so an unknown model is a startup error.
 // `thinking` is how each model is asked not to think (cheapest, fastest): the value differs per model.
@@ -219,6 +247,7 @@ export function buildConfig(env) {
     RATE_LIMIT_STORE: rateLimitStore,
 
     GITHUB: buildGitHubConfig(env, { nodeEnv, clientOrigin }),
+    SOCIAL: buildSocialConfig(env, { nodeEnv, clientOrigin }),
 
     AI: buildAiConfig(env, { nodeEnv }),
   };

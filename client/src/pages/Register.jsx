@@ -2,6 +2,7 @@ import { useContext, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/authContextObject";
 import { register as registerRequest } from "../services/authService";
+import SocialSignIn from "../components/auth/SocialSignIn";
 import { errorMessage } from "../services/api";
 
 const Register = () => {
@@ -308,6 +309,8 @@ const Register = () => {
                                       : "Create account"}
                             </button>
                         </form>
+
+                        <SocialSignIn disabled={loading} onError={setMessage} />
 
                         <div className="mt-7 flex flex-col gap-3 text-sm sm:flex-row sm:items-center sm:justify-between">
                             <p className="text-[var(--dt-text-secondary)]">

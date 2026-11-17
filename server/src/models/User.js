@@ -7,6 +7,9 @@ const userSchema = new mongoose.Schema({
   role: { type: String, enum: ['user', 'admin'], default: 'user', required: true },
   accountStatus: { type: String, enum: ['active', 'suspended'], default: 'active', required: true },
   passwordChangedAt: { type: Date, default: null },
+  // false for accounts created through Google, GitHub or LinkedIn until the user sets a password.
+  // Their passwordHash is a random unusable hash, so password sign-in cannot succeed.
+  passwordSet: { type: Boolean, default: true },
   // In-app reminder preferences. Defaults keep the dashboard's 14-day stall rule.
   reminders: {
     enabled: { type: Boolean, default: true },

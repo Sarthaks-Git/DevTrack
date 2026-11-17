@@ -22,6 +22,10 @@ function validationError(errors) {
   return error;
 }
 
+// Optional at the boundary: accounts created through Google, GitHub or LinkedIn have no password and
+// confirm by a recent sign-in instead. The account service requires it whenever the account has one.
+const optionalPassword = value => value === undefined || (typeof value === 'string' && value.length >= 1 && value.length <= 128);
+
 function onlyFields(body, allowed) {
   return Object.keys(body).every(key => allowed.includes(key));
 }
@@ -39,9 +43,7 @@ export function validateProfileUpdate(req, res, next) {
   if (email !== undefined && (typeof email !== 'string' || email.length > 254 || !EMAIL_PATTERN.test(email))) {
     errors.email = 'Please provide a valid email address';
   }
-  if (typeof currentPassword !== 'string' || currentPassword.length < 1 || currentPassword.length > 128) {
-    errors.currentPassword = 'Current password is required';
-  }
+  if (!optionalPassword(currentPassword)) errors.currentPassword = 'Current password is invalid';
 
   if (Object.keys(errors).length) return next(validationError(errors));
   if (typeof username === 'string') req.body.username = username.toLowerCase();
@@ -55,9 +57,7 @@ export function validatePasswordChange(req, res, next) {
   const errors = {};
 
   if (!onlyFields(body, ['currentPassword', 'newPassword'])) errors.fields = 'Request contains invalid fields';
-  if (typeof currentPassword !== 'string' || currentPassword.length < 1 || currentPassword.length > 128) {
-    errors.currentPassword = 'Current password is required';
-  }
+  if (!optionalPassword(currentPassword)) errors.currentPassword = 'Current password is invalid';
   const problem = passwordProblem(newPassword);
   if (problem) errors.newPassword = problem;
   else if (newPassword === currentPassword) errors.newPassword = 'New password must be different from the current password';
@@ -72,9 +72,7 @@ export function validateAccountDeletion(req, res, next) {
   const errors = {};
 
   if (!onlyFields(body, ['currentPassword', 'confirmation'])) errors.fields = 'Request contains invalid fields';
-  if (typeof currentPassword !== 'string' || currentPassword.length < 1 || currentPassword.length > 128) {
-    errors.currentPassword = 'Current password is required';
-  }
+  if (!optionalPassword(currentPassword)) errors.currentPassword = 'Current password is invalid';
   if (confirmation !== 'DELETE') errors.confirmation = 'Type DELETE to confirm';
 
   if (Object.keys(errors).length) return next(validationError(errors));

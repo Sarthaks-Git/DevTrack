@@ -8,6 +8,8 @@ const authSessionSchema = new mongoose.Schema({
   rotatedAt: { type: Date, default: null },
   // Coarse "Browser on OS" label only; raw user agents and IPs are not stored.
   userAgent: { type: String, maxlength: 60, default: null },
+  // How this session signed in; createdAt is the sign-in time (refresh rotates in place).
+  method: { type: String, enum: ['password', 'google', 'github', 'linkedin'], default: 'password' },
   expiresAt: { type: Date, required: true },
   revokedAt: { type: Date, default: null },
   revokeReason: { type: String, enum: ['logout', 'logout_all', 'password_change', 'email_change', 'reuse_detected', 'expired', 'account_inactive', null], default: null },

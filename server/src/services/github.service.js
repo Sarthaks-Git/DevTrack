@@ -182,10 +182,11 @@ export async function startGitHubConnectLogic(userId) {
   const verifier = randomToken(48);
   const challenge = crypto.createHash('sha256').update(verifier).digest('base64url');
 
-  await OAuthState.deleteMany({ owner: userId, provider: 'github' });
+  await OAuthState.deleteMany({ owner: userId, provider: 'github', purpose: 'connect' });
   await OAuthState.create({
     owner: userId,
     provider: 'github',
+    purpose: 'connect',
     stateHash: sha256(state),
     codeVerifier: encryptSecret(verifier, tokenContext(userId, 'pkce')),
     expiresAt: new Date(Date.now() + GITHUB_RULES.stateTtlMs),
@@ -218,7 +219,7 @@ export async function completeGitHubConnectLogic({ code, state, error, browserSt
     return 'expired';
   }
 
-  const record = await OAuthState.findOneAndDelete({ stateHash: sha256(state), provider: 'github', expiresAt: { $gt: new Date() } });
+  const record = await OAuthState.findOneAndDelete({ stateHash: sha256(state), provider: 'github', purpose: 'connect', expiresAt: { $gt: new Date() } });
   if (!record) {
     logFailure('connect', { kind: 'state_not_found' });
     return 'expired';

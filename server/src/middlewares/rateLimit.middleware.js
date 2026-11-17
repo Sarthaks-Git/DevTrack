@@ -55,6 +55,9 @@ export function limitWrites(req, res, next) {
 // (several GitHub calls each) and sync (auto on app open plus "Sync now").
 export const githubConnectRateLimit = createRateLimit({ name: 'githubConnect', limit: 20, keyGenerator: byUser });
 export const githubCallbackRateLimit = createRateLimit({ name: 'githubCallback', limit: 30 });
+// Social sign-in: starting and finishing the redirect, per IP (the user may not be signed in yet).
+export const socialStartRateLimit = createRateLimit({ name: 'socialStart', limit: 30 });
+export const socialCallbackRateLimit = createRateLimit({ name: 'socialCallback', limit: 30 });
 export const githubReadRateLimit = createRateLimit({ name: 'githubRead', limit: 60, keyGenerator: byUser });
 export const githubSyncRateLimit = createRateLimit({ name: 'githubSync', limit: 60, keyGenerator: byUser });
 

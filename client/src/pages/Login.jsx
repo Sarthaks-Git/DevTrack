@@ -1,13 +1,20 @@
 import { useContext, useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import SocialSignIn from "../components/auth/SocialSignIn";
+import { socialOutcomeText } from "../components/auth/socialMessages";
 import { AuthContext } from "../context/authContextObject";
 import { login as loginRequest } from "../services/authService";
 import { errorMessage } from "../services/api";
 
 const Login = () => {
+    const [searchParams] = useSearchParams();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [message, setMessage] = useState("");
+    // A failed Google / GitHub / LinkedIn sign-in comes back here with an outcome word.
+    const [message, setMessage] = useState(() => {
+        const outcome = searchParams.get("oauth");
+        return outcome ? socialOutcomeText(outcome, searchParams.get("provider")) : "";
+    });
     const [loading, setLoading] = useState(false);
 
     const navigate = useNavigate();
@@ -199,6 +206,8 @@ const Login = () => {
                                     : "Sign in"}
                             </button>
                         </form>
+
+                        <SocialSignIn disabled={loading} onError={setMessage} />
 
                         <div className="mt-7 flex flex-col gap-3 text-sm sm:flex-row sm:items-center sm:justify-between">
                             <p className="text-[var(--dt-text-secondary)]">

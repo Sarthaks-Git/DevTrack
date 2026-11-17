@@ -24,6 +24,8 @@ export const publicUser = user => ({
   username: user.username,
   email: user.email,
   role: user.role,
+  // false for accounts made through Google, GitHub or LinkedIn that have not set a password yet.
+  hasPassword: user.passwordSet !== false,
   createdAt: user.createdAt,
   updatedAt: user.updatedAt,
 });
@@ -72,7 +74,7 @@ function describeUserAgent(userAgent) {
   return `${browser} on ${os}`;
 }
 
-export async function createLoginSession(user, { userAgent } = {}) {
+export async function createLoginSession(user, { userAgent, method = 'password' } = {}) {
   const sessionId = new mongoose.Types.ObjectId();
 
   const refreshToken = makeRefreshToken(
@@ -85,6 +87,7 @@ export async function createLoginSession(user, { userAgent } = {}) {
     familyId: crypto.randomUUID(),
     tokenHash: hash(refreshToken),
     userAgent: describeUserAgent(userAgent),
+    method,
     expiresAt: new Date(
       Date.now() + REFRESH_DAYS * 86_400_000
     ),

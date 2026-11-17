@@ -3,9 +3,11 @@ import { csrf, register, login, getMe, logout, logoutAll, refresh } from '../con
 import { updateProfile, changePassword, listSessions, revokeSessionById, deleteAccount } from '../controllers/account.controller.js';
 import { authMiddleware } from '../middlewares/auth.middleware.js';
 import { requireCsrf } from '../middlewares/csrf.middleware.js';
-import { authRateLimit, loginAccountRateLimit, sensitiveAuthRateLimit, passwordCheckRateLimit, registerRateLimit, writeRateLimit } from '../middlewares/rateLimit.middleware.js';
+import { authRateLimit, loginAccountRateLimit, sensitiveAuthRateLimit, passwordCheckRateLimit, registerRateLimit, socialCallbackRateLimit, socialStartRateLimit, writeRateLimit } from '../middlewares/rateLimit.middleware.js';
 import { validateRegister, validateLogin } from '../validators/auth.validator.js';
 import { validateProfileUpdate, validatePasswordChange, validateAccountDeletion } from '../validators/account.validator.js';
+import { listIdentities, listProviders, socialCallback, startSocialLink, startSocialLogin, unlinkIdentity } from '../controllers/social.controller.js';
+import { validateProvider, validateSocialCallback, validateSocialStart, validateUnlinkIdentity } from '../validators/social.validator.js';
 
 const authRouter = Router();
 authRouter.get('/csrf', csrf);
@@ -22,4 +24,13 @@ authRouter.patch('/password', authMiddleware, requireCsrf, passwordCheckRateLimi
 authRouter.get('/sessions', authMiddleware, listSessions);
 authRouter.delete('/sessions/:id', authMiddleware, writeRateLimit, requireCsrf, revokeSessionById);
 authRouter.delete('/account', authMiddleware, requireCsrf, passwordCheckRateLimit, validateAccountDeletion, deleteAccount);
+
+// Sign in with Google, GitHub or LinkedIn (docs/API.md, Social sign-in).
+authRouter.get('/oauth/providers', listProviders);
+authRouter.post('/oauth/:provider/login', socialStartRateLimit, requireCsrf, validateProvider, validateSocialStart, startSocialLogin);
+authRouter.post('/oauth/:provider/link', authMiddleware, socialStartRateLimit, requireCsrf, validateProvider, validateSocialStart, startSocialLink);
+// Unauthenticated on purpose: the provider redirects the browser here; the state binds the handshake.
+authRouter.get('/oauth/:provider/callback', socialCallbackRateLimit, validateProvider, validateSocialCallback, socialCallback);
+authRouter.get('/identities', authMiddleware, listIdentities);
+authRouter.delete('/identities/:provider', authMiddleware, requireCsrf, passwordCheckRateLimit, validateProvider, validateUnlinkIdentity, unlinkIdentity);
 export default authRouter;

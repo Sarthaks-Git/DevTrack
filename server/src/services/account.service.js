@@ -16,29 +16,23 @@ import GitHubConnection from '../models/GitHubConnection.js';
 import GitHubCommit from '../models/GitHubCommit.js';
 import OAuthState from '../models/OAuthState.js';
 import CodeFinding from '../models/CodeFinding.js';
+import AuthIdentity from '../models/AuthIdentity.js';
 import SecurityReview from '../models/SecurityReview.js';
 import AiUsage from '../models/AiUsage.js';
 import AiAllowance from '../models/AiAllowance.js';
 import { revokeGitHubAccess } from './github.service.js';
+import { confirmAccountOwner } from './socialAuth.service.js';
 import AppError from '../utils/AppError.js';
 import { SALT_ROUNDS, publicUser } from './auth.service.js';
 import { passwordProblem } from '../validators/account.validator.js';
 
 // Every collection holding user-owned data. Account deletion must cover all of them.
-const OWNED_MODELS = [Goal, Project, CodingProfile, VerificationChallenge, JournalEntry, Activity, CodingSubmission, SolvedProblem, Notification, GitHubConnection, GitHubCommit, OAuthState, SecurityReview, CodeFinding, AiUsage, AiAllowance, AuthSession];
+const OWNED_MODELS = [Goal, Project, CodingProfile, VerificationChallenge, JournalEntry, Activity, CodingSubmission, SolvedProblem, Notification, GitHubConnection, GitHubCommit, OAuthState, SecurityReview, CodeFinding, AiUsage, AiAllowance, AuthIdentity, AuthSession];
 
 function assertUserId(userId) {
   if (!mongoose.isValidObjectId(userId)) throw new AppError('Authentication is required', 401, 'UNAUTHENTICATED');
 }
 
-async function loadUserWithPassword(userId, currentPassword) {
-  assertUserId(userId);
-  const user = await User.findById(userId).select('+passwordHash');
-  if (!user || user.accountStatus !== 'active') throw new AppError('Authentication is required', 401, 'UNAUTHENTICATED');
-  const matches = await bcrypt.compare(currentPassword, user.passwordHash);
-  if (!matches) throw new AppError('Current password is incorrect', 400, 'INVALID_CURRENT_PASSWORD');
-  return user;
-}
 
 async function revokeOtherSessions(userId, keepSessionId, reason) {
   await AuthSession.updateMany(
@@ -48,7 +42,7 @@ async function revokeOtherSessions(userId, keepSessionId, reason) {
 }
 
 export async function updateProfileLogic(userId, sessionId, { username, email, currentPassword }) {
-  const user = await loadUserWithPassword(userId, currentPassword);
+  const user = await confirmAccountOwner(userId, sessionId, currentPassword);
   const updates = {};
   if (username !== undefined && username !== user.username) updates.username = username;
   if (email !== undefined && email !== user.email) updates.email = email;
@@ -73,8 +67,9 @@ export async function updateProfileLogic(userId, sessionId, { username, email, c
   return { user: publicUser(user), changed: true };
 }
 
+// Also sets the first password of an account created through Google, GitHub or LinkedIn.
 export async function changePasswordLogic(userId, sessionId, { currentPassword, newPassword }) {
-  const user = await loadUserWithPassword(userId, currentPassword);
+  const user = await confirmAccountOwner(userId, sessionId, currentPassword);
   const problem = passwordProblem(newPassword, { username: user.username, email: user.email });
   if (problem) {
     const error = new AppError('Validation failed', 400, 'VALIDATION_ERROR');
@@ -84,6 +79,7 @@ export async function changePasswordLogic(userId, sessionId, { currentPassword, 
 
   user.passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
   user.passwordChangedAt = new Date();
+  user.passwordSet = true;
   await user.save();
   await revokeOtherSessions(user._id, sessionId, 'password_change');
 }
@@ -115,8 +111,8 @@ export async function revokeSessionByIdLogic(userId, sessionId) {
   if (!result.matchedCount) throw new AppError('Session not found', 404, 'SESSION_NOT_FOUND');
 }
 
-export async function deleteAccountLogic(userId, { currentPassword }) {
-  const user = await loadUserWithPassword(userId, currentPassword);
+export async function deleteAccountLogic(userId, sessionId, { currentPassword }) {
+  const user = await confirmAccountOwner(userId, sessionId, currentPassword);
   // Withdraw DevTrack's GitHub access at GitHub before the encrypted token is deleted.
   await revokeGitHubAccess(user._id);
   // Remove owned data first so a partial failure never leaves orphans behind a deleted user.

@@ -81,3 +81,16 @@ export function setGitHubStateCookie(res, state, maxAgeMs) {
 export function clearGitHubStateCookie(res) {
   res.clearCookie(GITHUB_STATE_COOKIE, { secure: config.COOKIE_SECURE, sameSite: 'lax', httpOnly: true, path: GITHUB_STATE_PATH });
 }
+
+// Pins a social sign-in handshake to the browser that started it (SameSite=Lax for the same
+// reason as above: the callback is a top-level navigation from the provider).
+export const SOCIAL_STATE_COOKIE = 'devtrack_oauth_state';
+const SOCIAL_STATE_PATH = '/api/auth/oauth';
+
+export function setSocialStateCookie(res, state, maxAgeMs) {
+  res.cookie(SOCIAL_STATE_COOKIE, state, { secure: config.COOKIE_SECURE, sameSite: 'lax', httpOnly: true, maxAge: maxAgeMs, path: SOCIAL_STATE_PATH });
+}
+
+export function clearSocialStateCookie(res) {
+  res.clearCookie(SOCIAL_STATE_COOKIE, { secure: config.COOKIE_SECURE, sameSite: 'lax', httpOnly: true, path: SOCIAL_STATE_PATH });
+}

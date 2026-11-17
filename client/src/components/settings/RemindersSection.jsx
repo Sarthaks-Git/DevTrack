@@ -52,7 +52,7 @@ function RemindersSection() {
 
   return (
     <SettingsSection
-      number="06"
+      number="07"
       label="Reminders"
       title="In-app reminders"
       description="DevTrack checks your goals and projects and nudges you in Alerts when something is overdue, stalled, or a verified target is reached. Email and phone reminders are not enabled yet."

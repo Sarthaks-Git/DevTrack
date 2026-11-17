@@ -69,7 +69,7 @@ function AISection() {
 
   return (
     <SettingsSection
-      number="05"
+      number="06"
       label="AI"
       title="AI features"
       description="Optional. When on, DevTrack asks an AI model to suggest security checks for your commits. Code review of changed lines (Pro) is a separate switch on each linked repository. Suggestions are labelled AI and never count as verified progress."
