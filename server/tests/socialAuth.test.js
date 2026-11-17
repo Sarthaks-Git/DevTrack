@@ -111,7 +111,7 @@ describe('signing in', () => {
     const person = profile();
     const { callback } = await roundTrip(b, 'google', { profileValue: person });
     expect(callback.status).toBe(303);
-    expect(location(callback)).toBe(`${CLIENT}/app`);
+    expect(location(callback)).toBe(`${CLIENT}/app/dashboard`);
     expect(callback.headers['referrer-policy']).toBe('no-referrer');
     expect(fetchSocialProfile).toHaveBeenCalledWith('google', { code: 'abc123', codeVerifier: expect.stringMatching(/^[A-Za-z0-9_-]{40,}$/) });
 
@@ -129,7 +129,7 @@ describe('signing in', () => {
 
     const again = await browser();
     const second = await roundTrip(again, 'google', { profileValue: { ...person, name: 'Renamed' } });
-    expect(location(second.callback)).toBe(`${CLIENT}/app`);
+    expect(location(second.callback)).toBe(`${CLIENT}/app/dashboard`);
     expect(await User.countDocuments({ email: person.email })).toBe(1);
     expect((await again.get('/api/auth/me')).body.user.id).toBe(String(user._id));
   });
@@ -194,7 +194,7 @@ describe('linking and the password-less account', () => {
     // A Google account already used by another DevTrack user cannot be linked here.
     const other = await roundTrip(await browser(), 'google', { profileValue: profile() });
     const theirs = await AuthIdentity.findOne({ provider: 'google' }).sort({ createdAt: -1 }).lean();
-    expect(location(other.callback)).toBe(`${CLIENT}/app`);
+    expect(location(other.callback)).toBe(`${CLIENT}/app/dashboard`);
     const steal = await roundTrip(b, 'google', { mode: 'link', profileValue: profile({ providerUserId: theirs.providerUserId }) });
     expect(location(steal.callback)).toBe(`${CLIENT}/app/settings?signin=in_use&provider=google#signin`);
 

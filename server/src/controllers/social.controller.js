@@ -39,7 +39,7 @@ function destination({ outcome, purpose, returnTo }, provider) {
   const base = config.CLIENT_ORIGIN;
   if (purpose === 'link') return `${base}/app/settings?signin=${outcome}&provider=${provider}#signin`;
   if (outcome === 'two_factor') return `${base}/login?step=2fa`;
-  if (outcome === 'signed_in') return returnTo === 'settings' ? `${base}/app/settings?reauth=ok#account` : `${base}/app`;
+  if (outcome === 'signed_in') return returnTo === 'settings' ? `${base}/app/settings?reauth=ok#account` : `${base}/app/dashboard`;
   if (returnTo === 'settings') return `${base}/app/settings?reauth=${outcome}#account`;
   return `${base}/login?oauth=${outcome}&provider=${provider}`;
 }

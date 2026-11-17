@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { createBrowserRouter, Link, RouterProvider } from "react-router-dom";
+import { createBrowserRouter, Link, Navigate, RouterProvider } from "react-router-dom";
 import Login from "./pages/Login";
 import Landing from "./pages/Landing";
 import Register from "./pages/Register";
@@ -49,6 +49,8 @@ const router = createBrowserRouter([
       {
         element: <AppLayout />,
         children: [
+          // Bare /app (old links, sign-in redirects) opens the dashboard.
+          { index: true, element: <Navigate to="dashboard" replace /> },
           { path: "dashboard", element: page(Dashboard) },
           { path: "goals", element: page(Goals) },
           { path: "projects", element: page(Projects) },
