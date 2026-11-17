@@ -3,8 +3,10 @@ import { csrf, register, login, getMe, logout, logoutAll, refresh } from '../con
 import { updateProfile, changePassword, listSessions, revokeSessionById, deleteAccount } from '../controllers/account.controller.js';
 import { authAllowUnverified, authMiddleware } from '../middlewares/auth.middleware.js';
 import { requireCsrf } from '../middlewares/csrf.middleware.js';
-import { authRateLimit, loginAccountRateLimit, sensitiveAuthRateLimit, passwordCheckRateLimit, registerRateLimit, socialCallbackRateLimit, socialStartRateLimit, twoFactorVerifyRateLimit, emailSendRateLimit, writeRateLimit } from '../middlewares/rateLimit.middleware.js';
-import { validateRegister, validateLogin, validateEmailCode } from '../validators/auth.validator.js';
+import { authRateLimit, loginAccountRateLimit, sensitiveAuthRateLimit, passwordCheckRateLimit, registerRateLimit, socialCallbackRateLimit, socialStartRateLimit, twoFactorVerifyRateLimit, emailSendRateLimit, writeRateLimit, passwordForgotRateLimit, passwordForgotEmailRateLimit, passwordResetRateLimit, passwordResetEmailRateLimit } from '../middlewares/rateLimit.middleware.js';
+import { validateRegister, validateLogin, validateEmailCode, validatePasswordForgot, validatePasswordReset } from '../validators/auth.validator.js';
+import { forgotPassword, resetPassword } from '../controllers/passwordReset.controller.js';
+import { cancelEmailChange, confirmEmailChange, getEmailChange, resendEmailChange } from '../controllers/emailChange.controller.js';
 import { sendVerificationCode, verifyEmailCode } from '../controllers/emailVerification.controller.js';
 import { validateProfileUpdate, validatePasswordChange, validateAccountDeletion } from '../validators/account.validator.js';
 import { listIdentities, listProviders, socialCallback, startSocialLink, startSocialLogin, unlinkIdentity } from '../controllers/social.controller.js';
@@ -39,6 +41,16 @@ authRouter.delete('/identities/:provider', authMiddleware, requireCsrf, password
 // Email verification (docs/API.md, Email verification). Open to signed-in, unverified accounts.
 authRouter.post('/email/send', authAllowUnverified, emailSendRateLimit, requireCsrf, sendVerificationCode);
 authRouter.post('/email/verify', authAllowUnverified, passwordCheckRateLimit, requireCsrf, validateEmailCode, verifyEmailCode);
+
+// Changing a verified email: the account keeps its address until the new one is confirmed.
+authRouter.get('/email/change', authMiddleware, getEmailChange);
+authRouter.post('/email/change/resend', authMiddleware, emailSendRateLimit, requireCsrf, resendEmailChange);
+authRouter.post('/email/change/confirm', authMiddleware, passwordCheckRateLimit, requireCsrf, validateEmailCode, confirmEmailChange);
+authRouter.delete('/email/change', authMiddleware, writeRateLimit, requireCsrf, cancelEmailChange);
+
+// Forgot password (signed out). Answers never reveal whether an email has an account.
+authRouter.post('/password/forgot', passwordForgotRateLimit, requireCsrf, validatePasswordForgot, passwordForgotEmailRateLimit, forgotPassword);
+authRouter.post('/password/reset', passwordResetRateLimit, requireCsrf, validatePasswordReset, passwordResetEmailRateLimit, resetPassword);
 
 // Two-factor authentication (docs/API.md, Two-factor authentication).
 authRouter.post('/2fa/verify', twoFactorVerifyRateLimit, requireCsrf, validateTwoFactorVerify, verifyTwoFactorLogin);

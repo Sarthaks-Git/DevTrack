@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { rateLimit } from 'express-rate-limit';
 import config from '../config/config.js';
 import { MongoRateLimitStore } from '../utils/mongoRateLimitStore.js';
@@ -22,6 +23,9 @@ export function createRateLimit({ name, limit, windowMs = WINDOW_MS, ...options 
 const byUser = req => `user:${req.auth?.userId || 'anonymous'}`;
 // Keyed by target email, so credential stuffing against one account is throttled across IPs.
 const byEmail = req => `email:${typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase().slice(0, 254) : 'none'}`;
+
+// Same idea for unauthenticated recovery routes, without keeping the address in the limit store.
+const byEmailHash = req => `emailHash:${crypto.createHash('sha256').update(typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase().slice(0, 254) : 'none').digest('hex')}`;
 
 // Flood guard only. Generous because users on campus or office networks share one public IP;
 // account-level abuse is handled by the per-email and per-user limits below.
@@ -69,3 +73,11 @@ export const githubSyncRateLimit = createRateLimit({ name: 'githubSync', limit: 
 export const aiSettingsRateLimit = createRateLimit({ name: 'aiSettings', limit: 30, keyGenerator: byUser });
 export const securityReviewRateLimit = createRateLimit({ name: 'securityReviews', limit: 300, keyGenerator: byUser });
 export const codeFindingRateLimit = createRateLimit({ name: 'codeFindings', limit: 300, keyGenerator: byUser });
+
+// Forgot password always answers 200, so these count every request. Per IP, and per target email
+// across IPs (the service also sends at most one code a minute and five an hour per account).
+export const passwordForgotRateLimit = createRateLimit({ name: 'passwordForgot', limit: 10 });
+export const passwordForgotEmailRateLimit = createRateLimit({ name: 'passwordForgotEmail', limit: 5, windowMs: 60 * 60 * 1000, keyGenerator: byEmailHash });
+// Code guesses: per IP and per email (each code also allows only 5 attempts).
+export const passwordResetRateLimit = createRateLimit({ name: 'passwordReset', limit: 20, skipSuccessfulRequests: true });
+export const passwordResetEmailRateLimit = createRateLimit({ name: 'passwordResetEmail', limit: 10, skipSuccessfulRequests: true, keyGenerator: byEmailHash });

@@ -20,17 +20,20 @@ import AuthIdentity from '../models/AuthIdentity.js';
 import TwoFactor from '../models/TwoFactor.js';
 import LoginChallenge from '../models/LoginChallenge.js';
 import EmailVerification from '../models/EmailVerification.js';
+import EmailChange from '../models/EmailChange.js';
+import PasswordReset from '../models/PasswordReset.js';
 import SecurityReview from '../models/SecurityReview.js';
 import AiUsage from '../models/AiUsage.js';
 import AiAllowance from '../models/AiAllowance.js';
 import { revokeGitHubAccess } from './github.service.js';
+import { startEmailChangeLogic } from './emailChange.service.js';
 import { confirmAccountOwner } from './socialAuth.service.js';
 import AppError from '../utils/AppError.js';
 import { SALT_ROUNDS, publicUser } from './auth.service.js';
 import { passwordProblem } from '../validators/account.validator.js';
 
 // Every collection holding user-owned data. Account deletion must cover all of them.
-export const OWNED_MODELS = [Goal, Project, CodingProfile, VerificationChallenge, JournalEntry, Activity, CodingSubmission, SolvedProblem, Notification, GitHubConnection, GitHubCommit, OAuthState, SecurityReview, CodeFinding, AiUsage, AiAllowance, AuthIdentity, TwoFactor, LoginChallenge, EmailVerification, AuthSession];
+export const OWNED_MODELS = [Goal, Project, CodingProfile, VerificationChallenge, JournalEntry, Activity, CodingSubmission, SolvedProblem, Notification, GitHubConnection, GitHubCommit, OAuthState, SecurityReview, CodeFinding, AiUsage, AiAllowance, AuthIdentity, TwoFactor, LoginChallenge, EmailVerification, EmailChange, PasswordReset, AuthSession];
 
 function assertUserId(userId) {
   if (!mongoose.isValidObjectId(userId)) throw new AppError('Authentication is required', 401, 'UNAUTHENTICATED');
@@ -57,8 +60,17 @@ export async function updateProfileLogic(userId, sessionId, { username, email, c
   }).lean();
   if (conflict) throw new AppError('That username or email is already in use', 409, 'ACCOUNT_EXISTS');
 
+  // A verified account keeps its email until the code sent to the new address is entered
+  // (services/emailChange.service.js). Sent first, so a throttled or failed send changes nothing.
+  // An unverified account's email is unproven anyway: it changes now and is verified as usual.
+  let pending = null;
+  if (updates.email && user.emailVerifiedAt) {
+    pending = await startEmailChangeLogic(user, updates.email);
+    delete updates.email;
+  }
+  if (!Object.keys(updates).length) return { user: publicUser(user), changed: false, pendingEmail: pending.pendingEmail };
+
   Object.assign(user, updates);
-  // A new address must be proven again before the account can be used.
   if (updates.email) user.emailVerifiedAt = null;
   try {
     await user.save();
@@ -69,7 +81,7 @@ export async function updateProfileLogic(userId, sessionId, { username, email, c
 
   // An email change moves account recovery; sign out every other device.
   if (updates.email) await revokeOtherSessions(user._id, sessionId, 'email_change');
-  return { user: publicUser(user), changed: true };
+  return { user: publicUser(user), changed: true, pendingEmail: pending?.pendingEmail || null };
 }
 
 // Also sets the first password of an account created through Google, GitHub or LinkedIn.

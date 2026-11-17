@@ -93,3 +93,32 @@ export function validateEmailCode(req, res, next) {
   }
   return next();
 }
+
+const EMAIL_SHAPE = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+const plainBody = body => (body && typeof body === 'object' && !Array.isArray(body) ? body : {});
+const validEmail = email => typeof email === 'string' && email.length <= 254 && email === email.trim() && EMAIL_SHAPE.test(email);
+const validationFailed = errors => Object.assign(new AppError('Validation failed', 400, 'VALIDATION_ERROR'), { errors });
+
+// Forgot password: { email } only.
+export function validatePasswordForgot(req, res, next) {
+  const body = plainBody(req.body);
+  if (Object.keys(body).some(key => key !== 'email') || !validEmail(body.email)) {
+    return next(validationFailed({ email: 'Please provide a valid email address' }));
+  }
+  req.body = { email: body.email.toLowerCase() };
+  return next();
+}
+
+// Reset password: { email, code, newPassword }. Username/email rules are checked once the code is right.
+export function validatePasswordReset(req, res, next) {
+  const body = plainBody(req.body);
+  const errors = {};
+  if (Object.keys(body).some(key => !['email', 'code', 'newPassword'].includes(key))) errors.fields = 'Request contains invalid fields';
+  if (!validEmail(body.email)) errors.email = 'Please provide a valid email address';
+  if (typeof body.code !== 'string' || !/^\d{6}$/.test(body.code)) errors.code = 'The code has 6 digits';
+  const problem = passwordProblem(body.newPassword);
+  if (problem) errors.newPassword = problem;
+  if (Object.keys(errors).length) return next(validationFailed(errors));
+  req.body = { email: body.email.toLowerCase(), code: body.code, newPassword: body.newPassword };
+  return next();
+}

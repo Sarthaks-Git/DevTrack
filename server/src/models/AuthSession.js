@@ -12,7 +12,7 @@ const authSessionSchema = new mongoose.Schema({
   method: { type: String, enum: ['password', 'google', 'github', 'linkedin'], default: 'password' },
   expiresAt: { type: Date, required: true },
   revokedAt: { type: Date, default: null },
-  revokeReason: { type: String, enum: ['logout', 'logout_all', 'password_change', 'email_change', 'reuse_detected', 'expired', 'account_inactive', null], default: null },
+  revokeReason: { type: String, enum: ['logout', 'logout_all', 'password_change', 'password_reset', 'email_change', 'reuse_detected', 'expired', 'account_inactive', null], default: null },
 }, { timestamps: true });
 
 authSessionSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });

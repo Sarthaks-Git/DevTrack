@@ -134,3 +134,36 @@ export async function verifyEmail(code) {
   const { data } = await api.post('/auth/email/verify', { code });
   return data.data;
 }
+
+// Forgot password (signed out). The answer never says whether the email has an account.
+export async function requestPasswordReset(email) {
+  await ensureCsrfToken();
+  const { data } = await api.post('/auth/password/forgot', { email });
+  return data;
+}
+
+export async function resetPassword(details) {
+  await ensureCsrfToken();
+  const { data } = await api.post('/auth/password/reset', details);
+  return data;
+}
+
+// Changing a verified email: it switches only after the code sent to the new address is entered.
+export async function getEmailChange() {
+  const { data } = await api.get('/auth/email/change');
+  return data.data;
+}
+
+export async function resendEmailChange() {
+  const { data } = await api.post('/auth/email/change/resend', {});
+  return data.data;
+}
+
+export async function confirmEmailChange(code) {
+  const { data } = await api.post('/auth/email/change/confirm', { code });
+  return data.data;
+}
+
+export async function cancelEmailChange() {
+  await api.delete('/auth/email/change');
+}

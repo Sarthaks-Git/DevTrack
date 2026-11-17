@@ -10,10 +10,14 @@ import { sendVerificationCodeLogic } from '../services/emailVerification.service
 
 export async function updateProfile(req, res, next) {
   try {
-    const { user, changed } = await updateProfileLogic(req.auth.userId, req.auth.sessionId, req.body);
-    // A changed email must be verified again: send the code to the new address (best effort).
+    const { user, changed, pendingEmail } = await updateProfileLogic(req.auth.userId, req.auth.sessionId, req.body);
+    if (pendingEmail) {
+      const message = changed ? 'Username updated. Enter the code sent to your new email to finish changing it.' : 'Enter the code sent to your new email to finish changing it.';
+      return res.status(200).json({ message, user, pendingEmail, emailSent: true });
+    }
+    // An unverified account that fixed its email: send the code to the new address (best effort).
     const delivery = changed && !user.emailVerified ? await sendVerificationCodeLogic(req.auth.userId).catch(() => null) : null;
-    return res.status(200).json({ message: changed ? 'Account details updated' : 'No changes to save', user, emailSent: Boolean(delivery?.sent) });
+    return res.status(200).json({ message: changed ? 'Account details updated' : 'No changes to save', user, pendingEmail: null, emailSent: Boolean(delivery?.sent) });
   } catch (error) {
     return next(error);
   }

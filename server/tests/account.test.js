@@ -1,11 +1,17 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import request from 'supertest';
+
+vi.mock('../src/services/email.transport.js', async importOriginal => {
+  const actual = await importOriginal();
+  return { ...actual, sendEmail: vi.fn().mockResolvedValue(undefined) };
+});
 import app from '../src/app.js';
 import Goal from '../src/models/Goal.js';
 import JournalEntry from '../src/models/JournalEntry.js';
 import Activity from '../src/models/Activity.js';
 import AuthSession from '../src/models/AuthSession.js';
 import User from '../src/models/User.js';
+import { sendEmail } from '../src/services/email.transport.js';
 import { createSession, login, uniqueUser, PASSWORD } from './helpers.js';
 
 describe('Account management API', () => {
@@ -53,6 +59,10 @@ describe('Account management API', () => {
     const newEmail = `moved_${Date.now().toString(36)}@example.com`;
     const res = await session.patch('/api/auth/profile').send({ email: newEmail, currentPassword: PASSWORD });
     expect(res.status).toBe(200);
+    // Nothing changes until the code sent to the new address is entered.
+    expect((await request(app).get('/api/auth/me').set('Cookie', other.cookie)).status).toBe(200);
+    const code = sendEmail.mock.calls.filter(([mail]) => mail.to === newEmail).at(-1)[0].text.match(/\b(\d{6})\b/)[1];
+    expect((await session.post('/api/auth/email/change/confirm').send({ code })).status).toBe(200);
 
     expect((await session.get('/api/auth/me')).status).toBe(200);
     expect((await request(app).get('/api/auth/me').set('Cookie', other.cookie)).status).toBe(401);

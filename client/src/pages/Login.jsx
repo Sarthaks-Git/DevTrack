@@ -2,6 +2,7 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import SocialSignIn from "../components/auth/SocialSignIn";
 import TwoFactorPrompt from "../components/auth/TwoFactorPrompt";
+import ForgotPassword from "../components/auth/ForgotPassword";
 import { socialOutcomeText } from "../components/auth/socialMessages";
 import { AuthContext } from "../context/authContextObject";
 import { login as loginRequest } from "../services/authService";
@@ -16,6 +17,8 @@ const Login = () => {
         const outcome = searchParams.get("oauth");
         return outcome ? socialOutcomeText(outcome, searchParams.get("provider")) : "";
     });
+    // "ok" after a successful password reset; anything else shows as an error.
+    const [messageKind, setMessageKind] = useState("error");
     const [loading, setLoading] = useState(false);
     // "code" once the password (or a provider) was accepted and 2FA asks for the authenticator code.
     const [step, setStep] = useState(() => (searchParams.get("step") === "2fa" ? "code" : "password"));
@@ -43,6 +46,7 @@ const Login = () => {
         event.preventDefault();
 
         setMessage("");
+        setMessageKind("error");
 
         const normalizedEmail = email.trim().toLowerCase();
 
@@ -139,13 +143,28 @@ const Login = () => {
                             </p>
                         </div>
 
-                        {step === "code" ? (
+                        {step === "forgot" ? (
+                            <ForgotPassword
+                                initialEmail={email.trim()}
+                                onDone={text => {
+                                    setPassword("");
+                                    setMessageKind("ok");
+                                    setMessage(text);
+                                    setStep("password");
+                                }}
+                                onCancel={() => {
+                                    setMessage("");
+                                    setStep("password");
+                                }}
+                            />
+                        ) : step === "code" ? (
                             <TwoFactorPrompt
                                 onSignedIn={async returnTo => {
                                     if (returnTo === "settings") afterSignIn.current = "/app/settings?reauth=ok#account";
                                     await refreshUser();
                                 }}
                                 onRestart={text => {
+                                    setMessageKind("error");
                                     setStep("password");
                                     setMessage(text);
                                 }}
@@ -159,8 +178,8 @@ const Login = () => {
                         >
                             {message && (
                                 <div
-                                    role="alert"
-                                    className="mb-7 border-l-2 border-red-400/70 bg-red-400/5 px-4 py-3 text-sm leading-6 text-red-300"
+                                    role={messageKind === "ok" ? "status" : "alert"}
+                                    className={`mb-7 border-l-2 px-4 py-3 text-sm leading-6 ${messageKind === "ok" ? "border-emerald-400/70 bg-emerald-400/5 text-emerald-200" : "border-red-400/70 bg-red-400/5 text-red-300"}`}
                                 >
                                     {message}
                                 </div>
@@ -194,12 +213,25 @@ const Login = () => {
                                 </div>
 
                                 <div>
-                                    <label
-                                        htmlFor="login-password"
-                                        className="mb-3 block text-[10px] font-medium uppercase tracking-[0.2em] text-[var(--dt-text-muted)]"
-                                    >
-                                        Password
-                                    </label>
+                                    <div className="mb-3 flex items-baseline justify-between gap-4">
+                                        <label
+                                            htmlFor="login-password"
+                                            className="block text-[10px] font-medium uppercase tracking-[0.2em] text-[var(--dt-text-muted)]"
+                                        >
+                                            Password
+                                        </label>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setMessage("");
+                                                setStep("forgot");
+                                            }}
+                                            disabled={loading}
+                                            className="text-xs text-[var(--dt-text-secondary)] transition-colors duration-200 hover:text-[var(--dt-accent-soft)] disabled:opacity-50"
+                                        >
+                                            Forgot password?
+                                        </button>
+                                    </div>
 
                                     <input
                                         id="login-password"

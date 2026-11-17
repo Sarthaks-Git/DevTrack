@@ -105,11 +105,11 @@ describe('email verification', () => {
     if (typo !== fresh) expect((await s.post('/api/auth/email/verify').send({ code: typo })).status).toBe(400);
     expect((await s.post('/api/auth/email/verify').send({ code: fresh })).status).toBe(200);
 
-    // Verified users who change their email are locked until the new address is confirmed.
+    // Verified users keep their email (and the app) until the new address is confirmed (tests/emailChange.test.js).
     const v = await createSession('mail_change');
+    const moved = await v.patch('/api/auth/profile').send({ email: `moved_${Date.now()}@example.com`, currentPassword: PASSWORD });
+    expect(moved.body.user.email).toBe(v.user.email);
     expect((await v.get('/api/goals')).status).toBe(200);
-    await v.patch('/api/auth/profile').send({ email: `moved_${Date.now()}@example.com`, currentPassword: PASSWORD });
-    expect((await v.get('/api/goals')).status).toBe(403);
   });
 
   it('keeps sign-out, sessions and account deletion open to unverified accounts, and needs sign-in for the rest', async () => {
