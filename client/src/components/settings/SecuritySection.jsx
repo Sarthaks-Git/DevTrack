@@ -137,7 +137,7 @@ function SecuritySection({ user, onSignedOut, onPasswordSet }) {
 
       <TwoFactorPanel user={user} />
 
-      <div className="mt-10 max-w-3xl">
+      <div className="mt-6 max-w-3xl">
         <div className="mb-4 flex items-center justify-between">
           <p className="text-sm font-medium text-[var(--dt-text-primary)]">Active sessions</p>
           <button type="button" className="dt-link-button" onClick={() => setConfirmAll(true)} disabled={!sessions?.length}>

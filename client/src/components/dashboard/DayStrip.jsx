@@ -13,7 +13,7 @@ function DayStrip({ days }) {
               className={`block h-2 ${active ? "bg-[var(--dt-accent)]" : elapsed ? "bg-[var(--dt-border)]" : "border border-dashed border-[var(--dt-border)]"}`}
               aria-label={`${label}: ${active ? "active" : elapsed ? "no activity" : "upcoming"}`}
             />
-            <span className="mt-1.5 block text-[9px] uppercase tracking-[0.12em] text-[var(--dt-text-muted)]">{label.slice(0, 2)}</span>
+            <span className="mt-1.5 block text-[11px] uppercase tracking-[0.12em] text-[var(--dt-text-muted)]">{label.slice(0, 2)}</span>
           </li>
         );
       })}

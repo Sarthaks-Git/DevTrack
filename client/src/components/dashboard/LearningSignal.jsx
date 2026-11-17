@@ -22,7 +22,7 @@ function LearningSignal({ version }) {
 
   return (
     <div className="dt-card mt-4">
-      <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--dt-text-muted)]">Learning signal</p>
+      <p className="text-[11px] uppercase tracking-[0.2em] text-[var(--dt-text-muted)]">Learning signal</p>
       <p className="mt-3 text-sm font-medium text-[var(--dt-text-primary)]">{text.title}</p>
       <p className="mt-2 text-xs leading-5 text-[var(--dt-text-secondary)]">{text.detail}</p>
       <Link to="/app/coding" className="dt-link-button mt-4 inline-block">See all skills →</Link>

@@ -170,25 +170,19 @@ function Dashboard() {
 
             <PageHeader
                 eyebrow="01 — Overview"
-                title={
-                    <>
-                        {period.greeting}
-                        <br />
-                        Here's where you stand.
-                    </>
-                }
+                title={`${period.greeting} Here's where you stand.`}
                 description="A quick view of what you're building toward and what deserves your attention."
                 below={<TechTip />}
             />
 
             {/* Current Focus */}
-            <section className="mb-16">
+            <section className="mb-8">
                 <div className="mb-5 flex items-end justify-between border-b border-[var(--dt-border)] pb-4">
                     <p className="text-xs uppercase tracking-[0.25em] text-[var(--dt-text-muted)]">
                         Current focus
                     </p>
 
-                    <span className="text-[10px] uppercase tracking-[0.2em] text-[var(--dt-text-muted)]">
+                    <span className="text-[11px] uppercase tracking-[0.2em] text-[var(--dt-text-muted)]">
                         {focusGoal ? "ACTIVE" : "NONE"}
                     </span>
                 </div>
@@ -221,7 +215,7 @@ function Dashboard() {
                                 )}
 
                                 {focusMilestones.length > 0 && (
-                                    <p className="mt-4 text-[10px] uppercase tracking-[0.18em] text-[var(--dt-text-muted)]">
+                                    <p className="mt-4 text-[11px] uppercase tracking-[0.18em] text-[var(--dt-text-muted)]">
                                         Milestones{" "}
                                         <span className="text-[var(--dt-text-secondary)]">
                                             {focusMilestones.filter((m) => m.done).length}/{focusMilestones.length}
@@ -231,16 +225,16 @@ function Dashboard() {
                             </div>
 
                             <div className="flex shrink-0 flex-wrap items-center gap-5">
-                                <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-[var(--dt-accent-soft)]">
+                                <span className="text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--dt-accent-soft)]">
                                     {focusGoal.priority}
                                 </span>
 
-                                <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-[var(--dt-text-secondary)]">
+                                <span className="text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--dt-text-secondary)]">
                                     {formatStatus(focusGoal.status)}
                                 </span>
 
                                 {focusGoal.deadline && (
-                                    <span className="text-[10px] uppercase tracking-[0.18em] text-[var(--dt-text-muted)]">
+                                    <span className="text-[11px] uppercase tracking-[0.18em] text-[var(--dt-text-muted)]">
                                         Due{" "}
                                         {formatGoalDeadline(focusGoal.deadline)}
                                     </span>
@@ -249,7 +243,7 @@ function Dashboard() {
                         </div>
                     </div>
                 ) : (
-                    <div className="border-b border-[var(--dt-border)] py-10">
+                    <div className="border-b border-[var(--dt-border)] py-6">
                         <p className="font-[family-name:var(--dt-font-display)] text-2xl text-[var(--dt-text-primary)]">
                             Nothing needs your attention yet.
                         </p>
@@ -286,7 +280,7 @@ function Dashboard() {
             />
 
             {/* Goal Statistics */}
-            <section className="mb-16">
+            <section className="mb-8">
                 <div className="mb-5 border-b border-[var(--dt-border)] pb-4">
                     <p className="text-xs uppercase tracking-[0.25em] text-[var(--dt-text-muted)]">
                         Goal snapshot
@@ -321,7 +315,7 @@ function Dashboard() {
                                 {String(statistic.value).padStart(2, "0")}
                             </p>
 
-                            <p className="mt-3 text-[10px] uppercase tracking-[0.2em] text-[var(--dt-text-muted)]">
+                            <p className="mt-3 text-[11px] uppercase tracking-[0.2em] text-[var(--dt-text-muted)]">
                                 {statistic.label}
                             </p>
                         </div>
@@ -330,7 +324,7 @@ function Dashboard() {
             </section>
 
             {/* Project Snapshot */}
-            <section className="mb-16">
+            <section className="mb-8">
                 <div className="mb-5 flex items-end justify-between border-b border-[var(--dt-border)] pb-4">
                     <p className="text-xs uppercase tracking-[0.25em] text-[var(--dt-text-muted)]">
                         Project snapshot
@@ -338,7 +332,7 @@ function Dashboard() {
 
                     <Link
                         to="/app/projects"
-                        className="text-[10px] uppercase tracking-[0.2em] text-[var(--dt-text-secondary)] transition-colors hover:text-[var(--dt-accent-soft)]"
+                        className="text-[11px] uppercase tracking-[0.2em] text-[var(--dt-text-secondary)] transition-colors hover:text-[var(--dt-accent-soft)]"
                     >
                         View all projects →
                     </Link>
@@ -372,7 +366,7 @@ function Dashboard() {
                                 {String(statistic.value).padStart(2, "0")}
                             </p>
 
-                            <p className="mt-3 text-[10px] uppercase tracking-[0.2em] text-[var(--dt-text-muted)]">
+                            <p className="mt-3 text-[11px] uppercase tracking-[0.2em] text-[var(--dt-text-muted)]">
                                 {statistic.label}
                             </p>
                         </div>
@@ -415,7 +409,7 @@ function Dashboard() {
                                     key={project._id}
                                     className="grid gap-3 border-b border-[var(--dt-border)] py-5 md:grid-cols-[40px_1fr_auto] md:items-start md:gap-6"
                                 >
-                                    <span className="font-mono text-[9px] tracking-[0.15em] text-[var(--dt-text-muted)]">
+                                    <span className="font-mono text-[11px] tracking-[0.15em] text-[var(--dt-text-muted)]">
                                         {String(index + 1).padStart(2, "0")}
                                     </span>
 
@@ -441,7 +435,7 @@ function Dashboard() {
                                                         .map((technology) => (
                                                             <span
                                                                 key={technology}
-                                                                className="border border-[var(--dt-border)] px-2 py-1 text-[10px] text-[var(--dt-text-muted)]"
+                                                                className="border border-[var(--dt-border)] px-2 py-1 text-[11px] text-[var(--dt-text-muted)]"
                                                             >
                                                                 {technology}
                                                             </span>
@@ -451,14 +445,14 @@ function Dashboard() {
                                     </div>
 
                                     <div className="flex flex-wrap items-center gap-4 md:justify-end">
-                                        <span className="text-[10px] uppercase tracking-[0.16em] text-[var(--dt-text-secondary)]">
+                                        <span className="text-[11px] uppercase tracking-[0.16em] text-[var(--dt-text-secondary)]">
                                             {formatStatus(project.status)}
                                         </span>
 
                                         {formatProjectDate(
                                             project.updatedAt || project.createdAt
                                         ) && (
-                                            <span className="text-[10px] text-[var(--dt-text-muted)]">
+                                            <span className="text-[11px] text-[var(--dt-text-muted)]">
                                                 Updated{" "}
                                                 {formatProjectDate(
                                                     project.updatedAt ||

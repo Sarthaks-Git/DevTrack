@@ -115,7 +115,7 @@ function CodeReviewDialog({ project, allowed, findings, onFindingChange, onToggl
         onClick={() => (enabled ? changeEnabled(false) : setToggle(current => ({ ...current, confirm: true, error: "" })))}
         disabled={toggle.busy}
         aria-pressed={enabled}
-        className={enabled ? "shrink-0 border border-[var(--dt-border)] px-4 py-2.5 text-[10px] font-medium uppercase tracking-[0.16em] text-[var(--dt-text-primary)] hover:border-[var(--dt-border-strong)] disabled:opacity-50" : "dt-primary-button shrink-0"}
+        className={enabled ? "shrink-0 border border-[var(--dt-border)] px-4 py-2.5 text-[11px] font-medium uppercase tracking-[0.16em] text-[var(--dt-text-primary)] hover:border-[var(--dt-border-strong)] disabled:opacity-50" : "dt-primary-button shrink-0"}
       >
         {toggle.busy && !toggle.confirm ? "Saving..." : enabled ? "Turn off" : "Turn on"}
       </button>}

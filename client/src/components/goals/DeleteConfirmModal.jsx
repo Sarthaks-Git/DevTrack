@@ -59,7 +59,7 @@ function DeleteConfirmModal({
                 "
             >
                 {/* Eyebrow */}
-                <p className="text-[10px] font-medium uppercase tracking-[0.3em] text-red-400/80">
+                <p className="text-[11px] font-medium uppercase tracking-[0.3em] text-red-400/80">
                     Destructive action
                 </p>
 

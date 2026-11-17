@@ -967,3 +967,83 @@
         animation: none;
     }
 }
+
+/* ================================================== */
+/* Day sky (light theme)                              */
+/* Dark is the night sky with stars; light is a calm  */
+/* day. The sky and sun sit behind the clouds (on the */
+/* container), the two cloud layers drift over them,  */
+/* and the glow layer adds the sun's soft halo.       */
+/* ================================================== */
+:root[data-theme="light"] .dt-stars {
+    background-image:
+        radial-gradient(circle at 90% 7%, rgba(255, 250, 230, 1) 0, rgba(255, 243, 205, 0.95) 46px, rgba(255, 226, 150, 0.55) 70px, rgba(255, 214, 130, 0) 160px),
+        linear-gradient(180deg, rgb(170, 204, 240) 0%, rgb(196, 220, 246) 26%, rgb(226, 236, 246) 48%, var(--dt-background) 72%);
+}
+
+:root[data-theme="light"] .dt-stars-far,
+:root[data-theme="light"] .dt-stars-near {
+    inset: -6% -15%;
+    background-repeat: no-repeat;
+}
+
+/* High, thin clouds. */
+:root[data-theme="light"] .dt-stars-far {
+    opacity: 1;
+    background-image:
+        radial-gradient(ellipse 300px 48px at 12% 14%, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0) 70%),
+        radial-gradient(ellipse 200px 36px at 20% 11%, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0) 70%),
+        radial-gradient(ellipse 340px 54px at 52% 9%, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0) 70%),
+        radial-gradient(ellipse 260px 44px at 66% 30%, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0) 70%),
+        radial-gradient(ellipse 280px 46px at 30% 34%, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0) 70%);
+    animation: dt-cloud-drift-far 90s ease-in-out infinite alternate;
+}
+
+/* Puffy clouds: a few overlapping puffs each, with a faint blue-grey base. */
+:root[data-theme="light"] .dt-stars-near {
+    opacity: 1;
+    background-image:
+        radial-gradient(ellipse 90px 54px at 26% 20%, rgb(255, 255, 255), rgba(255, 255, 255, 0) 75%),
+        radial-gradient(ellipse 120px 66px at 31% 18%, rgb(255, 255, 255), rgba(255, 255, 255, 0) 75%),
+        radial-gradient(ellipse 100px 50px at 36% 21%, rgb(255, 255, 255), rgba(255, 255, 255, 0) 75%),
+        radial-gradient(ellipse 210px 40px at 31% 25%, rgba(150, 175, 205, 0.45), rgba(150, 175, 205, 0) 72%),
+        radial-gradient(ellipse 80px 46px at 70% 13%, rgb(255, 255, 255), rgba(255, 255, 255, 0) 75%),
+        radial-gradient(ellipse 110px 60px at 75% 11%, rgb(255, 255, 255), rgba(255, 255, 255, 0) 75%),
+        radial-gradient(ellipse 90px 44px at 80% 14%, rgb(255, 255, 255), rgba(255, 255, 255, 0) 75%),
+        radial-gradient(ellipse 190px 36px at 75% 17%, rgba(150, 175, 205, 0.4), rgba(150, 175, 205, 0) 72%),
+        radial-gradient(ellipse 70px 38px at 50% 27%, rgb(255, 255, 255), rgba(255, 255, 255, 0) 75%),
+        radial-gradient(ellipse 95px 48px at 54% 25%, rgb(255, 255, 255), rgba(255, 255, 255, 0) 75%),
+        radial-gradient(ellipse 150px 30px at 53% 30%, rgba(150, 175, 205, 0.35), rgba(150, 175, 205, 0) 72%);
+    animation: dt-cloud-drift-near 60s ease-in-out infinite alternate;
+}
+
+/* The sun's wide, warm halo, breathing slowly. */
+:root[data-theme="light"] .dt-stars-glow {
+    inset: 0;
+    background-image:
+        radial-gradient(circle at 90% 7%, rgba(255, 220, 150, 0.5) 0, rgba(255, 220, 150, 0.22) 220px, rgba(255, 220, 150, 0) 520px);
+    animation: dt-sun-breathe 12s ease-in-out infinite alternate;
+}
+
+@keyframes dt-cloud-drift-far {
+    from { transform: translate3d(-50px, 0, 0); }
+    to { transform: translate3d(50px, 4px, 0); }
+}
+
+@keyframes dt-cloud-drift-near {
+    from { transform: translate3d(70px, 0, 0); }
+    to { transform: translate3d(-70px, -3px, 0); }
+}
+
+@keyframes dt-sun-breathe {
+    from { opacity: 0.7; }
+    to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :root[data-theme="light"] .dt-stars-far,
+    :root[data-theme="light"] .dt-stars-near,
+    :root[data-theme="light"] .dt-stars-glow {
+        animation: none;
+    }
+}

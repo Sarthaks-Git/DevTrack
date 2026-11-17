@@ -4,10 +4,10 @@ import { formatMilestoneDue, isMilestoneOverdue } from "../../utils/milestoneUti
 // "What's next?": the soonest open milestones across active goals and projects.
 function UpcomingMilestones({ milestones, total }) {
   return (
-    <section className="mb-16">
+    <section className="mb-8">
       <div className="mb-5 flex items-end justify-between border-b border-[var(--dt-border)] pb-4">
         <p className="text-xs uppercase tracking-[0.25em] text-[var(--dt-text-muted)]">Next milestones</p>
-        <span className="text-[10px] uppercase tracking-[0.2em] text-[var(--dt-text-muted)]">
+        <span className="text-[11px] uppercase tracking-[0.2em] text-[var(--dt-text-muted)]">
           {total} open
         </span>
       </div>
@@ -43,7 +43,7 @@ function UpcomingMilestones({ milestones, total }) {
                   </Link>
                 </div>
                 <span
-                  className={`text-[10px] uppercase tracking-[0.16em] ${
+                  className={`text-[11px] uppercase tracking-[0.16em] ${
                     overdue ? "text-red-300" : "text-[var(--dt-text-muted)]"
                   }`}
                 >

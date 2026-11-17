@@ -380,7 +380,7 @@ function ActivityHeatmap({ calendar, problemDays }) {
 
                 <div>
 
-                    <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--dt-text-muted)]">
+                    <p className="text-[11px] uppercase tracking-[0.16em] text-[var(--dt-text-muted)]">
 
                         Submissions
 
@@ -398,7 +398,7 @@ function ActivityHeatmap({ calendar, problemDays }) {
 
                 <div>
 
-                    <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--dt-text-muted)]">
+                    <p className="text-[11px] uppercase tracking-[0.16em] text-[var(--dt-text-muted)]">
 
                         Active days
 
@@ -416,7 +416,7 @@ function ActivityHeatmap({ calendar, problemDays }) {
 
                 <div className="col-span-2 sm:col-span-1">
 
-                    <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--dt-text-muted)]">
+                    <p className="text-[11px] uppercase tracking-[0.16em] text-[var(--dt-text-muted)]">
 
                         Period
 
@@ -464,7 +464,7 @@ function ActivityHeatmap({ calendar, problemDays }) {
 
                                     key={`${month.date.toISOString()}-${index}`}
 
-                                    className="absolute text-[10px] text-[var(--dt-text-muted)]"
+                                    className="absolute text-[11px] text-[var(--dt-text-muted)]"
 
                                     style={{
 
@@ -496,7 +496,7 @@ function ActivityHeatmap({ calendar, problemDays }) {
 
                         {/* Weekday labels */}
 
-                        <div className="grid grid-rows-7 gap-[3px] text-[10px] text-[var(--dt-text-muted)]">
+                        <div className="grid grid-rows-7 gap-[3px] text-[11px] text-[var(--dt-text-muted)]">
 
                             <span>Sun</span>
 
@@ -620,7 +620,7 @@ function ActivityHeatmap({ calendar, problemDays }) {
 
             <div className="mt-3 flex items-center justify-end gap-2">
 
-                <span className="text-[10px] text-[var(--dt-text-muted)]">
+                <span className="text-[11px] text-[var(--dt-text-muted)]">
 
                     Less
 
@@ -642,7 +642,7 @@ function ActivityHeatmap({ calendar, problemDays }) {
 
 
 
-                <span className="text-[10px] text-[var(--dt-text-muted)]">
+                <span className="text-[11px] text-[var(--dt-text-muted)]">
 
                     More
 
@@ -660,7 +660,7 @@ function ActivityHeatmap({ calendar, problemDays }) {
 
                     role="status"
 
-                    className={`pointer-events-none fixed z-[100] rounded-lg border border-[var(--dt-border)] px-3 py-2.5 shadow-2xl shadow-black/40 ${
+                    className={`pointer-events-none fixed z-[100] rounded-lg border border-[var(--dt-border)] px-3 py-2.5 shadow-2xl shadow-black/40 [[data-theme=light]_&]:shadow-black/15 ${
 
                         activeTooltip.placement === "above"
 
@@ -675,13 +675,13 @@ function ActivityHeatmap({ calendar, problemDays }) {
                         left: activeTooltip.x,
                         top: activeTooltip.y,
                         width: activeTooltip.width,
-        backgroundColor: "#151a17",
+                        backgroundColor: "var(--dt-popover)",
 
                     }}
 
                 >
 
-                    <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--dt-text-muted)]">
+                    <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--dt-text-muted)]">
 
                         Coding activity
 
@@ -717,7 +717,7 @@ function ActivityHeatmap({ calendar, problemDays }) {
 
 
 
-                    <p className="mt-1 text-[10px] text-[var(--dt-text-muted)]">
+                    <p className="mt-1 text-[11px] text-[var(--dt-text-muted)]">
                         {activeTooltip.count === 0
                             ? "No submissions recorded"
                             : activeTooltip.count === 1
@@ -729,17 +729,17 @@ function ActivityHeatmap({ calendar, problemDays }) {
                             {activeTooltip.problems.slice(0, 6).map((problem) => (
                                 <li key={problem.titleSlug} className="flex items-start justify-between gap-2 text-xs">
                                     <span className="min-w-0 truncate text-[var(--dt-text-primary)]">{problem.title}</span>
-                                    <span className="shrink-0 text-[10px] uppercase tracking-[0.1em] text-emerald-300">
+                                    <span className="shrink-0 text-[11px] uppercase tracking-[0.1em] text-emerald-300">
                                         Accepted{problem.count > 1 ? ` ×${problem.count}` : ""}
                                     </span>
                                 </li>
                             ))}
                             {activeTooltip.problems.length > 6 ? (
-                                <li className="text-[10px] text-[var(--dt-text-muted)]">+{activeTooltip.problems.length - 6} more</li>
+                                <li className="text-[11px] text-[var(--dt-text-muted)]">+{activeTooltip.problems.length - 6} more</li>
                             ) : null}
                         </ul>
                     ) : activeTooltip.count > 0 ? (
-                        <p className="mt-2 border-t border-[var(--dt-border)] pt-2 text-[10px] leading-4 text-[var(--dt-text-muted)]">
+                        <p className="mt-2 border-t border-[var(--dt-border)] pt-2 text-[11px] leading-4 text-[var(--dt-text-muted)]">
                             {activeTooltip.beforeTracking
                                 ? "Problem titles are tracked from the day you started using problem tracking."
                                 : "No accepted problems tracked this day."}
@@ -808,18 +808,15 @@ function Coding() {
         };
     }, [loadAll]);
 
-    async function loadMoreProblems() {
+    // One page of the problem log at a time (numbered pages instead of an ever-growing list).
+    async function showProblemPage(page) {
         if (!problems.data) return;
         setProblems((current) => ({ ...current, loadingMore: true }));
         try {
-            const next = await getSolvedProblems(problems.data.page + 1);
-            setProblems((current) => ({
-                ...current,
-                loadingMore: false,
-                data: { ...next, items: [...current.data.items, ...next.items] },
-            }));
+            const next = await getSolvedProblems(page);
+            setProblems((current) => ({ ...current, loadingMore: false, error: "", data: next }));
         } catch (err) {
-            setProblems((current) => ({ ...current, loadingMore: false, error: err.message || "Could not load more problems." }));
+            setProblems((current) => ({ ...current, loadingMore: false, error: err.message || "Could not load that page." }));
         }
     }
 
@@ -871,39 +868,39 @@ function Coding() {
                 title="Small steps. Stronger skills."
                 description="Your coding practice at a glance. Connect and manage coding platforms in Settings."
             >
-                {profile && <button type="button" onClick={handleRefresh} disabled={refreshing} className="self-start border border-[var(--dt-border)] px-4 py-2.5 text-[10px] font-medium uppercase tracking-[0.16em] text-[var(--dt-text-secondary)] transition-colors hover:text-[var(--dt-accent-soft)] disabled:opacity-40 sm:self-auto">{refreshing ? "Refreshing..." : "↻ Refresh stats"}</button>}
+                {profile && <button type="button" onClick={handleRefresh} disabled={refreshing} className="self-start border border-[var(--dt-border)] px-4 py-2.5 text-[11px] font-medium uppercase tracking-[0.16em] text-[var(--dt-text-secondary)] transition-colors hover:text-[var(--dt-accent-soft)] disabled:opacity-40 sm:self-auto">{refreshing ? "Refreshing..." : "↻ Refresh stats"}</button>}
             </PageHeader>
 
             {error && <div role="alert" className="mb-6 border-l-2 border-red-400 py-2 pl-3 text-sm text-red-400">{error}</div>}
             {message && <div role="status" className="mb-6 border-l-2 border-[var(--dt-accent-soft)] py-2 pl-3 text-sm text-[var(--dt-text-secondary)]">{message}</div>}
 
             {!profile && (
-                <div className="mb-10 border border-[var(--dt-border)] p-6 md:p-8">
-                    <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--dt-text-muted)]">No coding profile connected</p>
+                <div className="mb-6 border border-[var(--dt-border)] p-5">
+                    <p className="text-[11px] uppercase tracking-[0.2em] text-[var(--dt-text-muted)]">No coding profile connected</p>
                     <h2 className="mt-3 text-xl font-medium text-[var(--dt-text-primary)]">Your coding stats will appear here.</h2>
                     <p className="mt-2 max-w-xl text-sm leading-6 text-[var(--dt-text-secondary)]">Connect and verify a coding account in Settings. DevTrack only displays statistics after ownership is verified.</p>
-                    <Link to="/app/settings" className="mt-5 inline-flex border border-[var(--dt-border)] px-4 py-2.5 text-[10px] font-medium uppercase tracking-[0.16em] text-[var(--dt-text-secondary)] hover:text-[var(--dt-accent-soft)]">Manage connected accounts →</Link>
+                    <Link to="/app/settings" className="mt-5 inline-flex border border-[var(--dt-border)] px-4 py-2.5 text-[11px] font-medium uppercase tracking-[0.16em] text-[var(--dt-text-secondary)] hover:text-[var(--dt-accent-soft)]">Manage connected accounts →</Link>
                 </div>
             )}
 
-            <div className={profile ? "grid gap-12 min-[1340px]:grid-cols-[minmax(0,1fr)_18.5rem] min-[1340px]:gap-10" : ""}>
+            <div className={profile ? "grid grid-cols-[minmax(0,1fr)] gap-8 min-[1340px]:grid-cols-[minmax(0,1fr)_18.5rem] min-[1340px]:gap-8" : ""}>
             <div className="min-w-0">
             {profile && <div className="mb-8 flex flex-wrap items-center gap-3 border-b border-[var(--dt-border)] pb-4">
-                <div><p className="text-[10px] uppercase tracking-[0.2em] text-[var(--dt-text-muted)]">Connected platform</p><p className="mt-1 text-sm text-[var(--dt-text-primary)]">LeetCode · <a href={`https://leetcode.com/${encodeURIComponent(profile.username)}/`} target="_blank" rel="noreferrer" className="text-[var(--dt-accent-soft)] hover:underline">@{profile.username}</a></p></div>
-                <span className="ml-auto text-[10px] uppercase tracking-[0.15em] text-[var(--dt-text-muted)]">Verified</span>
+                <div><p className="text-[11px] uppercase tracking-[0.2em] text-[var(--dt-text-muted)]">Connected platform</p><p className="mt-1 text-sm text-[var(--dt-text-primary)]">LeetCode · <a href={`https://leetcode.com/${encodeURIComponent(profile.username)}/`} target="_blank" rel="noreferrer" className="text-[var(--dt-accent-soft)] hover:underline">@{profile.username}</a></p></div>
+                <span className="ml-auto text-[11px] uppercase tracking-[0.15em] text-[var(--dt-text-muted)]">Verified</span>
             </div>}
 
             {profile ? (
 
                 <>
 
-                    <section className="mb-10">
+                    <section className="mb-6">
 
                         <div className="mb-4 flex flex-wrap items-end justify-between gap-3 border-b border-[var(--dt-border)] pb-3">
 
                             <div>
 
-                                <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--dt-text-muted)]">
+                                <p className="text-[11px] uppercase tracking-[0.2em] text-[var(--dt-text-muted)]">
 
                                     Problem-solving progress
 
@@ -919,7 +916,7 @@ function Coding() {
 
 
 
-                            <span className="text-[10px] text-[var(--dt-text-muted)]">
+                            <span className="text-[11px] text-[var(--dt-text-muted)]">
 
                                 {stats?.lastFetchedAt
 
@@ -939,13 +936,13 @@ function Coding() {
 
                                 <div>
 
-                                    <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--dt-text-muted)]">
+                                    <p className="text-[11px] uppercase tracking-[0.16em] text-[var(--dt-text-muted)]">
 
                                         Total problems solved
 
                                     </p>
 
-                                    <p className="mt-2 text-5xl font-medium tracking-tight text-[var(--dt-text-primary)] md:text-6xl">
+                                    <p className="mt-1 text-4xl font-medium tracking-tight text-[var(--dt-text-primary)]">
 
                                         {totalSolved ?? "—"}
 
@@ -1001,7 +998,7 @@ function Coding() {
 
 
 
-                                    <div className="mt-2 flex justify-between text-[10px] text-[var(--dt-text-muted)]">
+                                    <div className="mt-2 flex justify-between text-[11px] text-[var(--dt-text-muted)]">
 
                                         <span>{totalSolved.toLocaleString()} solved</span>
 
@@ -1027,11 +1024,11 @@ function Coding() {
 
 
 
-                    <section className="mb-10">
+                    <section className="mb-6">
 
                         <div className="mb-4 border-b border-[var(--dt-border)] pb-3">
 
-                            <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--dt-text-muted)]">
+                            <p className="text-[11px] uppercase tracking-[0.2em] text-[var(--dt-text-muted)]">
 
                                 Difficulty breakdown
 
@@ -1089,7 +1086,7 @@ function Coding() {
 
                                     >
 
-                                        <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--dt-text-muted)]">
+                                        <p className="text-[11px] uppercase tracking-[0.16em] text-[var(--dt-text-muted)]">
 
                                             {item.label}
 
@@ -1149,7 +1146,7 @@ function Coding() {
 
 
 
-                                                <p className="mt-2 text-[10px] text-[var(--dt-text-muted)]">
+                                                <p className="mt-2 text-[11px] text-[var(--dt-text-muted)]">
 
                                                     {percentage.toFixed(1)}% solved
 
@@ -1159,7 +1156,7 @@ function Coding() {
 
                                         ) : (
 
-                                            <p className="mt-4 text-[10px] text-[var(--dt-text-muted)]">
+                                            <p className="mt-4 text-[11px] text-[var(--dt-text-muted)]">
 
                                                 Progress unavailable
 
@@ -1179,11 +1176,11 @@ function Coding() {
 
 
 
-                    <section className="mb-10">
+                    <section className="mb-6">
 
                         <div className="mb-4 border-b border-[var(--dt-border)] pb-3">
 
-                            <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--dt-text-muted)]">
+                            <p className="text-[11px] uppercase tracking-[0.2em] text-[var(--dt-text-muted)]">
 
                                 Activity
 
@@ -1215,7 +1212,7 @@ function Coding() {
 
                         <div className="mb-4 border-b border-[var(--dt-border)] pb-3">
 
-                            <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--dt-text-muted)]">
+                            <p className="text-[11px] uppercase tracking-[0.2em] text-[var(--dt-text-muted)]">
 
                                 Contest performance
 
@@ -1229,7 +1226,7 @@ function Coding() {
 
                             <div>
 
-                                <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--dt-text-muted)]">
+                                <p className="text-[11px] uppercase tracking-[0.16em] text-[var(--dt-text-muted)]">
 
                                     LeetCode contest rating
 
@@ -1264,7 +1261,7 @@ function Coding() {
                     loading={problems.loading}
                     error={problems.error}
                     loadingMore={problems.loadingMore}
-                    onLoadMore={loadMoreProblems}
+                    onPageChange={showProblemPage}
                 />
             ) : null}
             </div>

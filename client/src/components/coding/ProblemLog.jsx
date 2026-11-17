@@ -1,3 +1,4 @@
+import Pagination from "../common/Pagination";
 import { relativeTime } from "../activity/activityMeta";
 
 const DIFFICULTY_CLASS = {
@@ -28,7 +29,7 @@ function ProblemRow({ problem }) {
           {name}
         </a>
         {problem.difficulty ? (
-          <span className={`shrink-0 text-[10px] font-medium uppercase tracking-[0.12em] ${DIFFICULTY_CLASS[problem.difficulty]}`}>
+          <span className={`shrink-0 text-[11px] font-medium uppercase tracking-[0.12em] ${DIFFICULTY_CLASS[problem.difficulty]}`}>
             {problem.difficulty}
           </span>
         ) : null}
@@ -56,23 +57,23 @@ function ProblemRow({ problem }) {
 }
 
 // Right-hand column on the Coding page: problems accepted since tracking began, newest first.
-function ProblemLog({ data, loading, error, loadingMore, onLoadMore }) {
+function ProblemLog({ data, loading, error, loadingMore, onPageChange }) {
   const items = data?.items || [];
 
   return (
     <aside aria-labelledby="problem-log-title" className="min-[1340px]:sticky min-[1340px]:top-6 min-[1340px]:max-h-[calc(100vh-3rem)] min-[1340px]:overflow-y-auto min-[1340px]:pr-1">
       <div className="mb-4 flex items-end justify-between border-b border-[var(--dt-border)] pb-3">
-        <p id="problem-log-title" className="text-[10px] uppercase tracking-[0.2em] text-[var(--dt-text-muted)]">
+        <p id="problem-log-title" className="text-[11px] uppercase tracking-[0.2em] text-[var(--dt-text-muted)]">
           Problem log
         </p>
         {data ? (
-          <span className="text-[10px] uppercase tracking-[0.15em] text-[var(--dt-text-muted)]">{data.total} solved</span>
+          <span className="text-[11px] uppercase tracking-[0.15em] text-[var(--dt-text-muted)]">{data.total} solved</span>
         ) : null}
       </div>
 
       {data?.topPatterns?.length ? (
         <div className="mb-4">
-          <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--dt-text-muted)]">Most used patterns</p>
+          <p className="text-[11px] uppercase tracking-[0.16em] text-[var(--dt-text-muted)]">Most used patterns</p>
           <div className="mt-2 flex flex-wrap gap-1.5">
             {data.topPatterns.map((row) => (
               <span key={row.pattern} className="border border-[var(--dt-border)] px-2 py-0.5 text-[11px] text-[var(--dt-text-secondary)]">
@@ -100,19 +101,14 @@ function ProblemLog({ data, loading, error, loadingMore, onLoadMore }) {
         </ol>
       ) : null}
 
-      {data && data.page < data.pages ? (
-        <button
-          type="button"
-          onClick={onLoadMore}
-          disabled={loadingMore}
-          className="mt-3 text-[10px] font-medium uppercase tracking-[0.18em] text-[var(--dt-text-secondary)] transition-colors hover:text-[var(--dt-accent-soft)] disabled:opacity-40"
-        >
-          {loadingMore ? "Loading…" : "Show more"}
-        </button>
+      {data ? (
+        <div className={loadingMore ? "pointer-events-none opacity-50" : ""}>
+          <Pagination page={data.page} pageCount={data.pages} onChange={onPageChange} label="Problem log pages" scrollTargetId="problem-log-title" />
+        </div>
       ) : null}
 
       {data?.trackingSince ? (
-        <p className="mt-4 text-[10px] leading-4 text-[var(--dt-text-muted)]">
+        <p className="mt-4 text-[11px] leading-4 text-[var(--dt-text-muted)]">
           Tracking since {formatDay(data.trackingSince)}. Verified from LeetCode&apos;s public data; it shows accepted submissions only, and patterns come from each problem&apos;s topic tags.
         </p>
       ) : null}

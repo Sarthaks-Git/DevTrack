@@ -45,9 +45,9 @@ function SkillsPanel({ version }) {
   ).filter((entry) => entry.text);
 
   return (
-    <section className="mb-10">
+    <section className="mb-6">
       <div className="mb-4 border-b border-[var(--dt-border)] pb-3">
-        <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--dt-text-muted)]">Skills</p>
+        <p className="text-[11px] uppercase tracking-[0.2em] text-[var(--dt-text-muted)]">Skills</p>
         <p className="mt-1 text-sm text-[var(--dt-text-secondary)]">
           Patterns from your accepted problems{data?.trackingSince ? ", since tracking began" : ""}
         </p>
@@ -84,7 +84,7 @@ function SkillsPanel({ version }) {
                 </p>
               </div>
               <DifficultyBar easy={item.easy} medium={item.medium} hard={item.hard} />
-              <span className={`text-[10px] uppercase tracking-[0.16em] ${LEVEL_TONES[item.level]}`}>
+              <span className={`text-[11px] uppercase tracking-[0.16em] ${LEVEL_TONES[item.level]}`}>
                 {LEVEL_LABELS[item.level]}
               </span>
             </li>

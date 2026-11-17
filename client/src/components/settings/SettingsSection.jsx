@@ -1,8 +1,8 @@
 function SettingsSection({ id, number, label, title, description, children, tone }) {
   return (
-    <section id={id} className="scroll-mt-24 border-b border-[var(--dt-border)] py-10 first:pt-0" aria-labelledby={`settings-${number}`}>
-      <div className="mb-6">
-        <p className={`text-[10px] uppercase tracking-[0.2em] ${tone === "danger" ? "text-red-400/80" : "text-[var(--dt-text-muted)]"}`}>
+    <section id={id} className="scroll-mt-24 border-b border-[var(--dt-border)] py-6 first:pt-0" aria-labelledby={`settings-${number}`}>
+      <div className="mb-4">
+        <p className={`text-[11px] uppercase tracking-[0.2em] ${tone === "danger" ? "text-red-400/80" : "text-[var(--dt-text-muted)]"}`}>
           {number} / {label}
         </p>
         <h2 id={`settings-${number}`} className="mt-2 text-xl text-[var(--dt-text-primary)]">{title}</h2>

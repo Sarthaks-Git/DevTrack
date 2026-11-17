@@ -3,7 +3,7 @@ import { requestPasswordReset, resetPassword } from "../../services/authService"
 
 const COOLDOWN_SECONDS = 60;
 const INPUT = "w-full border-b border-[var(--dt-border)] bg-transparent px-0 py-3 text-base text-[var(--dt-text-primary)] outline-none transition-colors duration-200 placeholder:text-[var(--dt-text-muted)] focus:border-[var(--dt-accent)] disabled:cursor-not-allowed disabled:opacity-50";
-const LABEL = "mb-3 block text-[10px] font-medium uppercase tracking-[0.2em] text-[var(--dt-text-muted)]";
+const LABEL = "mb-3 block text-[11px] font-medium uppercase tracking-[0.2em] text-[var(--dt-text-muted)]";
 const PRIMARY = "mt-9 w-full border border-[var(--dt-accent)] bg-[var(--dt-accent)] px-6 py-4 text-xs font-medium uppercase tracking-[0.2em] text-white transition-all duration-200 hover:border-[var(--dt-accent-soft)] hover:bg-[var(--dt-accent-soft)] disabled:cursor-not-allowed disabled:opacity-50";
 
 // Login page "Forgot password?": email → code + new password. On success the user signs in again

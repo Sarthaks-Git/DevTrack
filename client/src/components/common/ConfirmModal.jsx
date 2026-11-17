@@ -43,7 +43,7 @@ function ConfirmModal({
       aria-labelledby={titleId}
     >
       <div className="w-full max-w-md border border-[var(--dt-border-strong)] bg-[var(--dt-surface)] p-7 shadow-2xl animate-[dt-modal-in_180ms_ease-out] md:p-8">
-        <p className={`text-[10px] font-medium uppercase tracking-[0.3em] ${destructive ? "text-red-400/80" : "text-[var(--dt-text-muted)]"}`}>
+        <p className={`text-[11px] font-medium uppercase tracking-[0.3em] ${destructive ? "text-red-400/80" : "text-[var(--dt-text-muted)]"}`}>
           {eyebrow}
         </p>
         <h2 id={titleId} className="mt-4 font-[family-name:var(--dt-font-display)] text-3xl leading-tight text-[var(--dt-text-primary)]">

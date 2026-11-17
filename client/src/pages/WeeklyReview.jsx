@@ -13,7 +13,7 @@ function SectionTitle({ children, note }) {
   return (
     <div className="mb-5 flex items-end justify-between gap-4 border-b border-[var(--dt-border)] pb-4">
       <h2 className="text-xs uppercase tracking-[0.25em] text-[var(--dt-text-muted)]">{children}</h2>
-      {note ? <span className="text-[10px] uppercase tracking-[0.18em] text-[var(--dt-text-muted)]">{note}</span> : null}
+      {note ? <span className="text-[11px] uppercase tracking-[0.18em] text-[var(--dt-text-muted)]">{note}</span> : null}
     </div>
   );
 }
@@ -22,7 +22,7 @@ function Figure({ value, label, note }) {
   return (
     <div className="border-l border-[var(--dt-border)] pl-4">
       <p className="font-[family-name:var(--dt-font-display)] text-4xl text-[var(--dt-text-primary)]">{value}</p>
-      <p className="mt-1 text-[10px] uppercase tracking-[0.18em] text-[var(--dt-text-muted)]">{label}</p>
+      <p className="mt-1 text-[11px] uppercase tracking-[0.18em] text-[var(--dt-text-muted)]">{label}</p>
       {note ? <p className="mt-1 text-xs text-[var(--dt-text-secondary)]">{note}</p> : null}
     </div>
   );
@@ -43,7 +43,7 @@ function FinishedList({ finished }) {
     <ul>
       {rows.map((row) => (
         <li key={row.key} className="grid grid-cols-[90px_minmax(0,1fr)] gap-4 border-b border-[var(--dt-border)] py-3">
-          <span className="text-[10px] uppercase tracking-[0.16em] text-emerald-300">{row.tag}</span>
+          <span className="text-[11px] uppercase tracking-[0.16em] text-emerald-300">{row.tag}</span>
           <Link to={row.to} className="min-w-0 break-words text-sm text-[var(--dt-text-primary)] hover:text-[var(--dt-accent-soft)]">
             {row.title}
             {row.detail ? <span className="block text-xs text-[var(--dt-text-muted)]">in {row.detail}</span> : null}
@@ -91,7 +91,7 @@ function Slipped({ slipped }) {
       {rows.map(({ key, item, text, urgent }) => (
         <li key={key} className="flex flex-wrap items-baseline justify-between gap-2 border-b border-[var(--dt-border)] py-3">
           <Link to={subjectPath(item.kind)} className="min-w-0 break-words text-sm text-[var(--dt-text-primary)] hover:text-[var(--dt-accent-soft)]">{item.title}</Link>
-          <span className={`text-[10px] uppercase tracking-[0.16em] ${urgent ? "text-red-300" : "text-[var(--dt-text-secondary)]"}`}>{text}</span>
+          <span className={`text-[11px] uppercase tracking-[0.16em] ${urgent ? "text-red-300" : "text-[var(--dt-text-secondary)]"}`}>{text}</span>
         </li>
       ))}
     </ul>
@@ -114,7 +114,7 @@ function FocusItem({ item, index }) {
   }
   return (
     <li className="grid gap-3 border-b border-[var(--dt-border)] py-5 md:grid-cols-[40px_1fr] md:gap-6">
-      <span className="font-mono text-[9px] tracking-[0.15em] text-[var(--dt-text-muted)]">{String(index + 1).padStart(2, "0")}</span>
+      <span className="font-mono text-[11px] tracking-[0.15em] text-[var(--dt-text-muted)]">{String(index + 1).padStart(2, "0")}</span>
       <div className="min-w-0">
         <Link to={to} className="break-words text-base font-medium text-[var(--dt-text-primary)] hover:text-[var(--dt-accent-soft)]">{title}</Link>
         <p className="mt-2 text-sm leading-6 text-[var(--dt-text-secondary)]">{detail}</p>
@@ -148,7 +148,7 @@ function WeeklyReview() {
       type="button"
       onClick={() => setParams(value === "last" ? { week: "last" } : {}, { replace: true })}
       aria-pressed={week === value}
-      className={`border px-4 py-2 text-[10px] uppercase tracking-[0.18em] transition-colors ${week === value ? "border-[var(--dt-accent)] text-[var(--dt-text-primary)]" : "border-[var(--dt-border)] text-[var(--dt-text-muted)] hover:text-[var(--dt-text-primary)]"}`}
+      className={`border px-4 py-2 text-[11px] uppercase tracking-[0.18em] transition-colors ${week === value ? "border-[var(--dt-accent)] text-[var(--dt-text-primary)]" : "border-[var(--dt-border)] text-[var(--dt-text-muted)] hover:text-[var(--dt-text-primary)]"}`}
     >
       {label}
     </button>
@@ -171,7 +171,7 @@ function WeeklyReview() {
       {state.status === "error" && !loading ? <StateMessage tone="error" title="Couldn't load the weekly review" message={state.error} /> : null}
 
       {data && !loading ? (
-        <div className="space-y-14">
+        <div className="space-y-8">
           <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
             <Figure value={data.totals.finished} label="Finished" note={compareText(data.totals.finished, data.previous.finished, { partial })} />
             <Figure

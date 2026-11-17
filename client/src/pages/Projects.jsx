@@ -1,5 +1,9 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Pagination from "../components/common/Pagination";
+import { usePagination } from "../components/common/usePagination";
+
+const PROJECTS_PER_PAGE = 6;
 import { Link } from "react-router-dom";
 import api, { ensureCsrfToken, errorMessage } from "../services/api";
 import { getGoals } from "../services/goalService";
@@ -77,7 +81,7 @@ function StatusLabel({ status }) {
   };
 
   return (
-    <span className="inline-flex items-center gap-2 border border-[var(--dt-border-strong)] px-2.5 py-1 text-[10px] uppercase tracking-[0.12em] text-[var(--dt-text-secondary)]">
+    <span className="inline-flex items-center gap-2 border border-[var(--dt-border-strong)] px-2.5 py-1 text-[11px] uppercase tracking-[0.12em] text-[var(--dt-text-secondary)]">
       <span
         className={`h-1.5 w-1.5 rounded-full ${
           status === "completed"
@@ -97,7 +101,7 @@ function ProjectCard({ project, goal, milestoneHandlers, githubConnected, securi
     <article className="group flex h-full flex-col border border-[var(--dt-border)] bg-[var(--dt-surface)] p-5 transition-colors duration-200 hover:border-[var(--dt-border-strong)] sm:p-6">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="mb-3 text-[10px] uppercase tracking-[0.2em] text-[var(--dt-text-muted)]">
+          <p className="mb-3 text-[11px] uppercase tracking-[0.2em] text-[var(--dt-text-muted)]">
             Project
           </p>
 
@@ -294,7 +298,7 @@ function ProjectForm({ initialProject, goals = [], saving, onCancel, onSubmit })
     >
       <div className="mb-6 flex items-start justify-between gap-4">
         <div>
-          <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--dt-accent-soft)]">
+          <p className="text-[11px] uppercase tracking-[0.2em] text-[var(--dt-accent-soft)]">
             {initialProject ? "Edit project" : "New project"}
           </p>
 
@@ -524,7 +528,7 @@ function DeleteProjectModal({ project, deleting, onCancel, onConfirm }) {
           !
         </div>
 
-        <p className="text-[10px] uppercase tracking-[0.2em] text-red-400">
+        <p className="text-[11px] uppercase tracking-[0.2em] text-red-400">
           Destructive action
         </p>
 
@@ -793,6 +797,8 @@ function Projects() {
     filter === "all"
       ? projects
       : projects.filter((project) => project.status === filter);
+  // Six cards a page (two rows on wide screens); a new filter starts at page 1.
+  const projectPages = usePagination(filteredProjects, PROJECTS_PER_PAGE, filter);
 
   const counts = {
     total: projects.length,
@@ -805,7 +811,7 @@ function Projects() {
   };
 
   const buttonClass =
-    "border border-[var(--dt-border-strong)] px-3 py-2 text-[10px] uppercase tracking-[0.12em] transition-colors";
+    "border border-[var(--dt-border-strong)] px-3 py-2 text-[11px] uppercase tracking-[0.12em] transition-colors";
 
   return (
     <div className="text-[var(--dt-text-primary)]">
@@ -841,7 +847,7 @@ function Projects() {
                 key={item.label}
                 className="bg-[var(--dt-background)] p-4 sm:p-5"
               >
-                <p className="text-[10px] uppercase tracking-[0.15em] text-[var(--dt-text-muted)]">
+                <p className="text-[11px] uppercase tracking-[0.15em] text-[var(--dt-text-muted)]">
                   {item.label}
                 </p>
                 <p className="mt-3 font-[family-name:var(--dt-font-display)] text-3xl">
@@ -884,10 +890,10 @@ function Projects() {
           </section>
         )}
 
-        <section className="mt-9">
+        <section className="mt-6">
           <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
             <div>
-              <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--dt-text-muted)]">
+              <p className="text-[11px] uppercase tracking-[0.2em] text-[var(--dt-text-muted)]">
                 Your workspace
               </p>
               <h2 className="mt-2 text-lg font-medium">
@@ -932,8 +938,8 @@ function Projects() {
               ))}
             </div>
           ) : filteredProjects.length === 0 ? (
-            <div className="border border-dashed border-[var(--dt-border-strong)] px-6 py-16 text-center sm:py-20">
-              <p className="text-[10px] uppercase tracking-[0.22em] text-[var(--dt-accent-soft)]">
+            <div className="border border-dashed border-[var(--dt-border-strong)] px-6 py-10 text-center">
+              <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--dt-accent-soft)]">
                 {projects.length === 0 ? "A clean slate" : "No matching projects"}
               </p>
 
@@ -960,8 +966,9 @@ function Projects() {
               )}
             </div>
           ) : (
+            <div id="project-grid">
             <div className="grid items-start gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {filteredProjects.map((project) => (
+              {projectPages.pageItems.map((project) => (
                 <div
                   key={project._id}
                   className={
@@ -987,6 +994,8 @@ function Projects() {
                   />
                 </div>
               ))}
+            </div>
+            <Pagination page={projectPages.page} pageCount={projectPages.pageCount} onChange={projectPages.setPage} label="Project pages" scrollTargetId="project-grid" total={filteredProjects.length} pageSize={PROJECTS_PER_PAGE} />
             </div>
           )}
         </section>

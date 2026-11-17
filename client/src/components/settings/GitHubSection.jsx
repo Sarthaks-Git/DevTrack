@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import SettingsSection, { Notice } from "./SettingsSection";
 import ConfirmModal from "../common/ConfirmModal";
 import { disconnectGitHub, getGitHubStatus, startGitHubConnect, syncGitHub } from "../../services/githubService";
@@ -18,7 +18,9 @@ function formatTime(value) {
 }
 
 function GitHubSection() {
-  const [params, setParams] = useSearchParams();
+  const [params] = useSearchParams();
+  const navigate = useNavigate();
+  const { hash } = useLocation();
   const [state, setState] = useState({ loading: true, status: null });
   const [notice, setNotice] = useState(() => OUTCOMES[params.get("github")] || { kind: "", text: "" });
   const [busy, setBusy] = useState("");
@@ -29,8 +31,9 @@ function GitHubSection() {
     if (!params.has("github")) return;
     const next = new URLSearchParams(params);
     next.delete("github");
-    setParams(next, { replace: true });
-  }, [params, setParams]);
+    // Keep the hash: it names the open Settings section.
+    navigate({ search: next.toString(), hash }, { replace: true });
+  }, [params, navigate, hash]);
 
   useEffect(() => {
     let active = true;
@@ -131,16 +134,16 @@ function GitHubSection() {
                 </button>
               ) : (
                 <>
-                  <a href={state.status.installUrl} target="_blank" rel="noopener noreferrer" className="border border-[var(--dt-border)] px-4 py-2.5 text-[10px] font-medium uppercase tracking-[0.16em] text-[var(--dt-text-primary)] hover:border-[var(--dt-border-strong)]">
+                  <a href={state.status.installUrl} target="_blank" rel="noopener noreferrer" className="border border-[var(--dt-border)] px-4 py-2.5 text-[11px] font-medium uppercase tracking-[0.16em] text-[var(--dt-text-primary)] hover:border-[var(--dt-border-strong)]">
                     Choose repositories ↗
                   </a>
-                  <button type="button" onClick={handleSync} disabled={Boolean(busy)} className="border border-[var(--dt-border)] px-4 py-2.5 text-[10px] font-medium uppercase tracking-[0.16em] text-[var(--dt-text-primary)] hover:border-[var(--dt-border-strong)] disabled:opacity-50">
+                  <button type="button" onClick={handleSync} disabled={Boolean(busy)} className="border border-[var(--dt-border)] px-4 py-2.5 text-[11px] font-medium uppercase tracking-[0.16em] text-[var(--dt-text-primary)] hover:border-[var(--dt-border-strong)] disabled:opacity-50">
                     {busy === "sync" ? "Syncing..." : "Sync now"}
                   </button>
                 </>
               )}
               {connection ? (
-                <button type="button" onClick={() => setConfirmDisconnect(true)} className="border border-red-400/40 px-4 py-2.5 text-[10px] font-medium uppercase tracking-[0.16em] text-red-400 hover:bg-red-400/10">
+                <button type="button" onClick={() => setConfirmDisconnect(true)} className="border border-red-400/40 px-4 py-2.5 text-[11px] font-medium uppercase tracking-[0.16em] text-red-400 hover:bg-red-400/10">
                   Disconnect GitHub
                 </button>
               ) : null}

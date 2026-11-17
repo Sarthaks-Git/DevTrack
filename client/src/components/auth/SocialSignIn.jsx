@@ -30,7 +30,7 @@ function SocialSignIn({ disabled = false, onError }) {
 
   return (
     <div className="mt-8">
-      <div className="flex items-center gap-4 text-[10px] uppercase tracking-[0.25em] text-[var(--dt-text-muted)]">
+      <div className="flex items-center gap-4 text-[11px] uppercase tracking-[0.25em] text-[var(--dt-text-muted)]">
         <span className="h-px flex-1 bg-[var(--dt-border)]" />
         or
         <span className="h-px flex-1 bg-[var(--dt-border)]" />

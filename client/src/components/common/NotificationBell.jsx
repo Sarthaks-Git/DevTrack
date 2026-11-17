@@ -19,7 +19,7 @@ function NotificationBell({ unread, onNavigate, className = "" }) {
       </svg>
       <span>Alerts</span>
       {unread > 0 ? (
-        <span className="min-w-5 rounded-full bg-[var(--dt-accent)] px-1.5 py-0.5 text-center font-mono text-[9px] leading-none tracking-normal text-white">
+        <span className="min-w-5 rounded-full bg-[var(--dt-accent)] px-1.5 py-0.5 text-center font-mono text-[11px] leading-none tracking-normal text-white">
           {unread > 99 ? "99+" : unread}
         </span>
       ) : null}

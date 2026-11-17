@@ -9,7 +9,7 @@ import { login as loginRequest } from "../services/authService";
 import { errorMessage } from "../services/api";
 
 const Login = () => {
-    const [searchParams] = useSearchParams();
+    const [searchParams, setSearchParams] = useSearchParams();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     // A failed Google / GitHub / LinkedIn sign-in comes back here with an outcome word.
@@ -67,6 +67,9 @@ const Login = () => {
             if (result.twoFactorRequired) {
                 setPassword("");
                 setStep("code");
+                // Keep the step in the address: phones often reload the tab while the user is in
+                // the authenticator app, and the pending sign-in (an HttpOnly cookie) survives that.
+                setSearchParams({ step: "2fa" }, { replace: true });
                 return;
             }
 
@@ -121,7 +124,7 @@ const Login = () => {
                         DevTrack
                     </Link>
 
-                    <span className="text-[9px] uppercase tracking-[0.3em] text-[var(--dt-text-muted)]">
+                    <span className="hidden text-[11px] uppercase tracking-[0.3em] text-[var(--dt-text-muted)] sm:inline">
                         Developer Command Center
                     </span>
                 </header>
@@ -129,7 +132,7 @@ const Login = () => {
                 <div className="flex flex-1 items-center justify-center px-6 py-12 md:px-10 md:py-16">
                     <section className="w-full max-w-md">
                         <div className="mb-10">
-                            <p className="mb-5 text-[10px] font-medium uppercase tracking-[0.35em] text-[var(--dt-text-muted)]">
+                            <p className="mb-5 text-[11px] font-medium uppercase tracking-[0.35em] text-[var(--dt-text-muted)]">
                                 01 — AUTHENTICATION
                             </p>
 
@@ -166,6 +169,7 @@ const Login = () => {
                                 onRestart={text => {
                                     setMessageKind("error");
                                     setStep("password");
+                                    setSearchParams({}, { replace: true });
                                     setMessage(text);
                                 }}
                             />
@@ -189,7 +193,7 @@ const Login = () => {
                                 <div>
                                     <label
                                         htmlFor="login-email"
-                                        className="mb-3 block text-[10px] font-medium uppercase tracking-[0.2em] text-[var(--dt-text-muted)]"
+                                        className="mb-3 block text-[11px] font-medium uppercase tracking-[0.2em] text-[var(--dt-text-muted)]"
                                     >
                                         Email
                                     </label>
@@ -216,7 +220,7 @@ const Login = () => {
                                     <div className="mb-3 flex items-baseline justify-between gap-4">
                                         <label
                                             htmlFor="login-password"
-                                            className="block text-[10px] font-medium uppercase tracking-[0.2em] text-[var(--dt-text-muted)]"
+                                            className="block text-[11px] font-medium uppercase tracking-[0.2em] text-[var(--dt-text-muted)]"
                                         >
                                             Password
                                         </label>
@@ -283,7 +287,7 @@ const Login = () => {
                 </div>
 
                 <footer className="px-6 py-6 md:px-10">
-                    <p className="text-[9px] uppercase tracking-[0.25em] text-[var(--dt-text-muted)]">
+                    <p className="text-[11px] uppercase tracking-[0.25em] text-[var(--dt-text-muted)]">
                         DevTrack — Build. Track. Evolve.
                     </p>
                 </footer>

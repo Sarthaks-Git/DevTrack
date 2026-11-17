@@ -104,11 +104,11 @@ function GoalForm({ editingGoal, onGoalCreated, onGoalUpdated, onCancelEdit }) {
   return (
     <div
       className="
-                mb-12
+                mb-6
                 border-y
                 border-[var(--dt-border)]
                 py-8
-                md:py-10
+                md:py-6
             "
     >
       <div className="mb-8 flex items-start justify-between gap-6">
@@ -208,7 +208,7 @@ function GoalForm({ editingGoal, onGoalCreated, onGoalUpdated, onCancelEdit }) {
                             "
             />
 
-            <div className="mt-2 text-right text-[10px] uppercase tracking-[0.15em] text-[var(--dt-text-muted)]">
+            <div className="mt-2 text-right text-[11px] uppercase tracking-[0.15em] text-[var(--dt-text-muted)]">
               {formData.title.length}/120
             </div>
           </div>
@@ -257,13 +257,13 @@ function GoalForm({ editingGoal, onGoalCreated, onGoalUpdated, onCancelEdit }) {
                             "
             />
 
-            <div className="mt-2 text-right text-[10px] uppercase tracking-[0.15em] text-[var(--dt-text-muted)]">
+            <div className="mt-2 text-right text-[11px] uppercase tracking-[0.15em] text-[var(--dt-text-muted)]">
               {formData.description.length}/2000
             </div>
           </div>
 
           {/* Status / Priority */}
-          <div className="grid gap-8 md:grid-cols-2">
+          <div className="grid gap-5 md:grid-cols-2">
             <div>
               <label
                 htmlFor="status"
@@ -400,7 +400,7 @@ function GoalForm({ editingGoal, onGoalCreated, onGoalUpdated, onCancelEdit }) {
         {/* Actions */}
         <div
           className="
-                        mt-10
+                        mt-6
                         flex
                         flex-col-reverse
                         gap-4

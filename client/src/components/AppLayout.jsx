@@ -48,9 +48,9 @@ function AppLayout() {
           <Sidebar unread={unread} onNavigate={() => setMenuOpen(false)} />
         </aside>
 
-        <main id="main-content" tabIndex={-1} className="min-h-screen outline-none lg:pl-64" style={{ viewTransitionName: "main-content" }}>
+        <main id="main-content" tabIndex={-1} className="min-h-screen overflow-x-clip outline-none lg:pl-64" style={{ viewTransitionName: "main-content" }}>
           {/* One container for every page: same width, gutters and top offset everywhere. */}
-          <div className="mx-auto w-full max-w-6xl px-4 pb-16 pt-10 sm:px-6 md:px-10 md:pt-14">
+          <div className="mx-auto w-full max-w-7xl px-4 pb-10 pt-5 sm:px-6 md:px-8 md:pt-6">
             <Outlet context={{ refreshUnread }} />
           </div>
         </main>

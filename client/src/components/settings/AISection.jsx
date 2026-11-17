@@ -92,7 +92,7 @@ function AISection() {
               onClick={() => (status.enabled ? change(false) : setConfirmOn(true))}
               disabled={busy}
               aria-pressed={status.enabled}
-              className={status.enabled ? "border border-[var(--dt-border)] px-4 py-2.5 text-[10px] font-medium uppercase tracking-[0.16em] text-[var(--dt-text-primary)] hover:border-[var(--dt-border-strong)] disabled:opacity-50" : "dt-primary-button"}
+              className={status.enabled ? "border border-[var(--dt-border)] px-4 py-2.5 text-[11px] font-medium uppercase tracking-[0.16em] text-[var(--dt-text-primary)] hover:border-[var(--dt-border-strong)] disabled:opacity-50" : "dt-primary-button"}
             >
               {busy ? "Saving..." : status.enabled ? "Turn off" : "Turn on"}
             </button>
@@ -106,7 +106,7 @@ function AISection() {
                 className={`border p-4 ${tier.current ? "border-[var(--dt-accent)]" : "border-[var(--dt-border)]"}`}
               >
                 <div className="flex items-baseline justify-between gap-2">
-                  <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--dt-text-muted)]">{tier.label}</p>
+                  <p className="text-[11px] uppercase tracking-[0.18em] text-[var(--dt-text-muted)]">{tier.label}</p>
                   {tier.current ? <span className="dt-badge">Your plan</span> : null}
                 </div>
                 <p className="mt-1 text-sm text-[var(--dt-text-primary)]">{tier.model}</p>

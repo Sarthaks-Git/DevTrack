@@ -116,7 +116,7 @@ function PlatformsSection() {
           </div>
 
           {profile ? (
-            <button type="button" onClick={() => setConfirmDisconnect(true)} className="mt-5 border border-red-400/40 px-4 py-2.5 text-[10px] font-medium uppercase tracking-[0.16em] text-red-400 hover:bg-red-400/10">
+            <button type="button" onClick={() => setConfirmDisconnect(true)} className="mt-5 border border-red-400/40 px-4 py-2.5 text-[11px] font-medium uppercase tracking-[0.16em] text-red-400 hover:bg-red-400/10">
               Disconnect LeetCode
             </button>
           ) : (
@@ -147,7 +147,7 @@ function PlatformsSection() {
                       {verifying ? "Verifying..." : "Verify ownership"}
                     </button>
                   </form>
-                  <button type="button" onClick={() => { setChallenge(null); setVerificationToken(""); }} className="mt-3 text-[10px] uppercase tracking-[0.14em] text-[var(--dt-text-muted)] hover:text-[var(--dt-text-primary)]">
+                  <button type="button" onClick={() => { setChallenge(null); setVerificationToken(""); }} className="mt-3 text-[11px] uppercase tracking-[0.14em] text-[var(--dt-text-muted)] hover:text-[var(--dt-text-primary)]">
                     Cancel verification
                   </button>
                 </div>
@@ -159,7 +159,7 @@ function PlatformsSection() {
             {UPCOMING.map(platform => (
               <div key={platform} className="flex items-center justify-between border border-[var(--dt-border)]/70 px-3 py-3">
                 <span className="text-sm text-[var(--dt-text-secondary)]">{platform}</span>
-                <span className="text-[9px] uppercase tracking-[0.15em] text-[var(--dt-text-muted)]">Coming soon</span>
+                <span className="text-[11px] uppercase tracking-[0.15em] text-[var(--dt-text-muted)]">Coming soon</span>
               </div>
             ))}
           </div>

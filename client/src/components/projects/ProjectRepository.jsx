@@ -100,9 +100,9 @@ function ProjectRepository({ project, githubConnected, onChange }) {
               <ul className="mt-3 space-y-2">
                 {commits.items.map(commit => (
                   <li key={commit.sha} className="grid grid-cols-[56px_minmax(0,1fr)_auto] items-baseline gap-3">
-                    <a href={commit.url} target="_blank" rel="noopener noreferrer" className="font-mono text-[10px] text-[var(--dt-text-muted)] hover:text-[var(--dt-accent-soft)]">{commit.shortSha}</a>
+                    <a href={commit.url} target="_blank" rel="noopener noreferrer" className="font-mono text-[11px] text-[var(--dt-text-muted)] hover:text-[var(--dt-accent-soft)]">{commit.shortSha}</a>
                     <span className="min-w-0 break-words text-[var(--dt-text-secondary)]">{commit.message}</span>
-                    <span className="text-[10px] text-[var(--dt-text-muted)]">{formatDay(commit.committedAt)}</span>
+                    <span className="text-[11px] text-[var(--dt-text-muted)]">{formatDay(commit.committedAt)}</span>
                   </li>
                 ))}
                 <li><span className="dt-badge dt-badge-verified">Verified from GitHub</span></li>

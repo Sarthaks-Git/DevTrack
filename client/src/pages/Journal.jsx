@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import PageHeader from "../components/common/PageHeader";
+import Pagination from "../components/common/Pagination";
 import StateMessage from "../components/common/StateMessage";
 import ConfirmModal from "../components/common/ConfirmModal";
 import JournalEditor from "../components/journal/JournalEditor";
@@ -128,7 +129,7 @@ function Journal() {
       </PageHeader>
 
       {editor ? (
-        <div className="mb-10">
+        <div className="mb-6">
           <JournalEditor
             key={editor.entry?._id || "new"}
             entry={editor.entry}
@@ -186,19 +187,17 @@ function Journal() {
       ) : null}
 
       {data?.items.length ? (
-        <div className={`space-y-4 transition-opacity ${loading ? "opacity-60" : ""}`} aria-busy={loading}>
+        <div id="journal-entries" className={`space-y-3 scroll-mt-6 transition-opacity ${loading ? "opacity-60" : ""}`} aria-busy={loading}>
           {data.items.map(entry => (
             <JournalEntryCard key={entry._id} entry={entry} onEdit={openEditor} onDelete={setDeleting} onTagClick={item => { setTag(item); setPage(1); }} />
           ))}
         </div>
       ) : null}
 
-      {data && data.pages > 1 ? (
-        <nav className="mt-8 flex items-center justify-between" aria-label="Journal pages">
-          <button type="button" className="dt-link-button" disabled={page <= 1 || loading} onClick={() => setPage(page - 1)}>← Newer</button>
-          <span className="text-xs text-[var(--dt-text-muted)]">Page {data.page} of {data.pages} · {data.total} entries</span>
-          <button type="button" className="dt-link-button" disabled={page >= data.pages || loading} onClick={() => setPage(page + 1)}>Older →</button>
-        </nav>
+      {data ? (
+        <div className={loading ? "pointer-events-none opacity-60" : ""}>
+          <Pagination page={data.page} pageCount={data.pages} onChange={setPage} label="Journal pages" scrollTargetId="journal-entries" total={data.total} pageSize={PAGE_SIZE} />
+        </div>
       ) : null}
 
       <ConfirmModal

@@ -1,4 +1,8 @@
 import { useEffect, useRef, useState } from "react";
+import Pagination from "../components/common/Pagination";
+import { usePagination } from "../components/common/usePagination";
+
+const GOALS_PER_PAGE = 8;
 import GoalList from "../components/goals/GoalList";
 import PageHeader from "../components/common/PageHeader";
 import GoalForm from "../components/goals/GoalForm";
@@ -25,6 +29,7 @@ function Goals() {
 
   const [deletingGoal, setDeletingGoal] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const goalPages = usePagination(goals, GOALS_PER_PAGE);
 
   useEffect(() => {
     if (!showForm) {
@@ -169,20 +174,14 @@ function Goals() {
     <section>
       <PageHeader
         eyebrow="02 — Goals"
-        title={
-          <>
-            Things you're
-            <br />
-            building toward.
-          </>
-        }
+        title="Things you're building toward."
         description="Track the things that matter now, the things you're working toward, and the things you eventually want to accomplish."
       />
 
       {/* Goals Toolbar */}
       <div
         className="
-                    mb-8
+                    mb-4
                     flex
                     items-end
                     justify-between
@@ -241,7 +240,7 @@ function Goals() {
           className="
                         border-t
                         border-[var(--dt-border)]
-                        py-16
+                        py-10
                     "
         >
           <p className="text-xs uppercase tracking-[0.25em] text-[var(--dt-text-muted)]">
@@ -280,13 +279,17 @@ function Goals() {
           </button>
         </div>
       ) : (
+        <div id="goal-list">
         <GoalList
-          goals={goals}
+          goals={goalPages.pageItems}
+          offset={goalPages.offset}
           projects={projects}
           milestoneHandlers={milestoneHandlers}
           onEdit={handleEdit}
           onDelete={handleDelete}
         />
+        <Pagination page={goalPages.page} pageCount={goalPages.pageCount} onChange={goalPages.setPage} label="Goal pages" scrollTargetId="goal-list" total={goals.length} pageSize={GOALS_PER_PAGE} />
+        </div>
       )}
 
       {/* Delete Modal */}

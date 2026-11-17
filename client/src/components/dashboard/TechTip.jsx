@@ -21,13 +21,13 @@ function TechTip() {
   return (
     <aside aria-label="Tech tip" className="mt-8 max-w-2xl border-l border-[var(--dt-border-strong)] pl-4">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-        <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-[var(--dt-accent-soft)]">
+        <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-[var(--dt-accent-soft)]">
           Tip · {tip.topic}
         </p>
         <button
           type="button"
           onClick={() => setIndex((current) => (current + 1) % TECH_TIPS.length)}
-          className="text-[10px] uppercase tracking-[0.2em] text-[var(--dt-text-muted)] transition-colors hover:text-[var(--dt-text-primary)]"
+          className="text-[11px] uppercase tracking-[0.2em] text-[var(--dt-text-muted)] transition-colors hover:text-[var(--dt-text-primary)]"
         >
           Another →
         </button>

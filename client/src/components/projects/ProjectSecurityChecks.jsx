@@ -46,7 +46,7 @@ function ReviewCard({ review, busy, error, onAnswer, onReopen, onDismissRequest 
     <div className="border border-[var(--dt-border)] p-4">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <p className="text-sm font-medium text-[var(--dt-text-primary)]">{review.area}</p>
-        <span className="text-[10px] uppercase tracking-[0.16em] text-[var(--dt-text-muted)]">
+        <span className="text-[11px] uppercase tracking-[0.16em] text-[var(--dt-text-muted)]">
           {open ? `${answered}/${review.items.length}` : review.status === "done" ? "Done" : "Dismissed"}
         </span>
       </div>

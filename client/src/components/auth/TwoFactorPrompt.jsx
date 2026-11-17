@@ -41,7 +41,7 @@ function TwoFactorPrompt({ onSignedIn, onRestart }) {
       {error ? (
         <div role="alert" className="mt-5 border-l-2 border-red-400/70 bg-red-400/5 px-4 py-3 text-sm leading-6 text-red-300">{error}</div>
       ) : null}
-      <label htmlFor="two-factor-code" className="mt-7 mb-3 block text-[10px] font-medium uppercase tracking-[0.2em] text-[var(--dt-text-muted)]">
+      <label htmlFor="two-factor-code" className="mt-7 mb-3 block text-[11px] font-medium uppercase tracking-[0.2em] text-[var(--dt-text-muted)]">
         {useBackup ? "Backup code" : "Authentication code"}
       </label>
       <input

@@ -41,7 +41,7 @@ function OverlayDialog({ eyebrow, title, subtitle, locked = false, onClose, chil
       >
         <div className="flex items-start justify-between gap-4 border-b border-[var(--dt-border)] p-5 md:p-6">
           <div className="min-w-0">
-            <p className="text-[10px] font-medium uppercase tracking-[0.3em] text-[var(--dt-text-muted)]">{eyebrow}</p>
+            <p className="text-[11px] font-medium uppercase tracking-[0.3em] text-[var(--dt-text-muted)]">{eyebrow}</p>
             <h2 id={titleId} className="mt-2 break-words font-[family-name:var(--dt-font-display)] text-2xl leading-tight text-[var(--dt-text-primary)]">
               {title}
             </h2>

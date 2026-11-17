@@ -8,7 +8,7 @@ function ActivityItem({ item, compact = false }) {
         {ACTIVITY_META[item.type]?.marker || "•"}
       </span>
       <div className="min-w-0 flex-1">
-        <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--dt-text-muted)]">
+        <p className="text-[11px] uppercase tracking-[0.2em] text-[var(--dt-text-muted)]">
           {activityLabel(item.type)}
           {verified ? <span className="dt-badge dt-badge-verified ml-3 align-middle">Verified</span> : null}
         </p>

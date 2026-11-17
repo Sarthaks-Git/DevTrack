@@ -8,7 +8,7 @@ function Stat({ value, label, note }) {
   return (
     <div>
       <p className="font-[family-name:var(--dt-font-display)] text-3xl text-[var(--dt-text-primary)]">{value}</p>
-      <p className="mt-1 text-[10px] uppercase tracking-[0.18em] text-[var(--dt-text-muted)]">{label}</p>
+      <p className="mt-1 text-[11px] uppercase tracking-[0.18em] text-[var(--dt-text-muted)]">{label}</p>
       {note ? <p className="mt-1 text-[11px] text-[var(--dt-text-secondary)]">{note}</p> : null}
     </div>
   );
@@ -31,19 +31,19 @@ function WeeklySnapshot() {
   const data = state.data;
 
   return (
-    <section className="mt-16">
+    <section className="mt-8">
       <div className="mb-5 flex items-end justify-between border-b border-[var(--dt-border)] pb-4">
         <p className="text-xs uppercase tracking-[0.25em] text-[var(--dt-text-muted)]">
           This week{data ? ` · ${formatWeekRange(data.week)}` : ""}
         </p>
-        <Link to="/app/review" className="dt-link-button text-[10px]">Full review →</Link>
+        <Link to="/app/review" className="dt-link-button text-[11px]">Full review →</Link>
       </div>
 
       {state.status === "loading" ? <p className="py-6 text-sm text-[var(--dt-text-muted)]">Adding up your week...</p> : null}
       {state.status === "error" ? <p role="alert" className="py-6 text-sm text-red-300">Couldn't load this week's summary.</p> : null}
 
       {data ? (
-        <div className="grid gap-8 md:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] md:items-start">
+        <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] md:items-start">
           <div>
             <DayStrip days={data.consistency.days} />
             <p className="mt-3 text-xs text-[var(--dt-text-secondary)]">

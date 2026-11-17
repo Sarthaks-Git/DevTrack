@@ -146,7 +146,7 @@ const Register = () => {
                         DevTrack
                     </Link>
 
-                    <span className="text-[9px] uppercase tracking-[0.3em] text-[var(--dt-text-muted)]">
+                    <span className="hidden text-[11px] uppercase tracking-[0.3em] text-[var(--dt-text-muted)] sm:inline">
                         Developer Command Center
                     </span>
                 </header>
@@ -154,7 +154,7 @@ const Register = () => {
                 <div className="flex flex-1 items-center justify-center px-6 py-12 md:px-10 md:py-16">
                     <section className="w-full max-w-md">
                         <div className="mb-10">
-                            <p className="mb-5 text-[10px] font-medium uppercase tracking-[0.35em] text-[var(--dt-text-muted)]">
+                            <p className="mb-5 text-[11px] font-medium uppercase tracking-[0.35em] text-[var(--dt-text-muted)]">
                                 02 — AUTHENTICATION
                             </p>
 
@@ -195,7 +195,7 @@ const Register = () => {
                                 <div>
                                     <label
                                         htmlFor="register-username"
-                                        className="mb-3 block text-[10px] font-medium uppercase tracking-[0.2em] text-[var(--dt-text-muted)]"
+                                        className="mb-3 block text-[11px] font-medium uppercase tracking-[0.2em] text-[var(--dt-text-muted)]"
                                     >
                                         Username
                                     </label>
@@ -222,7 +222,7 @@ const Register = () => {
                                 <div>
                                     <label
                                         htmlFor="register-email"
-                                        className="mb-3 block text-[10px] font-medium uppercase tracking-[0.2em] text-[var(--dt-text-muted)]"
+                                        className="mb-3 block text-[11px] font-medium uppercase tracking-[0.2em] text-[var(--dt-text-muted)]"
                                     >
                                         Email
                                     </label>
@@ -247,7 +247,7 @@ const Register = () => {
                                 <div>
                                     <label
                                         htmlFor="register-password"
-                                        className="mb-3 block text-[10px] font-medium uppercase tracking-[0.2em] text-[var(--dt-text-muted)]"
+                                        className="mb-3 block text-[11px] font-medium uppercase tracking-[0.2em] text-[var(--dt-text-muted)]"
                                     >
                                         Password
                                     </label>
@@ -272,7 +272,7 @@ const Register = () => {
                                 <div>
                                     <label
                                         htmlFor="register-confirm-password"
-                                        className="mb-3 block text-[10px] font-medium uppercase tracking-[0.2em] text-[var(--dt-text-muted)]"
+                                        className="mb-3 block text-[11px] font-medium uppercase tracking-[0.2em] text-[var(--dt-text-muted)]"
                                     >
                                         Confirm password
                                     </label>
@@ -329,7 +329,7 @@ const Register = () => {
                 </div>
 
                 <footer className="px-6 py-6 md:px-10">
-                    <p className="text-[9px] uppercase tracking-[0.25em] text-[var(--dt-text-muted)]">
+                    <p className="text-[11px] uppercase tracking-[0.25em] text-[var(--dt-text-muted)]">
                         DevTrack — Build. Track. Evolve.
                     </p>
                 </footer>

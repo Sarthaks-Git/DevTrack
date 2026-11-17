@@ -77,7 +77,7 @@ function MilestoneList({ milestones: serverMilestones = [], onAdd, onUpdate, onR
         onClick={() => setOpen((value) => !value)}
         aria-expanded={open}
         aria-controls={panelId}
-        className="flex w-full items-center gap-3 text-left text-[10px] font-medium uppercase tracking-[0.18em] text-[var(--dt-text-muted)] transition-colors hover:text-[var(--dt-text-primary)]"
+        className="flex w-full items-center gap-3 text-left text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--dt-text-muted)] transition-colors hover:text-[var(--dt-text-primary)]"
       >
         <span aria-hidden="true">{open ? "▾" : "▸"}</span>
         <span>Milestones</span>
@@ -108,7 +108,7 @@ function MilestoneList({ milestones: serverMilestones = [], onAdd, onUpdate, onR
                       aria-label={`Mark "${item.title}" as ${item.done ? "not done" : "done"}`}
                       disabled={pending}
                       onClick={() => toggle(item)}
-                      className={`flex h-4 w-4 shrink-0 items-center justify-center border text-[10px] transition-colors ${
+                      className={`flex h-4 w-4 shrink-0 items-center justify-center border text-[11px] transition-colors ${
                         item.done
                           ? "border-[var(--dt-accent)] bg-[var(--dt-accent)] text-white"
                           : "border-[var(--dt-border-strong)] hover:border-[var(--dt-accent-soft)]"
@@ -124,7 +124,7 @@ function MilestoneList({ milestones: serverMilestones = [], onAdd, onUpdate, onR
                       {item.title}
                     </span>
                     {item.dueDate && (
-                      <span className={`shrink-0 text-[10px] uppercase tracking-[0.12em] ${overdue ? "text-red-300" : "text-[var(--dt-text-muted)]"}`}>
+                      <span className={`shrink-0 text-[11px] uppercase tracking-[0.12em] ${overdue ? "text-red-300" : "text-[var(--dt-text-muted)]"}`}>
                         {overdue ? "Overdue · " : ""}
                         {formatMilestoneDue(item.dueDate)}
                       </span>
@@ -163,7 +163,7 @@ function MilestoneList({ milestones: serverMilestones = [], onAdd, onUpdate, onR
             <button
               type="submit"
               disabled={busy === "add" || !title.trim()}
-              className="text-[10px] font-medium uppercase tracking-[0.18em] text-[var(--dt-text-secondary)] transition-colors hover:text-[var(--dt-accent-soft)] disabled:opacity-40"
+              className="text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--dt-text-secondary)] transition-colors hover:text-[var(--dt-accent-soft)] disabled:opacity-40"
             >
               {busy === "add" ? "Adding…" : "+ Add"}
             </button>

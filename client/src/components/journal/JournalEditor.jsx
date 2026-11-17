@@ -49,7 +49,7 @@ function JournalEditor({ entry, goals, projects, saving, error, onSave, onCancel
       <label className="dt-label md:col-span-2">
         Notes
         <textarea className="dt-input min-h-40 resize-y leading-6" value={form.content} onChange={set("content")} maxLength={20000} placeholder="Context, what worked, what you would do differently..." />
-        <span className="mt-1 block text-right text-[10px] text-[var(--dt-text-muted)]">{form.content.length.toLocaleString()} / 20,000</span>
+        <span className="mt-1 block text-right text-[11px] text-[var(--dt-text-muted)]">{form.content.length.toLocaleString()} / 20,000</span>
       </label>
       <label className="dt-label">
         Type

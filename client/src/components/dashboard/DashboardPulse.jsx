@@ -10,7 +10,7 @@ function SectionTitle({ children, to, linkLabel }) {
   return (
     <div className="mb-5 flex items-end justify-between border-b border-[var(--dt-border)] pb-4">
       <p className="text-xs uppercase tracking-[0.25em] text-[var(--dt-text-muted)]">{children}</p>
-      {to ? <Link to={to} className="dt-link-button text-[10px]">{linkLabel}</Link> : null}
+      {to ? <Link to={to} className="dt-link-button text-[11px]">{linkLabel}</Link> : null}
     </div>
   );
 }
@@ -34,12 +34,12 @@ function CodingSnapshot({ profile }) {
       </div>
       {synced ? (
         <>
-          <p className="mt-5 font-[family-name:var(--dt-font-display)] text-5xl text-[var(--dt-text-primary)]">{stats.totalSolved}</p>
+          <p className="mt-3 font-[family-name:var(--dt-font-display)] text-4xl text-[var(--dt-text-primary)]">{stats.totalSolved}</p>
           <p className="mt-1 text-xs uppercase tracking-[0.2em] text-[var(--dt-text-muted)]">problems solved</p>
           <p className="mt-4 text-xs text-[var(--dt-text-secondary)]">
             {stats.easySolved} easy · {stats.mediumSolved} medium · {stats.hardSolved} hard
           </p>
-          <p className="mt-4 text-[10px] uppercase tracking-[0.18em] text-[var(--dt-text-muted)]">Synced {relativeTime(stats.lastFetchedAt)}</p>
+          <p className="mt-4 text-[11px] uppercase tracking-[0.18em] text-[var(--dt-text-muted)]">Synced {relativeTime(stats.lastFetchedAt)}</p>
         </>
       ) : (
         <p className="mt-4 text-sm text-[var(--dt-text-secondary)]">Verified, but not synced yet.</p>
@@ -92,7 +92,7 @@ function DashboardPulse() {
   const weekProblems = summary?.problem_solved || 0;
 
   return (
-    <section className="mt-16 grid gap-12 lg:grid-cols-[1.6fr_1fr]">
+    <section className="mt-8 grid gap-8 lg:grid-cols-[1.6fr_1fr]">
       <div>
         <SectionTitle to="/app/timeline" linkLabel="Full timeline →">Recent activity</SectionTitle>
         {summary ? (

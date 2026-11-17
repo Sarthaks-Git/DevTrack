@@ -12,7 +12,7 @@ function StateMessage({ tone = "empty", title, message, action, onRetry }) {
     <div
       role={tone === "error" ? "alert" : "status"}
       aria-live="polite"
-      className="border border-dashed border-[var(--dt-border)] px-6 py-12 text-center"
+      className="border border-dashed border-[var(--dt-border)] px-6 py-8 text-center"
     >
       {tone === "loading" ? (
         <span className="mx-auto mb-4 block h-5 w-5 animate-spin rounded-full border-2 border-[var(--dt-border-strong)] border-t-[var(--dt-accent-soft)]" />

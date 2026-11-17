@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import PageHeader from "../components/common/PageHeader";
 import StateMessage from "../components/common/StateMessage";
+import CursorPager from "../components/common/CursorPager";
 import ActivityItem from "../components/activity/ActivityItem";
 import { ACTIVITY_FILTERS } from "../components/activity/activityMeta";
 import { getActivity } from "../services/activityService";
 import { getGitHubStatus, syncGitHub } from "../services/githubService";
 
-const PAGE_SIZE = 30;
+const PAGE_SIZE = 20;
 
 function dayHeading(date) {
   const day = new Date(date);
@@ -34,6 +35,8 @@ function Timeline() {
   const [reloadToken, setReloadToken] = useState(0);
   const [state, setState] = useState({ key: null, items: [], nextCursor: null, error: "" });
   const [loadingMore, setLoadingMore] = useState(false);
+  // The cursor that loads each visited page (page 0 needs none), so "Newer" can go back.
+  const [pages, setPages] = useState({ index: 0, cursors: [null] });
 
   const requestKey = `${type}#${reloadToken}`;
   const loading = state.key !== requestKey;
@@ -41,7 +44,11 @@ function Timeline() {
   useEffect(() => {
     let active = true;
     getActivity({ type, limit: PAGE_SIZE })
-      .then(data => active && setState({ key: requestKey, items: data.items, nextCursor: data.nextCursor, error: "" }))
+      .then(data => {
+        if (!active) return;
+        setState({ key: requestKey, items: data.items, nextCursor: data.nextCursor, error: "" });
+        setPages({ index: 0, cursors: [null] });
+      })
       .catch(error => active && setState({ key: requestKey, items: [], nextCursor: null, error: error.message }));
     return () => {
       active = false;
@@ -63,11 +70,13 @@ function Timeline() {
     };
   }, []);
 
-  async function loadMore() {
+  async function showPage(index, cursors) {
     setLoadingMore(true);
     try {
-      const data = await getActivity({ type, limit: PAGE_SIZE, before: state.nextCursor });
-      setState(previous => ({ ...previous, items: [...previous.items, ...data.items], nextCursor: data.nextCursor }));
+      const data = await getActivity({ type, limit: PAGE_SIZE, before: cursors[index] || undefined });
+      setState(previous => ({ ...previous, items: data.items, nextCursor: data.nextCursor, error: "" }));
+      setPages({ index, cursors });
+      document.getElementById("timeline-feed")?.scrollIntoView({ behavior: "smooth", block: "start" });
     } catch (error) {
       setState(previous => ({ ...previous, error: error.message }));
     } finally {
@@ -87,7 +96,7 @@ function Timeline() {
 
       {/* The feed reads best as a narrower column; the header stays full width like every page. */}
       <div className="max-w-4xl">
-      <div className="mb-8 flex flex-wrap gap-2" role="group" aria-label="Filter timeline">
+      <div id="timeline-feed" className="mb-5 flex scroll-mt-6 flex-wrap gap-2" role="group" aria-label="Filter timeline">
         {ACTIVITY_FILTERS.map(filter => (
           <button
             key={filter.value || "all"}
@@ -112,7 +121,7 @@ function Timeline() {
       ) : null}
 
       {!loading && groups.length ? (
-        <div className="space-y-10">
+        <div className={`space-y-6 ${loadingMore ? "opacity-60" : ""}`}>
           {groups.map(group => (
             <section key={group.heading} aria-label={group.heading}>
               <h2 className="sticky top-0 z-10 bg-[var(--dt-background)]/90 py-2 text-xs font-medium uppercase tracking-[0.25em] text-[var(--dt-text-muted)] backdrop-blur-sm">
@@ -126,12 +135,15 @@ function Timeline() {
         </div>
       ) : null}
 
-      {!loading && state.nextCursor ? (
-        <div className="mt-10 text-center">
-          <button type="button" className="dt-link-button" onClick={loadMore} disabled={loadingMore}>
-            {loadingMore ? "Loading..." : "Load older activity"}
-          </button>
-        </div>
+      {!loading ? (
+        <CursorPager
+          label="Timeline pages"
+          pageIndex={pages.index}
+          hasOlder={Boolean(state.nextCursor)}
+          busy={loadingMore}
+          onNewer={() => showPage(pages.index - 1, pages.cursors)}
+          onOlder={() => showPage(pages.index + 1, [...pages.cursors.slice(0, pages.index + 1), state.nextCursor])}
+        />
       ) : null}
       </div>
     </section>

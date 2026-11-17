@@ -11,7 +11,7 @@ function JournalEntryCard({ entry, onEdit, onDelete, onTagClick }) {
 
   return (
     <article className="dt-card">
-      <div className="flex flex-wrap items-center gap-3 text-[10px] uppercase tracking-[0.2em] text-[var(--dt-text-muted)]">
+      <div className="flex flex-wrap items-center gap-3 text-[11px] uppercase tracking-[0.2em] text-[var(--dt-text-muted)]">
         <time dateTime={entry.entryDate}>{new Date(entry.entryDate).toLocaleDateString(undefined, { dateStyle: "medium", timeZone: "UTC" })}</time>
         <span aria-hidden="true">·</span>
         <span>{typeLabel(entry.type)}</span>

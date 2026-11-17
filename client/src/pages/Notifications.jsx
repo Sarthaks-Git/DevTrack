@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import PageHeader from "../components/common/PageHeader";
 import StateMessage from "../components/common/StateMessage";
+import CursorPager from "../components/common/CursorPager";
 import { relativeTime } from "../components/activity/activityMeta";
 import { getNotifications, markAllNotificationsRead, markNotificationRead } from "../services/notificationService";
 
@@ -24,6 +25,8 @@ function Notifications() {
   const { refreshUnread } = useOutletContext() || {};
   const [state, setState] = useState({ status: "loading", items: [], nextCursor: null, error: "" });
   const [busy, setBusy] = useState(false);
+  // The cursor that loads each visited page (page 0 needs none), so "Newer" can go back.
+  const [pages, setPages] = useState({ index: 0, cursors: [null] });
 
   useEffect(() => {
     let active = true;
@@ -40,11 +43,13 @@ function Notifications() {
     };
   }, [refreshUnread]);
 
-  async function loadMore() {
+  async function showPage(index, cursors) {
     setBusy(true);
     try {
-      const data = await getNotifications({ limit: PAGE_SIZE, before: state.nextCursor });
-      setState((current) => ({ ...current, items: [...current.items, ...data.items], nextCursor: data.nextCursor }));
+      const data = await getNotifications({ limit: PAGE_SIZE, before: cursors[index] || undefined });
+      setState((current) => ({ ...current, items: data.items, nextCursor: data.nextCursor, error: "" }));
+      setPages({ index, cursors });
+      document.getElementById("notification-list")?.scrollIntoView({ behavior: "smooth", block: "start" });
     } catch (error) {
       setState((current) => ({ ...current, error: error.message }));
     } finally {
@@ -101,15 +106,15 @@ function Notifications() {
       ) : null}
 
       {state.items.length > 0 ? (
-        <ul className="divide-y divide-[var(--dt-border)] border-y border-[var(--dt-border)]">
+        <ul id="notification-list" className={`scroll-mt-6 divide-y divide-[var(--dt-border)] border-y border-[var(--dt-border)] ${busy ? "opacity-60" : ""}`}>
           {state.items.map((item) => (
             <li key={item._id}>
               <button
                 type="button"
                 onClick={() => open(item)}
-                className="grid w-full gap-2 py-5 text-left transition-colors hover:bg-[var(--dt-surface)] sm:grid-cols-[110px_minmax(0,1fr)_auto] sm:items-start sm:gap-6 sm:px-3"
+                className="grid w-full gap-1.5 py-3 text-left transition-colors hover:bg-[var(--dt-surface)] sm:grid-cols-[110px_minmax(0,1fr)_auto] sm:items-start sm:gap-6 sm:px-3"
               >
-                <span className={`text-[10px] uppercase tracking-[0.16em] ${item.type === "target_reached" ? "text-emerald-300" : item.type.includes("overdue") ? "text-red-300" : "text-[var(--dt-text-secondary)]"}`}>
+                <span className={`text-[11px] uppercase tracking-[0.16em] ${item.type === "target_reached" ? "text-emerald-300" : item.type.includes("overdue") ? "text-red-300" : "text-[var(--dt-text-secondary)]"}`}>
                   {TYPE_LABELS[item.type] || "Reminder"}
                 </span>
                 <span className="min-w-0">
@@ -119,17 +124,22 @@ function Notifications() {
                   </span>
                   {item.body ? <span className="mt-1 block text-xs leading-5 text-[var(--dt-text-muted)]">{item.body}</span> : null}
                 </span>
-                <span className="text-[10px] text-[var(--dt-text-muted)]">{relativeTime(item.createdAt)}</span>
+                <span className="text-[11px] text-[var(--dt-text-muted)]">{relativeTime(item.createdAt)}</span>
               </button>
             </li>
           ))}
         </ul>
       ) : null}
 
-      {state.nextCursor ? (
-        <button type="button" onClick={loadMore} disabled={busy} className="dt-link-button mt-6">
-          {busy ? "Loading..." : "Load older"}
-        </button>
+      {state.status === "ready" ? (
+        <CursorPager
+          label="Notification pages"
+          pageIndex={pages.index}
+          hasOlder={Boolean(state.nextCursor)}
+          busy={busy}
+          onNewer={() => showPage(pages.index - 1, pages.cursors)}
+          onOlder={() => showPage(pages.index + 1, [...pages.cursors.slice(0, pages.index + 1), state.nextCursor])}
+        />
       ) : null}
     </section>
   );

@@ -43,7 +43,7 @@ function Landing() {
                     </div>
 
                     <div className="flex items-center gap-6">
-                        <div className="hidden text-[10px] font-medium uppercase tracking-[0.22em] text-[var(--dt-text-muted)] sm:block">
+                        <div className="hidden text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--dt-text-muted)] sm:block">
                             Developer Command Center
                         </div>
 
@@ -65,7 +65,7 @@ function Landing() {
                 {/* Hero */}
                 <section className="flex flex-1 items-center py-20 sm:py-24 lg:py-28">
                     <div className="w-full">
-                        <div className="mb-8 flex items-center gap-4 text-[10px] font-semibold uppercase tracking-[0.25em] text-[var(--dt-accent-soft)]">
+                        <div className="mb-8 flex items-center gap-4 text-[11px] font-semibold uppercase tracking-[0.25em] text-[var(--dt-accent-soft)]">
                             <span>00 — INTRODUCTION</span>
                             <span className="h-px w-12 bg-[var(--dt-border-strong)]" />
                         </div>
@@ -150,7 +150,7 @@ function Landing() {
 
                 {/* Bottom information strip */}
                 <footer className="border-t border-[var(--dt-border)] py-5">
-                    <div className="flex flex-col gap-4 text-[10px] font-medium uppercase tracking-[0.18em] text-[var(--dt-text-muted)] sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex flex-col gap-4 text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--dt-text-muted)] sm:flex-row sm:items-center sm:justify-between">
                         <span>One system. Every step.</span>
 
                         <div className="flex items-center gap-6">

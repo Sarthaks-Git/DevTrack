@@ -137,7 +137,7 @@ function TwoFactorPanel({ user }) {
   }
 
   return (
-    <div id="two-factor" className="mt-10 max-w-3xl scroll-mt-24">
+    <div id="two-factor" className="mt-6 max-w-3xl scroll-mt-24">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <p className="text-sm font-medium text-[var(--dt-text-primary)]">Two-factor authentication</p>
         {status ? <span className={`dt-badge ${status.enabled ? "dt-badge-verified" : ""}`}>{status.enabled ? "On" : "Off"}</span> : null}

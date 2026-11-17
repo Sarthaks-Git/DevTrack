@@ -150,7 +150,7 @@
 
     .dt-card {
         border: 1px solid var(--dt-border);
-        background: rgb(13 15 19 / 0.6);
+        background: color-mix(in srgb, var(--dt-surface) 60%, transparent);
         padding: 1.5rem;
     }
 
@@ -168,8 +168,8 @@
     }
 
     .dt-badge-verified {
-        border-color: rgb(52 211 153 / 0.4);
-        color: rgb(110 231 183);
+        border-color: var(--dt-verified-border);
+        color: var(--dt-verified);
     }
 }
 
@@ -202,5 +202,15 @@
 
     @media (prefers-reduced-motion: reduce) {
         .dt-atmosphere { transition: none; }
+    }
+}
+
+/* Grid children default to their content's width, so one wide child (the heatmap, a long URL)
+   can stretch a one-column phone layout past the screen. Let them shrink; wide content then
+   wraps or scrolls inside its own box. */
+@layer base {
+    /* In the base layer so an explicit min-w-* class on an element still wins. */
+    #main-content .grid > * {
+        min-width: 0;
     }
 }

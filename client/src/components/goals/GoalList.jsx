@@ -1,6 +1,6 @@
 import GoalCard from "./GoalCard";
 
-function GoalList({ goals, projects = [], milestoneHandlers, onEdit, onDelete }) {
+function GoalList({ goals, projects = [], milestoneHandlers, onEdit, onDelete, offset = 0 }) {
     return (
         <div>
             {goals.map((goal, index) => (
@@ -9,7 +9,7 @@ function GoalList({ goals, projects = [], milestoneHandlers, onEdit, onDelete })
                     goal={goal}
                     linkedProjects={projects.filter((project) => project.goal === goal._id)}
                     milestoneHandlers={milestoneHandlers}
-                    number={String(index + 1).padStart(2, "0")}
+                    number={String(offset + index + 1).padStart(2, "0")}
                     onEdit={onEdit}
                     onDelete={onDelete}
                 />

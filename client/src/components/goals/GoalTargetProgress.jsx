@@ -24,7 +24,7 @@ function GoalTargetProgress({ target, progress }) {
           >
             <div className="h-full bg-[var(--dt-accent-soft)] transition-[width] duration-500" style={{ width: `${percent}%` }} />
           </div>
-          <p className="mt-2 text-[10px] uppercase tracking-[0.16em] text-[var(--dt-text-muted)]">
+          <p className="mt-2 text-[11px] uppercase tracking-[0.16em] text-[var(--dt-text-muted)]">
             {progress.current}/{progress.count} solved{progress.reached ? " · Target reached" : ""}
           </p>
         </>

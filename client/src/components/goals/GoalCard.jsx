@@ -40,20 +40,19 @@ function GoalCard({ goal, number, linkedProjects = [], milestoneHandlers, onEdit
                 group
                 border-t
                 border-[var(--dt-border)]
-                py-7
+                py-4
                 transition-colors
                 duration-300
                 hover:border-[var(--dt-border-strong)]
-                md:py-8
             "
         >
-            <div className="grid gap-4 md:grid-cols-[40px_1fr_auto] md:gap-6">
+            <div className="grid gap-3 md:grid-cols-[32px_1fr_auto] md:gap-5">
 
                 {/* Number */}
                 <div
                     className="
                         font-mono
-                        text-[9px]
+                        text-[11px]
                         tracking-[0.15em]
                         text-[var(--dt-text-muted)]
                     "
@@ -67,14 +66,13 @@ function GoalCard({ goal, number, linkedProjects = [], milestoneHandlers, onEdit
                     {/* Title */}
                     <h3
                         className="
-                            text-xl
+                            text-lg
                             font-medium
                             tracking-tight
                             text-[var(--dt-text-primary)]
                             transition-transform
                             duration-300
                             group-hover:translate-x-1
-                            md:text-2xl
                         "
                     >
                         {goal.title}
@@ -84,8 +82,8 @@ function GoalCard({ goal, number, linkedProjects = [], milestoneHandlers, onEdit
                     {goal.description && (
                         <p
                             className="
-                                mt-3
-                                max-w-2xl
+                                mt-1.5
+                                max-w-3xl
                                 text-sm
                                 leading-6
                                 text-[var(--dt-text-secondary)]
@@ -98,7 +96,7 @@ function GoalCard({ goal, number, linkedProjects = [], milestoneHandlers, onEdit
                     {/* Metadata */}
                     <div
                         className="
-                            mt-5
+                            mt-3
                             flex
                             flex-wrap
                             items-center
@@ -112,7 +110,7 @@ function GoalCard({ goal, number, linkedProjects = [], milestoneHandlers, onEdit
                                 flex
                                 items-center
                                 gap-2
-                                text-[10px]
+                                text-[11px]
                                 font-medium
                                 uppercase
                                 tracking-[0.15em]
@@ -130,7 +128,7 @@ function GoalCard({ goal, number, linkedProjects = [], milestoneHandlers, onEdit
                         {formattedDeadline && (
                             <span
                                 className="
-                                    text-[10px]
+                                    text-[11px]
                                     uppercase
                                     tracking-[0.15em]
                                     text-[var(--dt-text-muted)]
@@ -188,7 +186,7 @@ function GoalCard({ goal, number, linkedProjects = [], milestoneHandlers, onEdit
                             type="button"
                             onClick={() => onEdit(goal)}
                             className="
-                                text-[10px]
+                                text-[11px]
                                 font-medium
                                 uppercase
                                 tracking-[0.18em]
@@ -205,7 +203,7 @@ function GoalCard({ goal, number, linkedProjects = [], milestoneHandlers, onEdit
                             type="button"
                             onClick={() => onDelete(goal)}
                             className="
-                                text-[10px]
+                                text-[11px]
                                 font-medium
                                 uppercase
                                 tracking-[0.18em]
@@ -225,7 +223,7 @@ function GoalCard({ goal, number, linkedProjects = [], milestoneHandlers, onEdit
                     className="
                         self-start
                         text-left
-                        text-[10px]
+                        text-[11px]
                         font-medium
                         uppercase
                         tracking-[0.2em]

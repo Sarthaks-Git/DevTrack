@@ -2,6 +2,7 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useContext, useState } from "react";
 import { AuthContext } from "../context/authContextObject";
 import NotificationBell from "./common/NotificationBell";
+import ThemePicker from "./common/ThemePicker";
 
 const navigationItems = [
   { number: "01", label: "Overview", path: "/app/dashboard" },
@@ -26,16 +27,16 @@ function Sidebar({ unread = 0, onNavigate }) {
   }
 
   return (
-    <div className="flex h-full flex-col border-r border-[var(--dt-border)] bg-[var(--dt-background)]/90 px-6 py-8 backdrop-blur-sm">
+    <div className="flex h-full flex-col border-r border-[var(--dt-border)] bg-[var(--dt-background)]/95 px-6 py-8 backdrop-blur-sm lg:bg-transparent lg:backdrop-blur-none">
       <div>
         <Link to="/app/dashboard" viewTransition onClick={onNavigate} className="font-[family-name:var(--dt-font-display)] text-2xl text-[var(--dt-text-primary)]">
           DevTrack
         </Link>
-        <p className="mt-1 text-[9px] uppercase tracking-[0.3em] text-[var(--dt-text-muted)]">Developer Command Center</p>
+        <p className="mt-1 text-[11px] uppercase tracking-[0.3em] text-[var(--dt-text-muted)]">Developer Command Center</p>
       </div>
 
-      <nav className="mt-14" aria-label="Main">
-        <p className="mb-5 text-[9px] font-medium uppercase tracking-[0.3em] text-[var(--dt-text-muted)]">Navigate</p>
+      <nav className="mt-8" aria-label="Main">
+        <p className="mb-5 text-[11px] font-medium uppercase tracking-[0.3em] text-[var(--dt-text-muted)]">Navigate</p>
         <ul className="space-y-1">
           {navigationItems.map(item => (
             <li key={item.path}>
@@ -49,7 +50,7 @@ function Sidebar({ unread = 0, onNavigate }) {
               >
                 {({ isActive }) => (
                   <>
-                    <span className={`w-5 font-mono text-[9px] tracking-[0.15em] transition-colors duration-200 ${isActive ? "text-[var(--dt-accent-soft)]" : "text-[var(--dt-text-muted)] group-hover:text-[var(--dt-accent-soft)]"}`}>
+                    <span className={`w-5 font-mono text-[11px] tracking-[0.15em] transition-colors duration-200 ${isActive ? "text-[var(--dt-accent-soft)]" : "text-[var(--dt-text-muted)] group-hover:text-[var(--dt-accent-soft)]"}`}>
                       {item.number}
                     </span>
                     <span>{item.label}</span>
@@ -63,6 +64,7 @@ function Sidebar({ unread = 0, onNavigate }) {
 
       <div className="mt-auto border-t border-[var(--dt-border)] pt-5">
         <NotificationBell unread={unread} onNavigate={onNavigate} className="mb-4" />
+        <div className="mb-4"><ThemePicker compact /></div>
         {user ? <p className="mb-3 truncate text-xs text-[var(--dt-text-muted)]">@{user.username}</p> : null}
         <button
           type="button"

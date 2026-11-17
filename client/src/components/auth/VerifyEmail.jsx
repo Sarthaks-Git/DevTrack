@@ -85,7 +85,7 @@ function VerifyEmail() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-[var(--dt-background)] px-6 py-12">
       <section className="w-full max-w-md">
-        <p className="mb-5 text-[10px] font-medium uppercase tracking-[0.35em] text-[var(--dt-text-muted)]">One more step</p>
+        <p className="mb-5 text-[11px] font-medium uppercase tracking-[0.35em] text-[var(--dt-text-muted)]">One more step</p>
         <h1 className="font-[family-name:var(--dt-font-display)] text-4xl leading-tight text-[var(--dt-text-primary)] md:text-5xl">Confirm your email.</h1>
         <p className="mt-5 text-sm leading-6 text-[var(--dt-text-secondary)]">
           We sent a 6-digit code to <span className="break-all text-[var(--dt-text-primary)]">{user?.email}</span>. Enter it to start using DevTrack. Check spam if you do not see it.
@@ -116,7 +116,7 @@ function VerifyEmail() {
           </form>
         ) : (
           <form onSubmit={submit} noValidate className="mt-8 border-y border-[var(--dt-border)] py-6">
-            <label htmlFor="email-code" className="mb-3 block text-[10px] font-medium uppercase tracking-[0.2em] text-[var(--dt-text-muted)]">Verification code</label>
+            <label htmlFor="email-code" className="mb-3 block text-[11px] font-medium uppercase tracking-[0.2em] text-[var(--dt-text-muted)]">Verification code</label>
             <input
               id="email-code"
               value={code}
