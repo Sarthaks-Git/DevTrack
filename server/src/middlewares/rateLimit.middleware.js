@@ -59,6 +59,8 @@ export const githubCallbackRateLimit = createRateLimit({ name: 'githubCallback',
 export const socialStartRateLimit = createRateLimit({ name: 'socialStart', limit: 30 });
 export const socialCallbackRateLimit = createRateLimit({ name: 'socialCallback', limit: 30 });
 // Authenticator codes at sign-in, per IP; each challenge also allows only 5 attempts.
+// Verification emails per account (the service also allows one a minute and five an hour).
+export const emailSendRateLimit = createRateLimit({ name: 'emailSend', limit: 10, keyGenerator: byUser });
 export const twoFactorVerifyRateLimit = createRateLimit({ name: 'twoFactorVerify', limit: 20, skipSuccessfulRequests: true });
 export const githubReadRateLimit = createRateLimit({ name: 'githubRead', limit: 60, keyGenerator: byUser });
 export const githubSyncRateLimit = createRateLimit({ name: 'githubSync', limit: 60, keyGenerator: byUser });

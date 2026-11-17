@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import request from 'supertest';
 import app from '../src/app.js';
+import { markEmailVerified } from './helpers.js';
 
 function createUser(prefix = 'goal') {
     const uniqueId = `${Date.now().toString(36)}${Math.random()
@@ -27,6 +28,7 @@ async function createAuthenticatedUser() {
         .set('x-csrf-token', csrfToken)
         .send(user);
     expect(registerResponse.status).toBe(201);
+    await markEmailVerified(registerResponse.body.user.id);
 
     const loginResponse = await request(app)
         .post('/api/auth/login')

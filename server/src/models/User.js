@@ -7,6 +7,9 @@ const userSchema = new mongoose.Schema({
   role: { type: String, enum: ['user', 'admin'], default: 'user', required: true },
   accountStatus: { type: String, enum: ['active', 'suspended'], default: 'active', required: true },
   passwordChangedAt: { type: Date, default: null },
+  // Set once the user enters the code sent to `email` (or a provider verified it). Until then the
+  // account can only verify, change its email, sign out or delete itself.
+  emailVerifiedAt: { type: Date, default: null },
   // false for accounts created through Google, GitHub or LinkedIn until the user sets a password.
   // Their passwordHash is a random unusable hash, so password sign-in cannot succeed.
   passwordSet: { type: Boolean, default: true },

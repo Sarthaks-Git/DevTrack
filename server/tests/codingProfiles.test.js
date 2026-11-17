@@ -14,6 +14,7 @@ import { fetchLeetCodeOwnershipProfile } from '../src/services/leetcodeOwnership
 import { fetchLeetCodeStats } from '../src/services/leetcode.service.js';
 import CodingProfile from '../src/models/CodingProfile.js';
 import app from '../src/app.js';
+import { markEmailVerified } from './helpers.js';
 
 function createUser() {
     const uniqueId = `${Date.now().toString(36)}${Math.random()
@@ -40,6 +41,7 @@ async function createAuthenticatedUser() {
         .set('x-csrf-token', csrfToken)
         .send(user);
     expect(registerResponse.status).toBe(201);
+    await markEmailVerified(registerResponse.body.user.id);
 
     const loginResponse = await request(app)
         .post('/api/auth/login')

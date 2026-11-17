@@ -18,8 +18,20 @@ beforeAll(async () => {
     await mongoose.connection.db.dropDatabase();
     // Index builds started at model load can race the drop above; rebuild them so unique
     // indexes (which atomic limits and dedupe rely on) exist before any test runs.
-    await Promise.all(Object.values(mongoose.models).map(model => model.createIndexes()));
+    await buildIndexesAfterDrop();
 });
+
+// Atlas finishes a drop in the background (the previous file drops at its end too). Creating a
+// collection meanwhile fails with "database is in the process of being dropped": wait and retry.
+async function buildIndexesAfterDrop(attempt = 1) {
+    try {
+        await Promise.all(Object.values(mongoose.models).map(model => model.createIndexes()));
+    } catch (error) {
+        if (attempt >= 20 || !/being dropped/i.test(error?.message || '')) throw error;
+        await new Promise(resolve => setTimeout(resolve, 500));
+        await buildIndexesAfterDrop(attempt + 1);
+    }
+}
 
 afterAll(async () => {
     await mongoose.connection.db.dropDatabase();

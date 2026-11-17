@@ -1,6 +1,7 @@
 import { useContext } from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { AuthContext } from "../context/authContextObject";
+import VerifyEmail from "./auth/VerifyEmail";
 
 const ProtectedRoute = () => {
   const { user, loading, authError, refreshUser } = useContext(AuthContext);
@@ -25,6 +26,9 @@ const ProtectedRoute = () => {
   if (!user) {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
+
+  // The server refuses app data until the email is confirmed; show the confirmation screen instead.
+  if (user.emailVerified === false) return <VerifyEmail />;
 
   return <Outlet />;
 };

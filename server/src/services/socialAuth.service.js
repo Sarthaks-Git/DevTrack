@@ -93,6 +93,8 @@ async function createSocialUser(provider, profile) {
         email: profile.email,
         passwordHash,
         passwordSet: false,
+        // The provider verified this address.
+        emailVerifiedAt: new Date(),
       });
       try {
         await AuthIdentity.create({ owner: user._id, provider, providerUserId: profile.providerUserId, email: profile.email, displayName: profile.name, lastUsedAt: new Date() });
@@ -153,6 +155,7 @@ export async function completeSocialLogic({ provider, code, state, error, browse
     if (await AuthIdentity.exists({ owner: record.owner, provider })) return fail('already_linked', purpose);
     try {
       await AuthIdentity.create({ owner: record.owner, provider, providerUserId: profile.providerUserId, email: profile.email, displayName: profile.name });
+      await User.updateOne({ _id: record.owner, email: profile.email, emailVerifiedAt: null }, { $set: { emailVerifiedAt: new Date() } });
     } catch (failure) {
       if (failure?.code === 11000) return fail('in_use', purpose);
       throw failure;
@@ -166,6 +169,11 @@ export async function completeSocialLogic({ provider, code, state, error, browse
     user = await User.findById(identity.owner);
     if (!user || user.accountStatus !== 'active') return fail('failed', purpose, returnTo);
     await AuthIdentity.updateOne({ _id: identity._id }, { $set: { lastUsedAt: new Date(), email: profile.email } });
+    // The provider vouches for this address: if it is the account's email, that email is verified.
+    if (!user.emailVerifiedAt && user.email === profile.email) {
+      user.emailVerifiedAt = new Date();
+      await User.updateOne({ _id: user._id, email: profile.email }, { $set: { emailVerifiedAt: user.emailVerifiedAt } });
+    }
   } else {
     // DevTrack does not verify emails at sign-up, so an existing account with this address may not
     // belong to this person. Never attach automatically: the owner links it from Settings instead.

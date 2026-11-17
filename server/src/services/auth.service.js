@@ -27,6 +27,7 @@ export const publicUser = user => ({
   role: user.role,
   // false for accounts made through Google, GitHub or LinkedIn that have not set a password yet.
   hasPassword: user.passwordSet !== false,
+  emailVerified: Boolean(user.emailVerifiedAt),
   createdAt: user.createdAt,
   updatedAt: user.updatedAt,
 });
@@ -442,5 +443,5 @@ export async function getActiveSession(sessionId, userId) {
     owner: userId,
     revokedAt: null,
     expiresAt: { $gt: new Date() },
-  }).populate('owner', 'role accountStatus');
+  }).populate('owner', 'role accountStatus emailVerifiedAt');
 }

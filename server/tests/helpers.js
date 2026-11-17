@@ -1,9 +1,13 @@
 import request from 'supertest';
 import app from '../src/app.js';
+import User from '../src/models/User.js';
 
 export const PASSWORD = 'CorrectHorseBattery9!';
 
 const cookiePairs = response => (response.headers['set-cookie'] || []).map(value => value.split(';')[0]);
+
+// For tests that register users themselves: the app is locked until the email is verified.
+export const markEmailVerified = userId => User.updateOne({ _id: userId }, { $set: { emailVerifiedAt: new Date() } });
 
 export function uniqueUser(prefix = 'tester') {
   const id = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
@@ -11,7 +15,7 @@ export function uniqueUser(prefix = 'tester') {
 }
 
 // Registers a user and returns a cookie jar plus helpers that send CSRF-protected requests.
-export async function createSession(prefix) {
+export async function createSession(prefix, { verified = true } = {}) {
   const user = uniqueUser(prefix);
   const csrfResponse = await request(app).get('/api/auth/csrf');
   const csrfCookie = cookiePairs(csrfResponse).find(pair => pair.startsWith('devtrack_csrf='));
@@ -21,6 +25,8 @@ export async function createSession(prefix) {
     .set('Cookie', csrfCookie).set('x-csrf-token', csrfToken).set('User-Agent', 'Mozilla/5.0 (Windows NT 10.0) Chrome/130.0')
     .send(user);
   if (register.status !== 201) throw new Error(`Registration failed with ${register.status}`);
+  // Most tests need a usable account: mark the email verified (tests/emailVerification.test.js covers the flow).
+  if (verified) await markEmailVerified(register.body.user.id);
 
   const jar = new Map([[ 'devtrack_csrf', csrfCookie ]]);
   for (const pair of cookiePairs(register)) jar.set(pair.split('=')[0], pair);

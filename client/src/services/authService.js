@@ -123,3 +123,14 @@ export async function regenerateRecoveryCodes(code) {
   const { data } = await api.post('/auth/2fa/recovery-codes', { code });
   return data.data;
 }
+
+// Email verification: a 6-digit code goes to the account's email.
+export async function sendVerificationEmail() {
+  const { data } = await api.post('/auth/email/send', {});
+  return data.data;
+}
+
+export async function verifyEmail(code) {
+  const { data } = await api.post('/auth/email/verify', { code });
+  return data.data;
+}

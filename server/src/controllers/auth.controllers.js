@@ -19,6 +19,7 @@ import {
   setTwoFactorCookie,
 } from '../utils/cookies.js';
 import { CHALLENGE_TTL_MS } from '../services/loginChallenge.service.js';
+import { sendVerificationCodeLogic } from '../services/emailVerification.service.js';
 
 export async function csrf(req, res) {
   setCsrfCookie(
@@ -41,8 +42,10 @@ export async function register(req, res, next) {
     );
 
     setAuthCookies(res, result);
+    const delivery = await sendVerificationCodeLogic(result.user.id).catch(() => null);
 
     return res.status(201).json({
+      emailSent: Boolean(delivery?.sent),
       message: 'Registration successful',
       user: result.user,
     });

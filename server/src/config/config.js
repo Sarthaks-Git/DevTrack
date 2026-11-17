@@ -125,6 +125,21 @@ function buildSocialConfig(env, { nodeEnv, clientOrigin }) {
   return providers;
 }
 
+// Transactional email (Brevo). Email verification is mandatory, so production refuses to start without it.
+function buildEmailConfig(env, { nodeEnv }) {
+  if (nodeEnv === 'test') return { enabled: true, apiKey: 'test-key-never-sent', fromEmail: 'noreply@devtrack.test', fromName: 'DevTrack' };
+  const apiKey = env.BREVO_API_KEY || '';
+  const fromEmail = (env.EMAIL_FROM || '').trim().toLowerCase();
+  const fromName = (env.EMAIL_FROM_NAME || 'DevTrack').trim().slice(0, 60);
+  const enabled = Boolean(apiKey && fromEmail);
+  if (fromEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fromEmail)) throw new Error('EMAIL_FROM must be an email address');
+  if (nodeEnv === 'production') {
+    if (!enabled) throw new Error('BREVO_API_KEY and EMAIL_FROM are required in production (email verification)');
+    if (PLACEHOLDER_PATTERN.test(apiKey)) throw new Error('BREVO_API_KEY is a placeholder');
+  }
+  return { enabled, apiKey, fromEmail, fromName };
+}
+
 // USD per million tokens (input, output), from Anthropic's published prices. The budget guard
 // needs a price for every model it may call, so an unknown model is a startup error.
 // `thinking` is how each model is asked not to think (cheapest, fastest): the value differs per model.
@@ -250,6 +265,7 @@ export function buildConfig(env) {
 
     GITHUB: buildGitHubConfig(env, { nodeEnv, clientOrigin }),
     SOCIAL: buildSocialConfig(env, { nodeEnv, clientOrigin }),
+    EMAIL: buildEmailConfig(env, { nodeEnv }),
 
     AI: buildAiConfig(env, { nodeEnv }),
   };

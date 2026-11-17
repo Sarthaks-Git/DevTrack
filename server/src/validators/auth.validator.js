@@ -1,3 +1,4 @@
+import AppError from '../utils/AppError.js';
 import { passwordProblem } from './account.validator.js';
 
 export function validateRegister(req, res, next) {
@@ -83,4 +84,12 @@ export function validateLogin(req, res, next) {
     req.body.email = email.toLowerCase();
 
     next();
+}
+// The 6-digit code from the verification email.
+export function validateEmailCode(req, res, next) {
+  const body = req.body && typeof req.body === 'object' && !Array.isArray(req.body) ? req.body : {};
+  if (Object.keys(body).some(key => key !== 'code') || typeof body.code !== 'string' || !/^\d{6}$/.test(body.code)) {
+    return next(Object.assign(new AppError('Validation failed', 400, 'VALIDATION_ERROR'), { errors: { code: 'The code has 6 digits' } }));
+  }
+  return next();
 }

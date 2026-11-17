@@ -19,6 +19,7 @@ import CodeFinding from '../models/CodeFinding.js';
 import AuthIdentity from '../models/AuthIdentity.js';
 import TwoFactor from '../models/TwoFactor.js';
 import LoginChallenge from '../models/LoginChallenge.js';
+import EmailVerification from '../models/EmailVerification.js';
 import SecurityReview from '../models/SecurityReview.js';
 import AiUsage from '../models/AiUsage.js';
 import AiAllowance from '../models/AiAllowance.js';
@@ -29,7 +30,7 @@ import { SALT_ROUNDS, publicUser } from './auth.service.js';
 import { passwordProblem } from '../validators/account.validator.js';
 
 // Every collection holding user-owned data. Account deletion must cover all of them.
-const OWNED_MODELS = [Goal, Project, CodingProfile, VerificationChallenge, JournalEntry, Activity, CodingSubmission, SolvedProblem, Notification, GitHubConnection, GitHubCommit, OAuthState, SecurityReview, CodeFinding, AiUsage, AiAllowance, AuthIdentity, TwoFactor, LoginChallenge, AuthSession];
+const OWNED_MODELS = [Goal, Project, CodingProfile, VerificationChallenge, JournalEntry, Activity, CodingSubmission, SolvedProblem, Notification, GitHubConnection, GitHubCommit, OAuthState, SecurityReview, CodeFinding, AiUsage, AiAllowance, AuthIdentity, TwoFactor, LoginChallenge, EmailVerification, AuthSession];
 
 function assertUserId(userId) {
   if (!mongoose.isValidObjectId(userId)) throw new AppError('Authentication is required', 401, 'UNAUTHENTICATED');
@@ -57,6 +58,8 @@ export async function updateProfileLogic(userId, sessionId, { username, email, c
   if (conflict) throw new AppError('That username or email is already in use', 409, 'ACCOUNT_EXISTS');
 
   Object.assign(user, updates);
+  // A new address must be proven again before the account can be used.
+  if (updates.email) user.emailVerifiedAt = null;
   try {
     await user.save();
   } catch (error) {

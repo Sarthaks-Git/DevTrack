@@ -11,6 +11,8 @@ const production = (overrides = {}) => ({
   JWT_SECRET: STRONG_SECRET,
   CLIENT_ORIGIN: 'https://devtrack.app',
   TOKEN_ENCRYPTION_KEY: randomBytes(32).toString('base64'),
+  BREVO_API_KEY: randomBytes(24).toString('hex'),
+  EMAIL_FROM: 'noreply@devtrack.app',
   ...overrides,
 });
 
@@ -19,6 +21,13 @@ describe('Configuration guards', () => {
     const config = buildConfig(production());
     expect(config.NODE_ENV).toBe('production');
     expect(config.COOKIE_SECURE).toBe(true);
+  });
+
+  it('requires email delivery in production, because sign-up needs email verification', () => {
+    expect(() => buildConfig(production({ BREVO_API_KEY: undefined }))).toThrow(/BREVO_API_KEY and EMAIL_FROM/);
+    expect(() => buildConfig(production({ EMAIL_FROM: undefined }))).toThrow(/BREVO_API_KEY and EMAIL_FROM/);
+    expect(() => buildConfig(production({ EMAIL_FROM: 'not-an-email' }))).toThrow(/EMAIL_FROM must be an email/);
+    expect(buildConfig(production()).EMAIL).toMatchObject({ enabled: true, fromEmail: 'noreply@devtrack.app', fromName: 'DevTrack' });
   });
 
   it('refuses placeholder or test secrets in production', () => {

@@ -1,10 +1,11 @@
 import { Router } from 'express';
 import { csrf, register, login, getMe, logout, logoutAll, refresh } from '../controllers/auth.controllers.js';
 import { updateProfile, changePassword, listSessions, revokeSessionById, deleteAccount } from '../controllers/account.controller.js';
-import { authMiddleware } from '../middlewares/auth.middleware.js';
+import { authAllowUnverified, authMiddleware } from '../middlewares/auth.middleware.js';
 import { requireCsrf } from '../middlewares/csrf.middleware.js';
-import { authRateLimit, loginAccountRateLimit, sensitiveAuthRateLimit, passwordCheckRateLimit, registerRateLimit, socialCallbackRateLimit, socialStartRateLimit, twoFactorVerifyRateLimit, writeRateLimit } from '../middlewares/rateLimit.middleware.js';
-import { validateRegister, validateLogin } from '../validators/auth.validator.js';
+import { authRateLimit, loginAccountRateLimit, sensitiveAuthRateLimit, passwordCheckRateLimit, registerRateLimit, socialCallbackRateLimit, socialStartRateLimit, twoFactorVerifyRateLimit, emailSendRateLimit, writeRateLimit } from '../middlewares/rateLimit.middleware.js';
+import { validateRegister, validateLogin, validateEmailCode } from '../validators/auth.validator.js';
+import { sendVerificationCode, verifyEmailCode } from '../controllers/emailVerification.controller.js';
 import { validateProfileUpdate, validatePasswordChange, validateAccountDeletion } from '../validators/account.validator.js';
 import { listIdentities, listProviders, socialCallback, startSocialLink, startSocialLogin, unlinkIdentity } from '../controllers/social.controller.js';
 import { validateProvider, validateSocialCallback, validateSocialStart, validateUnlinkIdentity } from '../validators/social.validator.js';
@@ -13,19 +14,19 @@ import { validateTwoFactorDisable, validateTwoFactorEnable, validateTwoFactorReg
 
 const authRouter = Router();
 authRouter.get('/csrf', csrf);
-authRouter.get('/me', authMiddleware, getMe);
+authRouter.get('/me', authAllowUnverified, getMe);
 authRouter.post('/register', registerRateLimit, authRateLimit, requireCsrf, validateRegister, register);
 authRouter.post('/login', authRateLimit, requireCsrf, validateLogin, loginAccountRateLimit, login);
 authRouter.post('/refresh', sensitiveAuthRateLimit, requireCsrf, refresh);
 authRouter.post('/logout', requireCsrf, logout);
-authRouter.post('/logout-all', authMiddleware, writeRateLimit, requireCsrf, logoutAll);
+authRouter.post('/logout-all', authAllowUnverified, writeRateLimit, requireCsrf, logoutAll);
 
 // Account management (Settings). Every password-confirmed action is throttled per user.
-authRouter.patch('/profile', authMiddleware, requireCsrf, passwordCheckRateLimit, validateProfileUpdate, updateProfile);
+authRouter.patch('/profile', authAllowUnverified, requireCsrf, passwordCheckRateLimit, validateProfileUpdate, updateProfile);
 authRouter.patch('/password', authMiddleware, requireCsrf, passwordCheckRateLimit, validatePasswordChange, changePassword);
-authRouter.get('/sessions', authMiddleware, listSessions);
-authRouter.delete('/sessions/:id', authMiddleware, writeRateLimit, requireCsrf, revokeSessionById);
-authRouter.delete('/account', authMiddleware, requireCsrf, passwordCheckRateLimit, validateAccountDeletion, deleteAccount);
+authRouter.get('/sessions', authAllowUnverified, listSessions);
+authRouter.delete('/sessions/:id', authAllowUnverified, writeRateLimit, requireCsrf, revokeSessionById);
+authRouter.delete('/account', authAllowUnverified, requireCsrf, passwordCheckRateLimit, validateAccountDeletion, deleteAccount);
 
 // Sign in with Google, GitHub or LinkedIn (docs/API.md, Social sign-in).
 authRouter.get('/oauth/providers', listProviders);
@@ -35,6 +36,10 @@ authRouter.post('/oauth/:provider/link', authMiddleware, socialStartRateLimit, r
 authRouter.get('/oauth/:provider/callback', socialCallbackRateLimit, validateProvider, validateSocialCallback, socialCallback);
 authRouter.get('/identities', authMiddleware, listIdentities);
 authRouter.delete('/identities/:provider', authMiddleware, requireCsrf, passwordCheckRateLimit, validateProvider, validateUnlinkIdentity, unlinkIdentity);
+// Email verification (docs/API.md, Email verification). Open to signed-in, unverified accounts.
+authRouter.post('/email/send', authAllowUnverified, emailSendRateLimit, requireCsrf, sendVerificationCode);
+authRouter.post('/email/verify', authAllowUnverified, passwordCheckRateLimit, requireCsrf, validateEmailCode, verifyEmailCode);
+
 // Two-factor authentication (docs/API.md, Two-factor authentication).
 authRouter.post('/2fa/verify', twoFactorVerifyRateLimit, requireCsrf, validateTwoFactorVerify, verifyTwoFactorLogin);
 authRouter.get('/2fa', authMiddleware, getTwoFactorStatus);
