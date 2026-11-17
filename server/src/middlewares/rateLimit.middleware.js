@@ -58,6 +58,8 @@ export const githubCallbackRateLimit = createRateLimit({ name: 'githubCallback',
 // Social sign-in: starting and finishing the redirect, per IP (the user may not be signed in yet).
 export const socialStartRateLimit = createRateLimit({ name: 'socialStart', limit: 30 });
 export const socialCallbackRateLimit = createRateLimit({ name: 'socialCallback', limit: 30 });
+// Authenticator codes at sign-in, per IP; each challenge also allows only 5 attempts.
+export const twoFactorVerifyRateLimit = createRateLimit({ name: 'twoFactorVerify', limit: 20, skipSuccessfulRequests: true });
 export const githubReadRateLimit = createRateLimit({ name: 'githubRead', limit: 60, keyGenerator: byUser });
 export const githubSyncRateLimit = createRateLimit({ name: 'githubSync', limit: 60, keyGenerator: byUser });
 

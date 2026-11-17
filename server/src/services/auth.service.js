@@ -8,6 +8,7 @@ import AuthSession from '../models/AuthSession.js';
 import AppError from '../utils/AppError.js';
 import config from '../config/config.js';
 import { signAccessToken } from '../utils/jwt.js';
+import { createLoginChallenge, isTwoFactorEnabled } from './loginChallenge.service.js';
 
 export const SALT_ROUNDS = 12;
 
@@ -171,6 +172,11 @@ export async function loginLogic(email, password, meta = {}) {
       401,
       'INVALID_CREDENTIALS'
     );
+  }
+
+  // Password was right; with 2FA on, the session waits for the authenticator code.
+  if (await isTwoFactorEnabled(user._id)) {
+    return { twoFactorRequired: true, challengeToken: await createLoginChallenge(user, { method: 'password', userAgent: meta.userAgent }) };
   }
 
   return createLoginSession(user, meta);

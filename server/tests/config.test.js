@@ -10,6 +10,7 @@ const production = (overrides = {}) => ({
   MONGODB_URI: 'mongodb+srv://cluster.example.net/devtrack',
   JWT_SECRET: STRONG_SECRET,
   CLIENT_ORIGIN: 'https://devtrack.app',
+  TOKEN_ENCRYPTION_KEY: randomBytes(32).toString('base64'),
   ...overrides,
 });
 
@@ -54,7 +55,9 @@ describe('Configuration guards', () => {
   it('keeps GitHub off unless fully configured, and requires an encryption key when on', () => {
     expect(buildConfig(production()).GITHUB.enabled).toBe(false);
     const github = { GITHUB_APP_CLIENT_ID: 'Iv23abc', GITHUB_APP_CLIENT_SECRET: randomBytes(20).toString('hex'), GITHUB_APP_SLUG: 'devtrack' };
-    expect(() => buildConfig(production(github))).toThrow(/TOKEN_ENCRYPTION_KEY/);
+    expect(() => buildConfig(production({ ...github, TOKEN_ENCRYPTION_KEY: undefined }))).toThrow(/TOKEN_ENCRYPTION_KEY/);
+    // Required in production even without the GitHub App: 2FA and sign-in use it.
+    expect(() => buildConfig(production({ TOKEN_ENCRYPTION_KEY: undefined }))).toThrow(/TOKEN_ENCRYPTION_KEY is required in production/);
     expect(() => buildConfig(production({ ...github, TOKEN_ENCRYPTION_KEY: randomBytes(16).toString('base64') }))).toThrow(/32 random bytes/);
     expect(() => buildConfig(production({ ...github, TOKEN_ENCRYPTION_KEY: Buffer.alloc(32, 7).toString('base64') }))).toThrow(/32 random bytes/);
 

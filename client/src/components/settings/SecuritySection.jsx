@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import SettingsSection, { Notice } from "./SettingsSection";
 import ConfirmModal from "../common/ConfirmModal";
+import TwoFactorPanel from "./TwoFactorPanel";
 import { changePassword, getSessions, revokeSession, logoutEverywhere } from "../../services/authService";
 
 const MIN_LENGTH = 12;
@@ -105,7 +106,7 @@ function SecuritySection({ user, onSignedOut, onPasswordSet }) {
   }
 
   return (
-    <SettingsSection number="02" label="Security" title="Password and sessions" description="Changing your password signs out every other device. Review where you are signed in and end sessions you do not recognize.">
+    <SettingsSection number="02" label="Security" title="Password, two-factor and sessions" description="Changing your password signs out every other device. Turn on two-factor authentication, and end sessions you do not recognize.">
       <form onSubmit={handlePassword} className="grid max-w-2xl gap-5 sm:grid-cols-2">
         {needsPassword ? (
           <label className="dt-label sm:col-span-2">
@@ -133,6 +134,8 @@ function SecuritySection({ user, onSignedOut, onPasswordSet }) {
         </div>
       </form>
       <Notice kind={passwordStatus.kind}>{passwordStatus.text}</Notice>
+
+      <TwoFactorPanel user={user} />
 
       <div className="mt-10 max-w-3xl">
         <div className="mb-4 flex items-center justify-between">

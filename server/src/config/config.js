@@ -75,6 +75,8 @@ function buildGitHubConfig(env, { nodeEnv, clientOrigin }) {
   const encryptionKey = parseEncryptionKey(env.TOKEN_ENCRYPTION_KEY);
   const enabled = Boolean(clientId && clientSecret && appSlug);
 
+  // 2FA secrets and sign-in handshakes are encrypted with this key too, so production always needs it.
+  if (nodeEnv === 'production' && !encryptionKey) throw new Error('TOKEN_ENCRYPTION_KEY is required in production');
   if (!enabled) return { enabled: false, encryptionKey };
   if (!encryptionKey) throw new Error('TOKEN_ENCRYPTION_KEY is required when the GitHub App is configured');
   if (!/^[a-z0-9-]{1,100}$/i.test(appSlug)) throw new Error('GITHUB_APP_SLUG is invalid');

@@ -91,3 +91,35 @@ export async function listIdentities() {
 export async function unlinkIdentity(provider, currentPassword) {
   await api.delete(`/auth/identities/${encodeURIComponent(provider)}`, { data: currentPassword ? { currentPassword } : {} });
 }
+
+// Two-factor authentication. The pending sign-in lives in an HttpOnly cookie set by the server.
+export async function verifyTwoFactor(details) {
+  await ensureCsrfToken();
+  const { data } = await api.post('/auth/2fa/verify', details);
+  return data;
+}
+
+export async function getTwoFactorStatus() {
+  const { data } = await api.get('/auth/2fa');
+  return data.data;
+}
+
+export async function startTwoFactorSetup(currentPassword) {
+  const { data } = await api.post('/auth/2fa/setup', currentPassword ? { currentPassword } : {});
+  return data.data;
+}
+
+export async function enableTwoFactor(code) {
+  const { data } = await api.post('/auth/2fa/enable', { code });
+  return data.data;
+}
+
+export async function disableTwoFactor(details) {
+  const { data } = await api.post('/auth/2fa/disable', details);
+  return data.data;
+}
+
+export async function regenerateRecoveryCodes(code) {
+  const { data } = await api.post('/auth/2fa/recovery-codes', { code });
+  return data.data;
+}

@@ -3,11 +3,13 @@ import { csrf, register, login, getMe, logout, logoutAll, refresh } from '../con
 import { updateProfile, changePassword, listSessions, revokeSessionById, deleteAccount } from '../controllers/account.controller.js';
 import { authMiddleware } from '../middlewares/auth.middleware.js';
 import { requireCsrf } from '../middlewares/csrf.middleware.js';
-import { authRateLimit, loginAccountRateLimit, sensitiveAuthRateLimit, passwordCheckRateLimit, registerRateLimit, socialCallbackRateLimit, socialStartRateLimit, writeRateLimit } from '../middlewares/rateLimit.middleware.js';
+import { authRateLimit, loginAccountRateLimit, sensitiveAuthRateLimit, passwordCheckRateLimit, registerRateLimit, socialCallbackRateLimit, socialStartRateLimit, twoFactorVerifyRateLimit, writeRateLimit } from '../middlewares/rateLimit.middleware.js';
 import { validateRegister, validateLogin } from '../validators/auth.validator.js';
 import { validateProfileUpdate, validatePasswordChange, validateAccountDeletion } from '../validators/account.validator.js';
 import { listIdentities, listProviders, socialCallback, startSocialLink, startSocialLogin, unlinkIdentity } from '../controllers/social.controller.js';
 import { validateProvider, validateSocialCallback, validateSocialStart, validateUnlinkIdentity } from '../validators/social.validator.js';
+import { disableTwoFactor, enableTwoFactor, getTwoFactorStatus, regenerateRecoveryCodes, startTwoFactorSetup, verifyTwoFactorLogin } from '../controllers/twoFactor.controller.js';
+import { validateTwoFactorDisable, validateTwoFactorEnable, validateTwoFactorRegenerate, validateTwoFactorSetup, validateTwoFactorVerify } from '../validators/twoFactor.validator.js';
 
 const authRouter = Router();
 authRouter.get('/csrf', csrf);
@@ -33,4 +35,11 @@ authRouter.post('/oauth/:provider/link', authMiddleware, socialStartRateLimit, r
 authRouter.get('/oauth/:provider/callback', socialCallbackRateLimit, validateProvider, validateSocialCallback, socialCallback);
 authRouter.get('/identities', authMiddleware, listIdentities);
 authRouter.delete('/identities/:provider', authMiddleware, requireCsrf, passwordCheckRateLimit, validateProvider, validateUnlinkIdentity, unlinkIdentity);
+// Two-factor authentication (docs/API.md, Two-factor authentication).
+authRouter.post('/2fa/verify', twoFactorVerifyRateLimit, requireCsrf, validateTwoFactorVerify, verifyTwoFactorLogin);
+authRouter.get('/2fa', authMiddleware, getTwoFactorStatus);
+authRouter.post('/2fa/setup', authMiddleware, requireCsrf, passwordCheckRateLimit, validateTwoFactorSetup, startTwoFactorSetup);
+authRouter.post('/2fa/enable', authMiddleware, requireCsrf, passwordCheckRateLimit, validateTwoFactorEnable, enableTwoFactor);
+authRouter.post('/2fa/disable', authMiddleware, requireCsrf, passwordCheckRateLimit, validateTwoFactorDisable, disableTwoFactor);
+authRouter.post('/2fa/recovery-codes', authMiddleware, requireCsrf, passwordCheckRateLimit, validateTwoFactorRegenerate, regenerateRecoveryCodes);
 export default authRouter;

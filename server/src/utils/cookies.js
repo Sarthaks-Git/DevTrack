@@ -82,6 +82,19 @@ export function clearGitHubStateCookie(res) {
   res.clearCookie(GITHUB_STATE_COOKIE, { secure: config.COOKIE_SECURE, sameSite: 'lax', httpOnly: true, path: GITHUB_STATE_PATH });
 }
 
+// The pending 2FA sign-in (password or provider already accepted). Lax so it survives the
+// provider redirect; the code is still posted only with the CSRF header from our own pages.
+export const TWO_FACTOR_COOKIE = 'devtrack_2fa';
+const TWO_FACTOR_PATH = '/api/auth/2fa';
+
+export function setTwoFactorCookie(res, token, maxAgeMs) {
+  res.cookie(TWO_FACTOR_COOKIE, token, { secure: config.COOKIE_SECURE, sameSite: 'lax', httpOnly: true, maxAge: maxAgeMs, path: TWO_FACTOR_PATH });
+}
+
+export function clearTwoFactorCookie(res) {
+  res.clearCookie(TWO_FACTOR_COOKIE, { secure: config.COOKIE_SECURE, sameSite: 'lax', httpOnly: true, path: TWO_FACTOR_PATH });
+}
+
 // Pins a social sign-in handshake to the browser that started it (SameSite=Lax for the same
 // reason as above: the callback is a top-level navigation from the provider).
 export const SOCIAL_STATE_COOKIE = 'devtrack_oauth_state';

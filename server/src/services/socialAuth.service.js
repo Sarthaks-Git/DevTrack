@@ -10,6 +10,7 @@ import AppError from '../utils/AppError.js';
 import { decryptSecret, encryptSecret, randomToken, sha256 } from '../utils/tokenCrypto.js';
 import { SALT_ROUNDS, createLoginSession } from './auth.service.js';
 import { buildAuthorizeUrl, fetchSocialProfile, usesPkce } from './socialProviders.service.js';
+import { createLoginChallenge, isTwoFactorEnabled } from './loginChallenge.service.js';
 
 export const SOCIAL_RULES = {
   stateTtlMs: 10 * 60 * 1000,
@@ -172,6 +173,11 @@ export async function completeSocialLogic({ provider, code, state, error, browse
     if (returnTo === 'settings') return fail('failed', purpose, returnTo);
     user = await createSocialUser(provider, profile);
     if (!user) return fail('email_exists', purpose, returnTo);
+  }
+  // With 2FA on, the provider is only the first factor: the authenticator code comes next.
+  if (await isTwoFactorEnabled(user._id)) {
+    const challengeToken = await createLoginChallenge(user, { method: provider, userAgent, returnTo });
+    return { outcome: 'two_factor', purpose, returnTo, challengeToken };
   }
   const session = await createLoginSession(user, { userAgent, method: provider });
   return { outcome: 'signed_in', purpose, returnTo, session };

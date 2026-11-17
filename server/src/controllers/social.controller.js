@@ -7,7 +7,8 @@ import {
   startSocialLogic,
   unlinkIdentityLogic,
 } from '../services/socialAuth.service.js';
-import { SOCIAL_STATE_COOKIE, clearSocialStateCookie, setAuthCookies, setSocialStateCookie } from '../utils/cookies.js';
+import { SOCIAL_STATE_COOKIE, clearSocialStateCookie, setAuthCookies, setSocialStateCookie, setTwoFactorCookie } from '../utils/cookies.js';
+import { CHALLENGE_TTL_MS } from '../services/loginChallenge.service.js';
 
 const ok = (res, data) => res.status(200).json({ success: true, data });
 
@@ -37,6 +38,7 @@ export const startSocialLink = (req, res, next) => start(req, res, next, 'link')
 function destination({ outcome, purpose, returnTo }, provider) {
   const base = config.CLIENT_ORIGIN;
   if (purpose === 'link') return `${base}/app/settings?signin=${outcome}&provider=${provider}#signin`;
+  if (outcome === 'two_factor') return `${base}/login?step=2fa`;
   if (outcome === 'signed_in') return returnTo === 'settings' ? `${base}/app/settings?reauth=ok#account` : `${base}/app`;
   if (returnTo === 'settings') return `${base}/app/settings?reauth=${outcome}#account`;
   return `${base}/login?oauth=${outcome}&provider=${provider}`;
@@ -61,6 +63,7 @@ export async function socialCallback(req, res) {
   }
   clearSocialStateCookie(res);
   if (result.session) setAuthCookies(res, result.session);
+  if (result.challengeToken) setTwoFactorCookie(res, result.challengeToken, CHALLENGE_TTL_MS);
   res.set('Referrer-Policy', 'no-referrer');
   return res.redirect(303, destination(result, provider));
 }

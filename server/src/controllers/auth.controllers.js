@@ -16,7 +16,9 @@ import {
   REFRESH_COOKIE,
   setAuthCookies,
   setCsrfCookie,
+  setTwoFactorCookie,
 } from '../utils/cookies.js';
+import { CHALLENGE_TTL_MS } from '../services/loginChallenge.service.js';
 
 export async function csrf(req, res) {
   setCsrfCookie(
@@ -54,6 +56,11 @@ export async function login(req, res, next) {
     const { email, password } = req.body;
 
     const result = await loginLogic(email, password, { userAgent: req.get('user-agent') });
+
+    if (result.twoFactorRequired) {
+      setTwoFactorCookie(res, result.challengeToken, CHALLENGE_TTL_MS);
+      return res.status(200).json({ message: 'Enter the code from your authenticator app', twoFactorRequired: true });
+    }
 
     setAuthCookies(res, result);
 

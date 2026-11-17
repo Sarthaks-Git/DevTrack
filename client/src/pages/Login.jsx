@@ -1,6 +1,7 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import SocialSignIn from "../components/auth/SocialSignIn";
+import TwoFactorPrompt from "../components/auth/TwoFactorPrompt";
 import { socialOutcomeText } from "../components/auth/socialMessages";
 import { AuthContext } from "../context/authContextObject";
 import { login as loginRequest } from "../services/authService";
@@ -16,6 +17,10 @@ const Login = () => {
         return outcome ? socialOutcomeText(outcome, searchParams.get("provider")) : "";
     });
     const [loading, setLoading] = useState(false);
+    // "code" once the password (or a provider) was accepted and 2FA asks for the authenticator code.
+    const [step, setStep] = useState(() => (searchParams.get("step") === "2fa" ? "code" : "password"));
+    // Where to go after signing in (Settings when the sign-in re-confirmed identity there).
+    const afterSignIn = useRef("/app/dashboard");
 
     const navigate = useNavigate();
 
@@ -27,7 +32,7 @@ const Login = () => {
 
     useEffect(() => {
         if (!authLoading && user) {
-            navigate("/app/dashboard", {
+            navigate(afterSignIn.current, {
                 replace: true,
                 viewTransition: true,
             });
@@ -54,7 +59,12 @@ const Login = () => {
         setLoading(true);
 
         try {
-            await loginRequest({ email: normalizedEmail, password });
+            const result = await loginRequest({ email: normalizedEmail, password });
+            if (result.twoFactorRequired) {
+                setPassword("");
+                setStep("code");
+                return;
+            }
 
             // The signed-in redirect effect above navigates once the user is loaded.
             await refreshUser();
@@ -129,6 +139,19 @@ const Login = () => {
                             </p>
                         </div>
 
+                        {step === "code" ? (
+                            <TwoFactorPrompt
+                                onSignedIn={async returnTo => {
+                                    if (returnTo === "settings") afterSignIn.current = "/app/settings?reauth=ok#account";
+                                    await refreshUser();
+                                }}
+                                onRestart={text => {
+                                    setStep("password");
+                                    setMessage(text);
+                                }}
+                            />
+                        ) : (
+                        <>
                         <form
                             onSubmit={handleSubmit}
                             noValidate
@@ -208,6 +231,8 @@ const Login = () => {
                         </form>
 
                         <SocialSignIn disabled={loading} onError={setMessage} />
+                        </>
+                        )}
 
                         <div className="mt-7 flex flex-col gap-3 text-sm sm:flex-row sm:items-center sm:justify-between">
                             <p className="text-[var(--dt-text-secondary)]">
