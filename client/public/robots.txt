@@ -1,0 +1,5 @@
+# The public pages may be indexed; the signed-in app and the API may not.
+User-agent: *
+Allow: /
+Disallow: /app/
+Disallow: /api/

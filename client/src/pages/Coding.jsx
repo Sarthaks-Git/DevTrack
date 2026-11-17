@@ -796,7 +796,8 @@ function Coding() {
         let active = true;
         loadAll()
             .then(async (leetcode) => {
-                // Show stored data first, then check LeetCode for new accepted problems in the background.
+                // Show stored data as soon as it arrives; the LeetCode check below can take seconds.
+                if (active) setLoading(false);
                 if (!active || leetcode?.connectionStatus !== "verified") return;
                 const outcome = await syncLeetCode().catch(() => null);
                 if (active && outcome?.status === "synced") await loadAll();

@@ -1,5 +1,4 @@
 
-@import url("https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600;700&display=swap");
 
 @import "tailwindcss";
 
@@ -677,23 +676,17 @@
 
         opacity: 0.35;
 
-        transform: scale(0.97);
-
     }
 
     50% {
 
         opacity: 0.75;
 
-        transform: scale(1.02);
-
     }
 
     100% {
 
         opacity: 0.45;
-
-        transform: scale(0.99);
 
     }
 
