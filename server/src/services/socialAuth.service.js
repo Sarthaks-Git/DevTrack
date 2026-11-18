@@ -117,7 +117,7 @@ async function createSocialUser(provider, profile) {
  * Step 2. Never throws to the browser: returns { outcome, redirect, session? }.
  * Outcomes: signed_in, linked, denied, expired, failed, email_unverified, email_exists, in_use, already_linked.
  */
-export async function completeSocialLogic({ provider, code, state, error, browserState, userAgent }) {
+export async function completeSocialLogic({ provider, code, state, error, browserState, userAgent, deviceToken }) {
   const fail = (outcome, purpose = 'login', returnTo = 'app') => ({ outcome, purpose, returnTo });
   if (!SOCIAL_PROVIDERS.includes(provider) || !config.SOCIAL[provider].enabled) return fail('failed');
   if (!state || !sameState(state, browserState)) {
@@ -187,7 +187,7 @@ export async function completeSocialLogic({ provider, code, state, error, browse
     const challengeToken = await createLoginChallenge(user, { method: provider, userAgent, returnTo });
     return { outcome: 'two_factor', purpose, returnTo, challengeToken };
   }
-  const session = await createLoginSession(user, { userAgent, method: provider });
+  const session = await createLoginSession(user, { userAgent, method: provider, deviceToken });
   return { outcome: 'signed_in', purpose, returnTo, session };
 }
 

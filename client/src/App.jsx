@@ -17,6 +17,7 @@ const Timeline = lazy(() => import("./pages/Timeline"));
 const Settings = lazy(() => import("./pages/Settings"));
 const Notifications = lazy(() => import("./pages/Notifications"));
 const WeeklyReview = lazy(() => import("./pages/WeeklyReview"));
+const UndoEmailChange = lazy(() => import("./pages/UndoEmailChange"));
 
 function PageFallback() {
   return <p className="p-8 text-sm text-[var(--dt-text-secondary)]" role="status">Loading...</p>;
@@ -42,6 +43,8 @@ const router = createBrowserRouter([
   { path: "/", element: <Landing /> },
   { path: "/register", element: <Register /> },
   { path: "/login", element: <Login /> },
+  // Signed out on purpose: opened from the email-changed alert.
+  { path: "/undo-email-change", element: page(UndoEmailChange) },
   {
     path: "/app",
     element: <ProtectedRoute />,

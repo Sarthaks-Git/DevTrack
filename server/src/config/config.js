@@ -267,6 +267,10 @@ export function buildConfig(env) {
     SOCIAL: buildSocialConfig(env, { nodeEnv, clientOrigin }),
     EMAIL: buildEmailConfig(env, { nodeEnv }),
 
+    // Leaked-password check (Have I Been Pwned range API, k-anonymity). Off in tests; set
+    // PASSWORD_BREACH_CHECK=off to disable it elsewhere.
+    PASSWORD_BREACH_CHECK: nodeEnv !== 'test' && (env.PASSWORD_BREACH_CHECK || 'on').trim().toLowerCase() !== 'off',
+
     AI: buildAiConfig(env, { nodeEnv }),
   };
 }

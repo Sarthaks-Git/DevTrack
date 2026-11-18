@@ -1,4 +1,4 @@
-import { cancelEmailChangeLogic, confirmEmailChangeLogic, getEmailChangeLogic, resendEmailChangeLogic } from '../services/emailChange.service.js';
+import { cancelEmailChangeLogic, confirmEmailChangeLogic, getEmailChangeLogic, resendEmailChangeLogic, undoEmailChangeLogic } from '../services/emailChange.service.js';
 
 const ok = (res, data) => res.status(200).json({ success: true, data });
 
@@ -30,6 +30,14 @@ export async function cancelEmailChange(req, res, next) {
   try {
     await cancelEmailChangeLogic(req.auth.userId);
     return res.status(204).send();
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function undoEmailChange(req, res, next) {
+  try {
+    return ok(res, await undoEmailChangeLogic(req.body.token));
   } catch (error) {
     return next(error);
   }

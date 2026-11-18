@@ -107,3 +107,14 @@ export function setSocialStateCookie(res, state, maxAgeMs) {
 export function clearSocialStateCookie(res) {
   res.clearCookie(SOCIAL_STATE_COOKIE, { secure: config.COOKIE_SECURE, sameSite: 'lax', httpOnly: true, path: SOCIAL_STATE_PATH });
 }
+
+// Random per-browser id used only to tell familiar browsers from new ones (new-sign-in alerts).
+// Not a credential: it signs nobody in. Lax so it reaches the social sign-in callback; the path
+// covers every sign-in route. Kept across sign-out so a returning browser is still recognized.
+export const DEVICE_COOKIE = 'devtrack_device';
+const DEVICE_MAX_AGE_MS = 400 * 86_400_000;
+
+export function setDeviceCookie(res, token) {
+  if (!token) return;
+  res.cookie(DEVICE_COOKIE, token, { secure: config.COOKIE_SECURE, sameSite: 'lax', httpOnly: true, maxAge: DEVICE_MAX_AGE_MS, path: '/api/auth' });
+}

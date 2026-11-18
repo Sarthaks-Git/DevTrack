@@ -4,7 +4,7 @@
   try {
     var saved = window.localStorage.getItem('devtrack-theme');
     if (saved === 'light' || saved === 'dark') preference = saved;
-  } catch (error) {
+  } catch {
     preference = 'system';
   }
   var prefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;

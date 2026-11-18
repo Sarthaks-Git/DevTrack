@@ -21,6 +21,7 @@ import TwoFactor from '../models/TwoFactor.js';
 import LoginChallenge from '../models/LoginChallenge.js';
 import EmailVerification from '../models/EmailVerification.js';
 import EmailChange from '../models/EmailChange.js';
+import EmailChangeUndo from '../models/EmailChangeUndo.js';
 import PasswordReset from '../models/PasswordReset.js';
 import SecurityReview from '../models/SecurityReview.js';
 import AiUsage from '../models/AiUsage.js';
@@ -28,12 +29,13 @@ import AiAllowance from '../models/AiAllowance.js';
 import { revokeGitHubAccess } from './github.service.js';
 import { startEmailChangeLogic } from './emailChange.service.js';
 import { confirmAccountOwner } from './socialAuth.service.js';
+import { assertPasswordNotBreached } from './breachedPassword.service.js';
 import AppError from '../utils/AppError.js';
 import { SALT_ROUNDS, publicUser } from './auth.service.js';
 import { passwordProblem } from '../validators/account.validator.js';
 
 // Every collection holding user-owned data. Account deletion must cover all of them.
-export const OWNED_MODELS = [Goal, Project, CodingProfile, VerificationChallenge, JournalEntry, Activity, CodingSubmission, SolvedProblem, Notification, GitHubConnection, GitHubCommit, OAuthState, SecurityReview, CodeFinding, AiUsage, AiAllowance, AuthIdentity, TwoFactor, LoginChallenge, EmailVerification, EmailChange, PasswordReset, AuthSession];
+export const OWNED_MODELS = [Goal, Project, CodingProfile, VerificationChallenge, JournalEntry, Activity, CodingSubmission, SolvedProblem, Notification, GitHubConnection, GitHubCommit, OAuthState, SecurityReview, CodeFinding, AiUsage, AiAllowance, AuthIdentity, TwoFactor, LoginChallenge, EmailVerification, EmailChange, EmailChangeUndo, PasswordReset, AuthSession];
 
 function assertUserId(userId) {
   if (!mongoose.isValidObjectId(userId)) throw new AppError('Authentication is required', 401, 'UNAUTHENTICATED');
@@ -93,6 +95,7 @@ export async function changePasswordLogic(userId, sessionId, { currentPassword, 
     error.errors = { newPassword: problem };
     throw error;
   }
+  await assertPasswordNotBreached(newPassword, 'newPassword');
 
   user.passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
   user.passwordChangedAt = new Date();

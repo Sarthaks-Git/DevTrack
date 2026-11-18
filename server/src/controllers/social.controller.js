@@ -7,7 +7,7 @@ import {
   startSocialLogic,
   unlinkIdentityLogic,
 } from '../services/socialAuth.service.js';
-import { SOCIAL_STATE_COOKIE, clearSocialStateCookie, setAuthCookies, setSocialStateCookie, setTwoFactorCookie } from '../utils/cookies.js';
+import { DEVICE_COOKIE, SOCIAL_STATE_COOKIE, clearSocialStateCookie, setAuthCookies, setDeviceCookie, setSocialStateCookie, setTwoFactorCookie } from '../utils/cookies.js';
 import { CHALLENGE_TTL_MS } from '../services/loginChallenge.service.js';
 
 const ok = (res, data) => res.status(200).json({ success: true, data });
@@ -54,6 +54,7 @@ export async function socialCallback(req, res) {
         ...req.socialCallback,
         browserState: req.cookies?.[SOCIAL_STATE_COOKIE],
         userAgent: req.get('user-agent'),
+        deviceToken: req.cookies?.[DEVICE_COOKIE],
       });
     } else if (process.env.NODE_ENV !== 'test') {
       process.stderr.write(`Social sign-in (${provider}) failed: invalid parameters\n`);
@@ -62,7 +63,10 @@ export async function socialCallback(req, res) {
     if (process.env.NODE_ENV !== 'test') process.stderr.write(`Social sign-in (${provider}) failed: unexpected ${error?.name || 'Error'}\n`);
   }
   clearSocialStateCookie(res);
-  if (result.session) setAuthCookies(res, result.session);
+  if (result.session) {
+    setAuthCookies(res, result.session);
+    setDeviceCookie(res, result.session.deviceToken);
+  }
   if (result.challengeToken) setTwoFactorCookie(res, result.challengeToken, CHALLENGE_TTL_MS);
   res.set('Referrer-Policy', 'no-referrer');
   return res.redirect(303, destination(result, provider));

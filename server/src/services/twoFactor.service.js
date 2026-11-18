@@ -145,7 +145,7 @@ export async function regenerateRecoveryCodesLogic(userId, code) {
  * Finishes a sign-in with the authenticator code or a backup code. Each challenge allows a few
  * attempts; the last failure, or success, deletes it.
  */
-export async function completeLoginChallengeLogic({ token, code, recoveryCode }) {
+export async function completeLoginChallengeLogic({ token, code, recoveryCode, deviceToken }) {
   if (typeof token !== 'string' || !/^[A-Za-z0-9_-]{20,100}$/.test(token)) {
     throw new AppError('Your sign-in expired. Please sign in again.', 401, 'TWO_FACTOR_CHALLENGE_EXPIRED');
   }
@@ -169,6 +169,6 @@ export async function completeLoginChallengeLogic({ token, code, recoveryCode })
   if (!removed.deletedCount) throw new AppError('Your sign-in expired. Please sign in again.', 401, 'TWO_FACTOR_CHALLENGE_EXPIRED');
   const user = await User.findById(challenge.owner);
   if (!user || user.accountStatus !== 'active') throw new AppError('Your sign-in expired. Please sign in again.', 401, 'TWO_FACTOR_CHALLENGE_EXPIRED');
-  const session = await createLoginSession(user, { userAgent: challenge.userAgent, method: challenge.method });
+  const session = await createLoginSession(user, { userAgent: challenge.userAgent, method: challenge.method, deviceToken });
   return { session, returnTo: challenge.returnTo };
 }

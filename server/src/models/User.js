@@ -39,6 +39,9 @@ const userSchema = new mongoose.Schema({
     since: { type: Date, default: null },
     until: { type: Date, default: null },
   },
+  // SHA-256 hashes of the random device cookie of browsers that signed in (newest last, max 20).
+  // A sign-in from a browser not in this list raises a new-sign-in alert.
+  knownDevices: { type: [String], default: undefined, select: false },
   // Last time reminders were generated; used to throttle regeneration per user.
   remindersCheckedAt: { type: Date, default: null },
 }, { timestamps: true });

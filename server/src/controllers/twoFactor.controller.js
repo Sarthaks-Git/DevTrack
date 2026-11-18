@@ -6,7 +6,7 @@ import {
   regenerateRecoveryCodesLogic,
   startTwoFactorSetupLogic,
 } from '../services/twoFactor.service.js';
-import { TWO_FACTOR_COOKIE, clearTwoFactorCookie, setAuthCookies } from '../utils/cookies.js';
+import { DEVICE_COOKIE, TWO_FACTOR_COOKIE, clearTwoFactorCookie, setAuthCookies, setDeviceCookie } from '../utils/cookies.js';
 
 const ok = (res, data) => res.status(200).json({ success: true, data });
 
@@ -57,9 +57,11 @@ export async function verifyTwoFactorLogin(req, res, next) {
       token: req.cookies?.[TWO_FACTOR_COOKIE],
       code: req.body.code,
       recoveryCode: req.body.recoveryCode,
+      deviceToken: req.cookies?.[DEVICE_COOKIE],
     });
     clearTwoFactorCookie(res);
     setAuthCookies(res, session);
+    setDeviceCookie(res, session.deviceToken);
     return res.status(200).json({ message: 'Login Successful', user: session.user, returnTo });
   } catch (error) {
     if (error?.code === 'TWO_FACTOR_CHALLENGE_EXPIRED') clearTwoFactorCookie(res);

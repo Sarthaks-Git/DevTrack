@@ -142,6 +142,13 @@ export async function requestPasswordReset(email) {
   return data;
 }
 
+// "This wasn't me" link from the email-changed alert (signed out).
+export async function undoEmailChange(token) {
+  await ensureCsrfToken();
+  const { data } = await api.post('/auth/email/change/undo', { token });
+  return data.data;
+}
+
 export async function resetPassword(details) {
   await ensureCsrfToken();
   const { data } = await api.post('/auth/password/reset', details);

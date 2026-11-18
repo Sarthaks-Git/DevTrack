@@ -10,6 +10,7 @@ import { passwordProblem } from '../validators/account.validator.js';
 import { SALT_ROUNDS } from './auth.service.js';
 import { sendEmail } from './email.transport.js';
 import { codeEmail, codeMatches, consumeAttempt, hashCode, sendWindow, storeCode } from './emailCode.service.js';
+import { assertPasswordNotBreached } from './breachedPassword.service.js';
 
 const PURPOSE = 'reset';
 
@@ -72,6 +73,7 @@ export async function resetPasswordLogic({ email, code, newPassword }) {
     error.errors = { newPassword: problem };
     throw error;
   }
+  await assertPasswordNotBreached(newPassword, 'newPassword');
 
   const passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
   // Claim the code before changing anything, so two racing requests cannot both use it.

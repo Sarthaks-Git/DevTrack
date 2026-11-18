@@ -1,11 +1,17 @@
+import bcrypt from 'bcrypt';
+import crypto from 'crypto';
 import mongoose from 'mongoose';
 import config from '../config/config.js';
 import User from '../models/User.js';
 import AuthSession from '../models/AuthSession.js';
+import AuthIdentity from '../models/AuthIdentity.js';
 import EmailChange from '../models/EmailChange.js';
+import EmailChangeUndo, { UNDO_TTL_MS } from '../models/EmailChangeUndo.js';
+import LoginChallenge from '../models/LoginChallenge.js';
 import EmailVerification from '../models/EmailVerification.js';
 import PasswordReset from '../models/PasswordReset.js';
 import AppError from '../utils/AppError.js';
+import { randomToken, sha256 } from '../utils/tokenCrypto.js';
 import { sendEmail } from './email.transport.js';
 import { attemptsLeft, codeEmail, codeMatches, consumeAttempt, hashCode, maskEmail, sendWindow, storeCode, throttleError } from './emailCode.service.js';
 import { deliveryError } from './emailVerification.service.js';
@@ -66,13 +72,42 @@ export async function cancelEmailChangeLogic(userId) {
   await EmailChange.deleteOne({ owner: userId });
 }
 
-function sendEmailChangedAlert(oldEmail, newEmail) {
-  const text = `The email on your DevTrack account was changed to ${maskEmail(newEmail)}, and your other devices were signed out.\n\nIf this was you, nothing else to do. If it was not, someone has your password: sign in with the new address if you can, change your password and turn on two-factor authentication, or reply to this email for help.`;
+const UNDO_TOKEN_PATTERN = /^[A-Za-z0-9_-]{43}$/;
+const undoLinkInvalid = () => new AppError('This link has expired or was already used.', 400, 'UNDO_LINK_INVALID');
+
+/**
+ * Creates the undo link for a change away from `oldEmail`. Returns the token, or null when a link
+ * from an earlier change is still valid: that link keeps restoring the original address.
+ */
+async function issueUndoToken(owner, oldEmail) {
+  const now = new Date();
+  await EmailChangeUndo.deleteMany({ owner, expiresAt: { $lte: now } });
+  if (await EmailChangeUndo.exists({ owner })) return null;
+  const token = randomToken(32);
+  try {
+    await EmailChangeUndo.create({ owner, restoreEmail: oldEmail, tokenHash: sha256(token), expiresAt: new Date(now.getTime() + UNDO_TTL_MS) });
+  } catch (error) {
+    if (error?.code === 11000) return null;
+    throw error;
+  }
+  return token;
+}
+
+function sendEmailChangedAlert(oldEmail, newEmail, undoToken) {
+  const intro = `The email on your DevTrack account was changed to ${maskEmail(newEmail)}, and your other devices were signed out.`;
+  const undoUrl = undoToken ? `${config.CLIENT_ORIGIN}/undo-email-change#token=${undoToken}` : null;
+  const notYou = undoUrl
+    ? 'If it was not you, undo it with the link below. It puts this address back, signs out every device and asks for a new password. The link works for 7 days.'
+    : 'If it was not you, use the undo link in the earlier email about the first change, or reply to this email for help.';
+  const parts = [intro, 'If this was you, there is nothing else to do.', notYou];
+  const text = [...parts, ...(undoUrl ? [undoUrl] : [])].join('\n\n');
+  const html = parts.map(part => `<p>${part}</p>`).join('')
+    + (undoUrl ? `<p><a href="${undoUrl}">Undo this email change</a></p>` : '');
   sendEmail({
     to: oldEmail,
     subject: 'Your DevTrack email was changed',
     text,
-    html: text.split('\n\n').map(part => `<p>${part}</p>`).join(''),
+    html,
   }).catch(error => {
     if (process.env.NODE_ENV !== 'test') process.stderr.write(`Email change alert failed: ${error?.kind || 'unavailable'}\n`);
   });
@@ -125,6 +160,50 @@ export async function confirmEmailChangeLogic(userId, sessionId, code) {
     PasswordReset.deleteMany({ owner: user._id }),
     EmailVerification.deleteMany({ owner: user._id }),
   ]);
-  sendEmailChangedAlert(user.email, record.email);
+  sendEmailChangedAlert(user.email, record.email, await issueUndoToken(user._id, user.email));
   return { email: record.email };
+}
+
+/**
+ * "This wasn't me": public, authorized only by the token mailed to the old address. Puts the old
+ * address back, signs out every device, replaces the password with an unusable one (the owner sets
+ * a new one with Forgot password, whose code now goes to the restored address), and removes social
+ * sign-ins whose email is not the restored address. Single use.
+ */
+export async function undoEmailChangeLogic(token) {
+  if (typeof token !== 'string' || !UNDO_TOKEN_PATTERN.test(token)) throw undoLinkInvalid();
+  const now = new Date();
+  const record = await EmailChangeUndo.findOne({ tokenHash: sha256(token), expiresAt: { $gt: now } }).lean();
+  if (!record) throw undoLinkInvalid();
+
+  const user = await User.findById(record.owner).select('email').lean();
+  if (!user) throw undoLinkInvalid();
+
+  const taken = () => new AppError('That address now belongs to another account. Reply to the alert email for help.', 409, 'UNDO_EMAIL_TAKEN');
+  if (await User.exists({ email: record.restoreEmail, _id: { $ne: user._id } })) throw taken();
+
+  // Claim the link before changing anything, so two racing requests cannot both use it.
+  const claimed = await EmailChangeUndo.deleteOne({ _id: record._id, tokenHash: record.tokenHash });
+  if (!claimed.deletedCount) throw undoLinkInvalid();
+
+  const unusableHash = await bcrypt.hash(crypto.randomBytes(32).toString('base64url'), 12);
+  try {
+    await User.updateOne(
+      { _id: user._id },
+      { $set: { email: record.restoreEmail, emailVerifiedAt: now, passwordHash: unusableHash, passwordChangedAt: now } }
+    );
+  } catch (error) {
+    if (error?.code === 11000) throw taken();
+    throw error;
+  }
+
+  await Promise.all([
+    AuthSession.updateMany({ owner: user._id, revokedAt: null }, { $set: { revokedAt: now, revokeReason: 'email_change_undone' } }),
+    LoginChallenge.deleteMany({ owner: user._id }),
+    EmailChange.deleteMany({ owner: user._id }),
+    PasswordReset.deleteMany({ owner: user._id }),
+    EmailVerification.deleteMany({ owner: user._id }),
+    AuthIdentity.deleteMany({ owner: user._id, email: { $ne: record.restoreEmail } }),
+  ]);
+  return { email: maskEmail(record.restoreEmail) };
 }

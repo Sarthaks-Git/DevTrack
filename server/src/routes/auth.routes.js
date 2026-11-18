@@ -3,10 +3,10 @@ import { csrf, register, login, getMe, logout, logoutAll, refresh } from '../con
 import { updateProfile, changePassword, listSessions, revokeSessionById, deleteAccount } from '../controllers/account.controller.js';
 import { authAllowUnverified, authMiddleware } from '../middlewares/auth.middleware.js';
 import { requireCsrf } from '../middlewares/csrf.middleware.js';
-import { authRateLimit, loginAccountRateLimit, sensitiveAuthRateLimit, passwordCheckRateLimit, registerRateLimit, socialCallbackRateLimit, socialStartRateLimit, twoFactorVerifyRateLimit, emailSendRateLimit, writeRateLimit, passwordForgotRateLimit, passwordForgotEmailRateLimit, passwordResetRateLimit, passwordResetEmailRateLimit } from '../middlewares/rateLimit.middleware.js';
-import { validateRegister, validateLogin, validateEmailCode, validatePasswordForgot, validatePasswordReset } from '../validators/auth.validator.js';
+import { authRateLimit, loginAccountRateLimit, sensitiveAuthRateLimit, passwordCheckRateLimit, registerRateLimit, socialCallbackRateLimit, socialStartRateLimit, twoFactorVerifyRateLimit, emailSendRateLimit, writeRateLimit, passwordForgotRateLimit, passwordForgotEmailRateLimit, passwordResetRateLimit, passwordResetEmailRateLimit, emailChangeUndoRateLimit } from '../middlewares/rateLimit.middleware.js';
+import { validateRegister, validateLogin, validateEmailCode, validatePasswordForgot, validatePasswordReset, validateEmailChangeUndo } from '../validators/auth.validator.js';
 import { forgotPassword, resetPassword } from '../controllers/passwordReset.controller.js';
-import { cancelEmailChange, confirmEmailChange, getEmailChange, resendEmailChange } from '../controllers/emailChange.controller.js';
+import { cancelEmailChange, confirmEmailChange, getEmailChange, resendEmailChange, undoEmailChange } from '../controllers/emailChange.controller.js';
 import { sendVerificationCode, verifyEmailCode } from '../controllers/emailVerification.controller.js';
 import { validateProfileUpdate, validatePasswordChange, validateAccountDeletion } from '../validators/account.validator.js';
 import { listIdentities, listProviders, socialCallback, startSocialLink, startSocialLogin, unlinkIdentity } from '../controllers/social.controller.js';
@@ -47,6 +47,8 @@ authRouter.get('/email/change', authMiddleware, getEmailChange);
 authRouter.post('/email/change/resend', authMiddleware, emailSendRateLimit, requireCsrf, resendEmailChange);
 authRouter.post('/email/change/confirm', authMiddleware, passwordCheckRateLimit, requireCsrf, validateEmailCode, confirmEmailChange);
 authRouter.delete('/email/change', authMiddleware, writeRateLimit, requireCsrf, cancelEmailChange);
+// "This wasn't me" link from the email-changed alert. Signed out on purpose: the token is the proof.
+authRouter.post('/email/change/undo', emailChangeUndoRateLimit, requireCsrf, validateEmailChangeUndo, undoEmailChange);
 
 // Forgot password (signed out). Answers never reveal whether an email has an account.
 authRouter.post('/password/forgot', passwordForgotRateLimit, requireCsrf, validatePasswordForgot, passwordForgotEmailRateLimit, forgotPassword);

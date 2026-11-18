@@ -9,6 +9,8 @@ import AppError from '../utils/AppError.js';
 import config from '../config/config.js';
 import { signAccessToken } from '../utils/jwt.js';
 import { createLoginChallenge, isTwoFactorEnabled } from './loginChallenge.service.js';
+import { assertPasswordNotBreached } from './breachedPassword.service.js';
+import { recognizeDevice, sendNewSignInAlert } from './loginAlert.service.js';
 
 export const SALT_ROUNDS = 12;
 
@@ -76,8 +78,12 @@ function describeUserAgent(userAgent) {
   return `${browser} on ${os}`;
 }
 
-export async function createLoginSession(user, { userAgent, method = 'password' } = {}) {
+// Every sign-in path (password, provider, 2FA, registration) ends here. `deviceToken` is the
+// browser's device cookie; the returned one must be set back on the response.
+export async function createLoginSession(user, { userAgent, method = 'password', deviceToken } = {}) {
   const sessionId = new mongoose.Types.ObjectId();
+  const device = await recognizeDevice(user._id, deviceToken);
+  const deviceLabel = describeUserAgent(userAgent);
 
   const refreshToken = makeRefreshToken(
     sessionId.toString()
@@ -88,14 +94,19 @@ export async function createLoginSession(user, { userAgent, method = 'password' 
     owner: user._id,
     familyId: crypto.randomUUID(),
     tokenHash: hash(refreshToken),
-    userAgent: describeUserAgent(userAgent),
+    userAgent: deviceLabel,
     method,
     expiresAt: new Date(
       Date.now() + REFRESH_DAYS * 86_400_000
     ),
   });
 
+  if (device.isNewDevice) {
+    await sendNewSignInAlert(user, { sessionId: session._id.toString(), deviceLabel, method });
+  }
+
   return {
+    deviceToken: device.deviceToken,
     user: publicUser(user),
     accessToken: signAccessToken(
       user,
@@ -124,6 +135,8 @@ export async function registerLogic(username, email, password, meta = {}) {
       'ACCOUNT_EXISTS'
     );
   }
+
+  await assertPasswordNotBreached(password, 'password');
 
   const passwordHash = await bcrypt.hash(
     password,

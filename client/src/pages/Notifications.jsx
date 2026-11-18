@@ -18,6 +18,7 @@ const TYPE_LABELS = {
   weekly_review: "Weekly review",
   security_review: "Security check",
   code_review: "Code review",
+  new_sign_in: "New sign-in",
 };
 
 function Notifications() {
@@ -65,7 +66,7 @@ function Notifications() {
         refreshUnread?.();
       }
     }
-    const destination = { goal: "/app/goals", project: "/app/projects", review: "/app/review?week=last" }[item.subjectType] || "/app/dashboard";
+    const destination = { goal: "/app/goals", project: "/app/projects", review: "/app/review?week=last", account: "/app/settings#security" }[item.subjectType] || "/app/dashboard";
     navigate(destination, { viewTransition: true });
   }
 

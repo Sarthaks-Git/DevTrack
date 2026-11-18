@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-export const NOTIFICATION_TYPES = ['goal_overdue', 'project_overdue', 'due_soon', 'milestone_overdue', 'stalled', 'target_reached', 'weekly_review', 'security_review', 'code_review'];
+export const NOTIFICATION_TYPES = ['goal_overdue', 'project_overdue', 'due_soon', 'milestone_overdue', 'stalled', 'target_reached', 'weekly_review', 'security_review', 'code_review', 'new_sign_in'];
 const RETENTION_DAYS = 60;
 
 // In-app reminders. Written only by the server; the client can only read and mark them read.
@@ -8,9 +8,9 @@ const notificationSchema = new mongoose.Schema(
   {
     owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     type: { type: String, enum: NOTIFICATION_TYPES, required: true },
-    subjectType: { type: String, enum: ['goal', 'project', 'review'], required: true },
-    // Weekly reviews are about a week, not a record, so they carry no subject id.
-    subjectId: { type: mongoose.Schema.Types.ObjectId, default: null, required() { return this.subjectType !== 'review'; } },
+    subjectType: { type: String, enum: ['goal', 'project', 'review', 'account'], required: true },
+    // Weekly reviews (a week) and account alerts (the account itself) carry no subject id.
+    subjectId: { type: mongoose.Schema.Types.ObjectId, default: null, required() { return this.subjectType === 'goal' || this.subjectType === 'project'; } },
     title: { type: String, required: true, maxlength: 200 },
     body: { type: String, default: '', maxlength: 300 },
     // One reminder per situation: e.g. a stall is re-announced only after new activity and a new stall.

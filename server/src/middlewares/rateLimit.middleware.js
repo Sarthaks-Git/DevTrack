@@ -80,4 +80,6 @@ export const passwordForgotRateLimit = createRateLimit({ name: 'passwordForgot',
 export const passwordForgotEmailRateLimit = createRateLimit({ name: 'passwordForgotEmail', limit: 5, windowMs: 60 * 60 * 1000, keyGenerator: byEmailHash });
 // Code guesses: per IP and per email (each code also allows only 5 attempts).
 export const passwordResetRateLimit = createRateLimit({ name: 'passwordReset', limit: 20, skipSuccessfulRequests: true });
+// Undo links are 256-bit random tokens; this only stops token guessing and noise.
+export const emailChangeUndoRateLimit = createRateLimit({ name: 'emailChangeUndo', limit: 10, skipSuccessfulRequests: true });
 export const passwordResetEmailRateLimit = createRateLimit({ name: 'passwordResetEmail', limit: 10, skipSuccessfulRequests: true, keyGenerator: byEmailHash });

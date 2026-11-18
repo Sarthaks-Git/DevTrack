@@ -13,9 +13,11 @@ import {
 
 import {
   clearAuthCookies,
+  DEVICE_COOKIE,
   REFRESH_COOKIE,
   setAuthCookies,
   setCsrfCookie,
+  setDeviceCookie,
   setTwoFactorCookie,
 } from '../utils/cookies.js';
 import { CHALLENGE_TTL_MS } from '../services/loginChallenge.service.js';
@@ -38,10 +40,11 @@ export async function register(req, res, next) {
       username,
       email,
       password,
-      { userAgent: req.get('user-agent') }
+      { userAgent: req.get('user-agent'), deviceToken: req.cookies?.[DEVICE_COOKIE] }
     );
 
     setAuthCookies(res, result);
+    setDeviceCookie(res, result.deviceToken);
     const delivery = await sendVerificationCodeLogic(result.user.id).catch(() => null);
 
     return res.status(201).json({
@@ -58,7 +61,7 @@ export async function login(req, res, next) {
   try {
     const { email, password } = req.body;
 
-    const result = await loginLogic(email, password, { userAgent: req.get('user-agent') });
+    const result = await loginLogic(email, password, { userAgent: req.get('user-agent'), deviceToken: req.cookies?.[DEVICE_COOKIE] });
 
     if (result.twoFactorRequired) {
       setTwoFactorCookie(res, result.challengeToken, CHALLENGE_TTL_MS);
@@ -66,6 +69,7 @@ export async function login(req, res, next) {
     }
 
     setAuthCookies(res, result);
+    setDeviceCookie(res, result.deviceToken);
 
     return res.status(200).json({
       message: 'Login Successful',

@@ -122,3 +122,12 @@ export function validatePasswordReset(req, res, next) {
   req.body = { email: body.email.toLowerCase(), code: body.code, newPassword: body.newPassword };
   return next();
 }
+
+// Undo an email change: { token } from the link mailed to the old address.
+export function validateEmailChangeUndo(req, res, next) {
+  const body = plainBody(req.body);
+  if (Object.keys(body).some(key => key !== 'token') || typeof body.token !== 'string' || !/^[A-Za-z0-9_-]{43}$/.test(body.token)) {
+    return next(validationFailed({ token: 'This link is not valid' }));
+  }
+  return next();
+}
