@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Outlet, useLocation } from "react-router-dom";
+import { Link, Outlet, useLocation } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import AmbientBackground from "./ui/AmbientBackground";
 import NotificationBell from "./common/NotificationBell";
@@ -30,7 +30,7 @@ function AppLayout() {
       <div className="relative min-h-screen">
         {/* Mobile top bar */}
         <div className="sticky top-0 z-20 flex items-center justify-between border-b border-[var(--dt-border)] bg-[var(--dt-background)]/90 px-4 py-3 backdrop-blur-sm lg:hidden">
-          <span className="font-[family-name:var(--dt-font-display)] text-xl text-[var(--dt-text-primary)]">DevTrack</span>
+          <Link to="/" viewTransition className="font-[family-name:var(--dt-font-display)] text-xl text-[var(--dt-text-primary)]">DevTrack</Link>
           <div className="flex items-center gap-5">
             <NotificationBell unread={unread} />
             <button type="button" className="dt-link-button" aria-expanded={menuOpen} aria-controls="app-sidebar" onClick={() => setMenuOpen(true)}>

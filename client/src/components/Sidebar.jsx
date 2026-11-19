@@ -29,7 +29,7 @@ function Sidebar({ unread = 0, onNavigate }) {
   return (
     <div className="flex h-full flex-col border-r border-[var(--dt-border)] bg-[var(--dt-background)]/95 px-6 py-8 backdrop-blur-sm lg:bg-transparent lg:backdrop-blur-none">
       <div>
-        <Link to="/app/dashboard" viewTransition onClick={onNavigate} className="font-[family-name:var(--dt-font-display)] text-2xl text-[var(--dt-text-primary)]">
+        <Link to="/" viewTransition onClick={onNavigate} className="font-[family-name:var(--dt-font-display)] text-2xl text-[var(--dt-text-primary)] transition-colors duration-200 hover:text-[var(--dt-accent-soft)]">
           DevTrack
         </Link>
         <p className="mt-1 text-[11px] uppercase tracking-[0.3em] text-[var(--dt-text-muted)]">Developer Command Center</p>
