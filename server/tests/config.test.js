@@ -17,6 +17,22 @@ const production = (overrides = {}) => ({
 });
 
 describe('Configuration guards', () => {
+  it('trims stray whitespace pasted into dashboard values', () => {
+    const config = buildConfig(production({ CLIENT_ORIGIN: 'https://devtrack.app   ', EMAIL_FROM: ' noreply@devtrack.app\t' }));
+    expect(config.CLIENT_ORIGIN).toBe('https://devtrack.app');
+    expect(config.EMAIL.fromEmail).toBe('noreply@devtrack.app');
+  });
+
+  it('refuses a partly configured GitHub App and names the missing setting', () => {
+    expect(() => buildConfig(production({ GITHUB_APP_CLIENT_ID: 'Iv1.example', GITHUB_APP_SLUG: 'devtrack' }))).toThrow(/missing GITHUB_APP_CLIENT_SECRET/);
+    expect(buildConfig(production()).GITHUB.enabled).toBe(false);
+  });
+
+  it('rejects a CLIENT_ORIGIN with a path or trailing slash', () => {
+    expect(() => buildConfig(production({ CLIENT_ORIGIN: 'https://devtrack.app/' }))).toThrow(/origin only/);
+    expect(() => buildConfig(production({ CLIENT_ORIGIN: 'https://devtrack.app/app' }))).toThrow(/origin only/);
+  });
+
   it('accepts a complete production configuration and forces secure cookies', () => {
     const config = buildConfig(production());
     expect(config.NODE_ENV).toBe('production');

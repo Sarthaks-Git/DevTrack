@@ -77,6 +77,11 @@ function buildGitHubConfig(env, { nodeEnv, clientOrigin }) {
 
   // 2FA secrets and sign-in handshakes are encrypted with this key too, so production always needs it.
   if (nodeEnv === 'production' && !encryptionKey) throw new Error('TOKEN_ENCRYPTION_KEY is required in production');
+  // Half a configuration is a typo, not a choice: say which setting is missing instead of quietly
+  // turning GitHub off.
+  const githubSettings = { GITHUB_APP_CLIENT_ID: clientId, GITHUB_APP_CLIENT_SECRET: clientSecret, GITHUB_APP_SLUG: appSlug };
+  const missing = Object.keys(githubSettings).filter(key => !githubSettings[key]);
+  if (missing.length && missing.length < 3) throw new Error(`GitHub App is partly configured; missing ${missing.join(', ')}`);
   if (!enabled) return { enabled: false, encryptionKey };
   if (!encryptionKey) throw new Error('TOKEN_ENCRYPTION_KEY is required when the GitHub App is configured');
   if (!/^[a-z0-9-]{1,100}$/i.test(appSlug)) throw new Error('GITHUB_APP_SLUG is invalid');
@@ -190,7 +195,12 @@ function buildAiConfig(env, { nodeEnv }) {
   };
 }
 
-export function buildConfig(env) {
+export function buildConfig(rawEnv) {
+  // Values pasted into a hosting dashboard often carry stray spaces or newlines; none of these
+  // settings may legitimately start or end with whitespace.
+  const env = Object.fromEntries(
+    Object.entries(rawEnv).map(([key, value]) => [key, typeof value === 'string' ? value.trim() : value])
+  );
   const nodeEnv = env.NODE_ENV || 'development';
 
   if (!['development', 'test', 'production'].includes(nodeEnv)) {
@@ -237,6 +247,11 @@ export function buildConfig(env) {
     new URL(clientOrigin);
   } catch {
     throw new Error('CLIENT_ORIGIN must be a valid absolute URL');
+  }
+
+  // Links and redirects append paths to it, and CORS compares it exactly: keep only the origin.
+  if (new URL(clientOrigin).origin !== clientOrigin) {
+    throw new Error('CLIENT_ORIGIN must be an origin only, like https://example.com (no path or trailing slash)');
   }
 
   if (nodeEnv === 'production') {
