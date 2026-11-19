@@ -4,7 +4,7 @@ import { AuthContext } from "../context/authContextObject";
 import VerifyEmail from "./auth/VerifyEmail";
 
 const ProtectedRoute = () => {
-  const { user, loading, authError, refreshUser } = useContext(AuthContext);
+  const { user, loading, authError, sessionEnded, refreshUser } = useContext(AuthContext);
   const location = useLocation();
 
   if (loading) {
@@ -24,7 +24,7 @@ const ProtectedRoute = () => {
   }
 
   if (!user) {
-    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+    return <Navigate to="/login" replace state={{ from: location.pathname, sessionEnded }} />;
   }
 
   // The server refuses app data until the email is confirmed; show the confirmation screen instead.

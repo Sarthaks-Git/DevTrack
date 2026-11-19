@@ -1,5 +1,5 @@
 import { useContext, useEffect, useRef, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import SocialSignIn from "../components/auth/SocialSignIn";
 import TwoFactorPrompt from "../components/auth/TwoFactorPrompt";
 import ForgotPassword from "../components/auth/ForgotPassword";
@@ -10,15 +10,21 @@ import { errorMessage } from "../services/api";
 
 const Login = () => {
     const [searchParams, setSearchParams] = useSearchParams();
+    const location = useLocation();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     // A failed Google / GitHub / LinkedIn sign-in comes back here with an outcome word.
     const [message, setMessage] = useState(() => {
         const outcome = searchParams.get("oauth");
-        return outcome ? socialOutcomeText(outcome, searchParams.get("provider")) : "";
+        if (outcome) return socialOutcomeText(outcome, searchParams.get("provider"));
+        return location.state?.sessionEnded
+            ? "You were signed out. This session was ended from another tab or device, or it expired."
+            : "";
     });
-    // "ok" after a successful password reset; anything else shows as an error.
-    const [messageKind, setMessageKind] = useState("error");
+    // "ok" after a successful password reset, "info" for the signed-out notice, else an error.
+    const [messageKind, setMessageKind] = useState(() => (
+        !searchParams.get("oauth") && location.state?.sessionEnded ? "info" : "error"
+    ));
     const [loading, setLoading] = useState(false);
     // "code" once the password (or a provider) was accepted and 2FA asks for the authenticator code.
     const [step, setStep] = useState(() => (searchParams.get("step") === "2fa" ? "code" : "password"));
@@ -182,8 +188,8 @@ const Login = () => {
                         >
                             {message && (
                                 <div
-                                    role={messageKind === "ok" ? "status" : "alert"}
-                                    className={`mb-7 border-l-2 px-4 py-3 text-sm leading-6 ${messageKind === "ok" ? "border-emerald-400/70 bg-emerald-400/5 text-emerald-200" : "border-red-400/70 bg-red-400/5 text-red-300"}`}
+                                    role={messageKind === "error" ? "alert" : "status"}
+                                    className={`mb-7 border-l-2 px-4 py-3 text-sm leading-6 ${messageKind === "ok" ? "border-emerald-400/70 bg-emerald-400/5 text-emerald-200" : messageKind === "info" ? "border-amber-400/70 bg-amber-400/5 text-amber-200" : "border-red-400/70 bg-red-400/5 text-red-300"}`}
                                 >
                                     {message}
                                 </div>

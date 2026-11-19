@@ -113,6 +113,12 @@ async function refreshSession() {
   return refreshPromise;
 }
 
+export const SESSION_ENDED_EVENT = 'devtrack:session-ended';
+
+function notifySessionEnded() {
+  if (typeof window !== 'undefined') window.dispatchEvent(new Event(SESSION_ENDED_EVENT));
+}
+
 // Surface the API's human-readable message instead of Axios's generic status text.
 function withServerMessage(error) {
   if (error?.code === 'ECONNABORTED') {
@@ -151,6 +157,8 @@ api.interceptors.response.use(
 
       return api(originalRequest);
     } catch (refreshError) {
+      // The server refused the refresh: the session was ended elsewhere or expired.
+      if (refreshError.response?.status === 401) notifySessionEnded();
       return Promise.reject(withServerMessage(refreshError));
     }
   }
