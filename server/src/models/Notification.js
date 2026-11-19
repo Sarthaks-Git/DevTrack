@@ -16,6 +16,8 @@ const notificationSchema = new mongoose.Schema(
     // One reminder per situation: e.g. a stall is re-announced only after new activity and a new stall.
     dedupeKey: { type: String, required: true, maxlength: 200 },
     readAt: { type: Date, default: null },
+    // Set once the reminder went out in a daily email, so it is never emailed twice.
+    emailedAt: { type: Date, default: null },
   },
   { timestamps: { createdAt: true, updatedAt: false }, strict: 'throw' }
 );

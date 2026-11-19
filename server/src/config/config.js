@@ -285,6 +285,9 @@ export function buildConfig(rawEnv) {
     // Leaked-password check (Have I Been Pwned range API, k-anonymity). Off in tests; set
     // PASSWORD_BREACH_CHECK=off to disable it elsewhere.
     PASSWORD_BREACH_CHECK: nodeEnv !== 'test' && (env.PASSWORD_BREACH_CHECK || 'on').trim().toLowerCase() !== 'off',
+    // Daily reminder emails: on in production, off elsewhere unless REMINDER_EMAILS=on, so a dev
+    // server never mails real accounts by accident.
+    REMINDER_EMAILS: nodeEnv !== 'test' && (env.REMINDER_EMAILS || (nodeEnv === 'production' ? 'on' : 'off')).toLowerCase() === 'on',
 
     AI: buildAiConfig(env, { nodeEnv }),
   };

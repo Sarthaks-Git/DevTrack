@@ -19,6 +19,8 @@ const userSchema = new mongoose.Schema({
     stalledAfterDays: { type: Number, default: 14, min: 3, max: 60 },
     deadlineAlerts: { type: Boolean, default: true },
     weeklyReview: { type: Boolean, default: true },
+    // Daily email summary of new reminders (services/reminderEmail.service.js).
+    email: { type: Boolean, default: true },
   },
   // AI features are off until the user turns them on (they send commit text to the AI provider).
   ai: {
@@ -44,6 +46,9 @@ const userSchema = new mongoose.Schema({
   knownDevices: { type: [String], default: undefined, select: false },
   // Last time reminders were generated; used to throttle regeneration per user.
   remindersCheckedAt: { type: Date, default: null },
+  // India calendar day (YYYY-MM-DD) of the last reminder-email check; claimed atomically so each
+  // account is processed at most once a day, even with several server instances.
+  reminderDigestDay: { type: String, default: null },
 }, { timestamps: true });
 
 userSchema.index({ email: 1 }, { unique: true });

@@ -10,7 +10,7 @@ import { withTargetProgress } from './goalTarget.service.js';
 
 export const REMINDER_REFRESH_MS = 5 * 60 * 1000;
 export const NOTIFICATION_PAGE_MAX = 50;
-const REMINDER_DEFAULTS = Object.freeze({ enabled: true, stalledAfterDays: 14, deadlineAlerts: true, weeklyReview: true });
+const REMINDER_DEFAULTS = Object.freeze({ enabled: true, stalledAfterDays: 14, deadlineAlerts: true, weeklyReview: true, email: true });
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 const dayKey = value => new Date(value).toISOString().slice(0, 10);
@@ -144,7 +144,7 @@ export async function listNotificationsLogic(userId, { limit, before, today }) {
 
   const filter = { owner, ...(before ? { _id: { $lt: new mongoose.Types.ObjectId(before) } } : {}) };
   const [items, unread] = await Promise.all([
-    Notification.find(filter).sort({ _id: -1 }).limit(limit + 1).select('-owner -dedupeKey -__v').lean(),
+    Notification.find(filter).sort({ _id: -1 }).limit(limit + 1).select('-owner -dedupeKey -emailedAt -__v').lean(),
     Notification.countDocuments({ owner, readAt: null }),
   ]);
   const hasMore = items.length > limit;

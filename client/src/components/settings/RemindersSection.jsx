@@ -54,8 +54,8 @@ function RemindersSection() {
     <SettingsSection
       number="07"
       label="Reminders"
-      title="In-app reminders"
-      description="DevTrack checks your goals and projects and nudges you in Alerts when something is overdue, stalled, or a verified target is reached. Email and phone reminders are not enabled yet."
+      title="Reminders"
+      description="DevTrack checks your goals and projects and nudges you in Alerts when something is overdue, stalled, or a verified target is reached. New reminders can also come to your inbox as one short email each morning."
     >
       {!settings ? (
         status.text ? null : <p className="text-sm text-[var(--dt-text-muted)]">Loading...</p>
@@ -70,6 +70,20 @@ function RemindersSection() {
               className="mt-1"
             />
             <span>Send me in-app reminders</span>
+          </label>
+
+          <label className="flex items-start gap-3 text-sm text-[var(--dt-text-secondary)]">
+            <input
+              type="checkbox"
+              checked={settings.email}
+              disabled={saving || !settings.enabled}
+              onChange={(event) => save({ email: event.target.checked }, event.target.checked ? "You'll get one email each morning when there are new reminders." : "Reminder emails are off.")}
+              className="mt-1"
+            />
+            <span>
+              Email me new reminders
+              <span className="block text-xs text-[var(--dt-text-muted)]">One summary around 8 am (India time), only on days with something new.</span>
+            </span>
           </label>
 
           <label className="flex items-start gap-3 text-sm text-[var(--dt-text-secondary)]">

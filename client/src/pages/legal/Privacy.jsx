@@ -41,7 +41,7 @@ const sections = [
       <ul>
         <li>To run your account: sign-in, your dashboard, progress from verified sources, reminders and the weekly review.</li>
         <li>To keep it safe: email verification, alerts about new sign-ins and email changes, rate limits, and checking new passwords against known breaches.</li>
-        <li>To send account email: verification codes, password resets and security alerts. We do not send marketing email.</li>
+        <li>To send account email: verification codes, password resets, security alerts and, unless you turn it off in Settings → Reminders, a morning summary of new reminders. We do not send marketing email.</li>
       </ul>
     ),
   },
