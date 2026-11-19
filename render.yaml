@@ -1,0 +1,41 @@
+# Render Blueprint for the DevTrack API (docs/DEPLOYMENT.md). The client is on Vercel and forwards
+# /api/* here, so browsers only ever talk to the Vercel domain and cookies stay first-party.
+# Secrets are marked sync: false: Render asks for them in the dashboard; they never live in git.
+services:
+  - type: web
+    name: devtrack-api
+    runtime: node
+    plan: free
+    region: singapore
+    rootDir: server
+    buildCommand: npm ci --omit=dev
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "24"
+      # Vercel's proxy, then Render's: two hops before the app.
+      - key: TRUST_PROXY
+        value: "2"
+      # Counters survive restarts and free-tier sleep.
+      - key: RATE_LIMIT_STORE
+        value: mongo
+      - key: COOKIE_SAME_SITE
+        value: lax
+      - key: CLIENT_ORIGIN
+        sync: false
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: TOKEN_ENCRYPTION_KEY
+        sync: false
+      - key: BREVO_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
+      - key: EMAIL_FROM_NAME
+        value: DevTrack
