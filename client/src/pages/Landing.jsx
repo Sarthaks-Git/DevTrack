@@ -160,7 +160,10 @@ function Landing() {
                             <span>Timeline</span>
                         </div>
 
-                        <span>01 / 01</span>
+                        <nav aria-label="Legal" className="flex gap-6">
+                            <Link to="/privacy" className="hover:text-[var(--dt-accent-soft)]">Privacy</Link>
+                            <Link to="/terms" className="hover:text-[var(--dt-accent-soft)]">Terms</Link>
+                        </nav>
                     </div>
                 </footer>
             </div>

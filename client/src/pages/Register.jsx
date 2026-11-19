@@ -310,6 +310,13 @@ const Register = () => {
                             </button>
                         </form>
 
+                        <p className="mt-4 text-xs leading-5 text-[var(--dt-text-muted)]">
+                            By creating an account you agree to the{" "}
+                            <Link to="/terms" className="underline underline-offset-2 hover:text-[var(--dt-accent-soft)]">Terms</Link>
+                            {" "}and{" "}
+                            <Link to="/privacy" className="underline underline-offset-2 hover:text-[var(--dt-accent-soft)]">Privacy policy</Link>.
+                        </p>
+
                         <SocialSignIn disabled={loading} onError={setMessage} />
 
                         <div className="mt-7 flex flex-col gap-3 text-sm sm:flex-row sm:items-center sm:justify-between">
@@ -328,10 +335,14 @@ const Register = () => {
                     </section>
                 </div>
 
-                <footer className="px-6 py-6 md:px-10">
+                <footer className="flex flex-wrap items-center justify-between gap-3 px-6 py-6 md:px-10">
                     <p className="text-[11px] uppercase tracking-[0.25em] text-[var(--dt-text-muted)]">
                         DevTrack — Build. Track. Evolve.
                     </p>
+                    <nav aria-label="Legal" className="flex gap-5 text-xs text-[var(--dt-text-muted)]">
+                        <Link to="/privacy" className="hover:text-[var(--dt-accent-soft)]">Privacy</Link>
+                        <Link to="/terms" className="hover:text-[var(--dt-accent-soft)]">Terms</Link>
+                    </nav>
                 </footer>
             </div>
         </main>

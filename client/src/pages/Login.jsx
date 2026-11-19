@@ -292,10 +292,14 @@ const Login = () => {
                     </section>
                 </div>
 
-                <footer className="px-6 py-6 md:px-10">
+                <footer className="flex flex-wrap items-center justify-between gap-3 px-6 py-6 md:px-10">
                     <p className="text-[11px] uppercase tracking-[0.25em] text-[var(--dt-text-muted)]">
                         DevTrack — Build. Track. Evolve.
                     </p>
+                    <nav aria-label="Legal" className="flex gap-5 text-xs text-[var(--dt-text-muted)]">
+                        <Link to="/privacy" className="hover:text-[var(--dt-accent-soft)]">Privacy</Link>
+                        <Link to="/terms" className="hover:text-[var(--dt-accent-soft)]">Terms</Link>
+                    </nav>
                 </footer>
             </div>
         </main>
