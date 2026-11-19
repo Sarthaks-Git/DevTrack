@@ -142,7 +142,10 @@ function buildEmailConfig(env, { nodeEnv }) {
     if (!enabled) throw new Error('BREVO_API_KEY and EMAIL_FROM are required in production (email verification)');
     if (PLACEHOLDER_PATTERN.test(apiKey)) throw new Error('BREVO_API_KEY is a placeholder');
   }
-  return { enabled, apiKey, fromEmail, fromName };
+  // ALERT_EMAIL: where server crash alerts go (services/errorAlert.service.js). Optional.
+  const alertEmail = (env.ALERT_EMAIL || '').toLowerCase();
+  if (alertEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(alertEmail)) throw new Error('ALERT_EMAIL must be an email address');
+  return { enabled, apiKey, fromEmail, fromName, alertEmail: alertEmail || null };
 }
 
 // USD per million tokens (input, output), from Anthropic's published prices. The budget guard

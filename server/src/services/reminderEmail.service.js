@@ -4,6 +4,8 @@ import Notification from '../models/Notification.js';
 import User from '../models/User.js';
 import { sendEmail } from './email.transport.js';
 import { refreshRemindersLogic } from './notification.service.js';
+import { alertOwner } from './errorAlert.service.js';
+import { describeUnexpectedError } from '../middlewares/error.middleware.js';
 
 // Daily email summary of new in-app reminders. Runs inside the API process (the free host has no
 // cron); an hourly tick sends after SEND_HOUR_IST each India day. Each account is claimed
@@ -122,8 +124,10 @@ export function startReminderEmailSchedule() {
     try {
       const result = await runReminderEmails();
       if (result.checked) process.stdout.write(`Reminder emails: ${result.sent} sent, ${result.failed} failed, ${result.checked} checked\n`);
-    } catch {
-      process.stderr.write('Reminder email run failed\n');
+    } catch (error) {
+      const detail = describeUnexpectedError(error);
+      process.stderr.write(`Reminder email run failed: ${detail}\n`);
+      alertOwner('job', detail);
     } finally {
       running = false;
     }

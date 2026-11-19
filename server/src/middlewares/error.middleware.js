@@ -3,6 +3,8 @@
 // database or other services can contain internals or personal data, so they are never sent,
 // and they are never logged either.
 
+import { alertOwner } from '../services/errorAlert.service.js';
+
 // Generic texts for client errors raised by Express or body parsing (http-errors with expose).
 const CLIENT_ERROR_TEXT = {
   400: 'Bad request',
@@ -47,6 +49,8 @@ export function errorMiddleware(err, req, res, next) {
   if (err?.expose === true && Number.isInteger(status) && status >= 400 && status < 500) {
     return res.status(status).json({ message: CLIENT_ERROR_TEXT[status] || 'Bad request', code: 'BAD_REQUEST' });
   }
-  if (process.env.NODE_ENV !== 'test') process.stderr.write(`Unhandled application error: ${describeUnexpectedError(err, req)}\n`);
+  const detail = describeUnexpectedError(err, req);
+  if (process.env.NODE_ENV !== 'test') process.stderr.write(`Unhandled application error: ${detail}\n`);
+  alertOwner('request', detail);
   return res.status(500).json({ message: 'An unexpected error occurred', code: 'INTERNAL_ERROR' });
 }
