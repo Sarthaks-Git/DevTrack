@@ -21,9 +21,26 @@ let preference = readPreference();
 // Dark is the default when the device gives no answer.
 const resolve = value => (value === 'system' ? (media?.matches ? 'light' : 'dark') : value);
 
-function apply() {
-  document.documentElement.setAttribute('data-theme', resolve(preference));
-  listeners.forEach(listener => listener());
+// A theme change crossfades the page (View Transitions; styles at the end of index.css).
+// Browsers without them, and the first paint, switch instantly.
+function apply({ animate = true } = {}) {
+  const root = document.documentElement;
+  const next = resolve(preference);
+  const update = () => {
+    root.setAttribute('data-theme', next);
+    listeners.forEach(listener => listener());
+  };
+
+  if (!animate || root.getAttribute('data-theme') === next || typeof document.startViewTransition !== 'function') {
+    update();
+    return;
+  }
+
+  root.classList.add('dt-theme-switching');
+  const transition = document.startViewTransition(update);
+  transition.finished
+    .catch(() => {})
+    .finally(() => root.classList.remove('dt-theme-switching'));
 }
 
 export function setThemePreference(next) {
@@ -45,7 +62,7 @@ if (typeof window !== 'undefined') {
     preference = readPreference();
     apply();
   });
-  apply();
+  apply({ animate: false });
 }
 
 const subscribe = listener => {

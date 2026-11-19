@@ -98,7 +98,7 @@ function StatusLabel({ status }) {
 
 function ProjectCard({ project, goal, milestoneHandlers, githubConnected, securityReviews, onSecurityReviewChange, codeFindings, codeReviewAllowed, onCodeFindingChange, onCodeReviewToggle, onReplace, onEdit, onDelete }) {
   return (
-    <article className="group flex h-full flex-col border border-[var(--dt-border)] bg-[var(--dt-surface)] p-5 transition-colors duration-200 hover:border-[var(--dt-border-strong)] sm:p-6">
+    <article className="group flex h-full flex-col border border-[var(--dt-border)] bg-[var(--dt-surface)] shadow-[var(--dt-shadow-card)] p-5 transition-colors duration-200 hover:border-[var(--dt-border-strong)] sm:p-6">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="mb-3 text-[11px] uppercase tracking-[0.2em] text-[var(--dt-text-muted)]">
@@ -294,7 +294,7 @@ function ProjectForm({ initialProject, goals = [], saving, onCancel, onSubmit })
   return (
     <form
       onSubmit={handleSubmit}
-      className="border border-[var(--dt-border-strong)] bg-[var(--dt-surface)] p-5 sm:p-7"
+      className="border border-[var(--dt-border-strong)] bg-[var(--dt-surface)] p-5 shadow-[var(--dt-shadow-card)] sm:p-7"
     >
       <div className="mb-6 flex items-start justify-between gap-4">
         <div>

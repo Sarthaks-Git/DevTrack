@@ -150,7 +150,13 @@
     .dt-card {
         border: 1px solid var(--dt-border);
         background: color-mix(in srgb, var(--dt-surface) 60%, transparent);
+        box-shadow: var(--dt-shadow-card);
         padding: 1.5rem;
+    }
+
+    /* On light the translucent panel washes into the page; make it solid white. */
+    :root[data-theme="light"] .dt-card {
+        background: var(--dt-surface);
     }
 
     /* Evidence principle: verified data and manual data must look different. */

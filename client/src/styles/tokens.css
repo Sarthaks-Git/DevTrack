@@ -18,6 +18,9 @@
     --dt-border: #24262d;
     --dt-border-strong: #30333b;
 
+    /* Panels sit flat on dark; light gives them a soft lift (see the light block). */
+    --dt-shadow-card: none;
+
     /* Accent */
     --dt-accent: #8066ff;
     --dt-accent-soft: #a494ff;
@@ -61,23 +64,27 @@
     --dt-ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
 }
 /* Light theme (Settings → Appearance, or the device setting when "System" is chosen).
-   Same tokens, light values; the accent is darker so it stays readable on white. */
+   Same tokens, light values; the accent is darker so it stays readable on white.
+   Depth comes from a warm grey page under white panels with a soft shadow, and the three text
+   greys are spread apart (contrast on the page: 15.3 / 9.0 / 5.3, all WCAG AA). */
 :root[data-theme="light"] {
     color-scheme: light;
 
-    --dt-background: #f6f6f3;
+    --dt-background: #ecebe5;
     --dt-surface: #ffffff;
-    --dt-surface-elevated: #eeeee9;
+    --dt-surface-elevated: #e2e0d9;
     --dt-popover: #ffffff;
     --dt-verified: #067647;
     --dt-verified-border: rgb(6 118 71 / 0.45);
 
-    --dt-text-primary: #16171b;
-    --dt-text-secondary: #474a52;
-    --dt-text-muted: #4f535b;
+    --dt-text-primary: #14151a;
+    --dt-text-secondary: #3b3e46;
+    --dt-text-muted: #5d6068;
 
-    --dt-border: #deded9;
-    --dt-border-strong: #c7c8c2;
+    --dt-border: #d3d1c9;
+    --dt-border-strong: #a9a79e;
+
+    --dt-shadow-card: 0 1px 2px rgb(28 25 18 / 0.06), 0 2px 8px rgb(28 25 18 / 0.05);
 
     --dt-accent: #6247e0;
     --dt-accent-soft: #5136cc;

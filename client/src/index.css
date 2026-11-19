@@ -1040,3 +1040,27 @@
         animation: none;
     }
 }
+
+/* ================================================== */
+/* Theme switch: the new theme fades in over the old  */
+/* one (theme/theme.js adds the class). Opacity only, */
+/* so it stays on under reduced motion. Overrides the */
+/* route transitions above while the class is set.    */
+/* ================================================== */
+:root.dt-theme-switching::view-transition-group(*) {
+    animation: none;
+}
+
+:root.dt-theme-switching::view-transition-old(*) {
+    animation: none;
+    mix-blend-mode: normal;
+}
+
+:root.dt-theme-switching::view-transition-new(*) {
+    animation: dt-theme-fade 300ms ease;
+    mix-blend-mode: normal;
+}
+
+@keyframes dt-theme-fade {
+    from { opacity: 0; }
+}
