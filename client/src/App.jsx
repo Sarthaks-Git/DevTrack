@@ -5,6 +5,7 @@ import Landing from "./pages/Landing";
 import Register from "./pages/Register";
 import AppLayout from "./components/AppLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
+import RouteError from "./components/RouteError";
 import { AuthProvider } from "./context/AuthContext";
 
 // App pages load on demand so the landing and auth screens stay small.
@@ -41,7 +42,8 @@ const page = Component => (
   </Suspense>
 );
 
-const router = createBrowserRouter([
+// The pathless root catches any page crash and shows RouteError instead of the raw error.
+const router = createBrowserRouter([{ errorElement: <RouteError />, children: [
   { path: "/", element: <Landing /> },
   { path: "/register", element: <Register /> },
   { path: "/login", element: <Login /> },
@@ -73,7 +75,7 @@ const router = createBrowserRouter([
     ],
   },
   { path: "*", element: <NotFound /> },
-]);
+] }]);
 
 function App() {
   return (
