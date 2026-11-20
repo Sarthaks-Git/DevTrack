@@ -19,6 +19,9 @@ import { validateCodingProfile } from '../validators/codingProfile.validator.js'
 
 import { validateTodayQuery } from '../validators/viewerDay.validator.js';
 import { getSkills } from '../controllers/skills.controller.js';
+import { createLadder, deleteLadder, listLadders } from '../controllers/problemLadder.controller.js';
+import { validateCreateLadder } from '../validators/problemLadder.validator.js';
+import { validateObjectId } from '../middlewares/validateObjectId.middleware.js';
 
 const codingProfileRouter = Router();
 
@@ -62,6 +65,11 @@ codingProfileRouter.get('/leetcode/days', validateProblemDaysQuery, listProblemD
 
 // Read-only skill signals derived from the stored problem log (no provider call).
 codingProfileRouter.get('/leetcode/skills', validateTodayQuery, getSkills);
+
+// Practice ladders: real LeetCode problems for weak patterns, ticked off by verified solves.
+codingProfileRouter.get('/leetcode/ladders', validateTodayQuery, listLadders);
+codingProfileRouter.post('/leetcode/ladders', codingSyncRateLimit, requireCsrf, validateCreateLadder, createLadder);
+codingProfileRouter.delete('/leetcode/ladders/:id', requireCsrf, validateObjectId('id'), deleteLadder);
 
 codingProfileRouter.put(
     '/leetcode',

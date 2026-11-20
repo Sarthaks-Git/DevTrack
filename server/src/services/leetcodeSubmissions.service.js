@@ -23,7 +23,8 @@ const QUESTION_QUERY = `
 const SLUG_PATTERN = /^[a-z0-9-]{1,150}$/;
 const DIFFICULTIES = new Set(['Easy', 'Medium', 'Hard']);
 
-async function postGraphQL(query, variables) {
+// Shared with the practice-ladder catalogue (leetcodeCatalogue.service.js).
+export async function postGraphQL(query, variables) {
   let response;
   try {
     response = await fetch(LEETCODE_GRAPHQL_URL, {

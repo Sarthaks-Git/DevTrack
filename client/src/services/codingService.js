@@ -11,3 +11,7 @@ export async function getSolvedProblems(page = 1, limit = 20) { const { data } =
 export async function getProblemDays(from, to) { const { data } = await api.get('/coding-profiles/leetcode/days', { params: { from, to } }); return data.data; }
 // Skill signals computed by the server from the stored problem log.
 export async function getLeetCodeSkills() { const { data } = await api.get('/coding-profiles/leetcode/skills', { params: { today: localDayKey() } }); return data.data; }
+// Practice ladders (real LeetCode problems for weak patterns, ticked off by verified solves).
+export async function getLadders() { const { data } = await api.get('/coding-profiles/leetcode/ladders', { params: { today: localDayKey() } }); return data.data; }
+export async function createLadder(pattern) { const { data } = await api.post('/coding-profiles/leetcode/ladders', { pattern }); return data.data.ladder; }
+export async function deleteLadder(id) { await api.delete(`/coding-profiles/leetcode/ladders/${id}`); }

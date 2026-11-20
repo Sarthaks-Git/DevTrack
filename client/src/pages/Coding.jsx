@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { getCodingProfiles, syncLeetCode, getSolvedProblems, getProblemDays } from "../services/codingService";
 import ProblemLog from "../components/coding/ProblemLog";
 import SkillsPanel from "../components/coding/SkillsPanel";
+import LaddersPanel from "../components/coding/LaddersPanel";
 import PageHeader from "../components/common/PageHeader";
 
 
@@ -1208,6 +1209,7 @@ function Coding() {
 
 
                     <SkillsPanel version={skillsVersion} />
+                    <LaddersPanel version={skillsVersion} />
 
                     <section>
 
