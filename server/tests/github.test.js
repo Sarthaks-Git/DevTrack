@@ -32,6 +32,7 @@ import GitHubCommit from '../src/models/GitHubCommit.js';
 import GitHubConnection from '../src/models/GitHubConnection.js';
 import OAuthState from '../src/models/OAuthState.js';
 import Project from '../src/models/Project.js';
+import User from '../src/models/User.js';
 import { decryptSecret, encryptSecret, sha256 } from '../src/utils/tokenCrypto.js';
 import { createSession, PASSWORD } from './helpers.js';
 
@@ -275,9 +276,15 @@ describe('Repositories and commit sync', () => {
       content: [{ type: 'text', text: JSON.stringify({ commits: [{ ref: 0, relevant: true, area: 'Password reset', areaKey: 'authentication', checks: [{ text: 'Reset tokens expire and are single use', why: 'Old links could take over accounts.' }] }] }) }],
     });
     // Turning AI on reviews the commit that synced while it was off.
-    await s.put('/api/ai/consent').send({ enabled: true });
+    const consent = await s.put('/api/ai/consent').send({ enabled: true });
     await settleSecurityScans();
-    expect(createMessage).toHaveBeenCalledTimes(1);
+    // This test has failed intermittently in full runs only; on failure, say what the scan saw.
+    const diagnosis = async () => JSON.stringify({
+      consent: { status: consent.status, data: consent.body.data && { enabled: consent.body.data.enabled, available: consent.body.data.available } },
+      commits: await GitHubCommit.find({ owner: s.userId }).select('securityScan files message -_id').lean(),
+      lastIssue: (await User.findById(s.userId).select('ai').lean())?.ai?.lastIssue,
+    });
+    expect(createMessage.mock.calls.length, createMessage.mock.calls.length === 1 ? '' : await diagnosis()).toBe(1);
     expect(await SecurityReview.countDocuments({ owner: s.userId, project: p })).toBe(1);
 
     // Unlinking the repository removes its checks along with its commits.
