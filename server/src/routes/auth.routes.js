@@ -3,7 +3,8 @@ import { csrf, register, login, getMe, logout, logoutAll, refresh } from '../con
 import { updateProfile, changePassword, listSessions, revokeSessionById, deleteAccount } from '../controllers/account.controller.js';
 import { authAllowUnverified, authMiddleware } from '../middlewares/auth.middleware.js';
 import { requireCsrf } from '../middlewares/csrf.middleware.js';
-import { authRateLimit, loginAccountRateLimit, sensitiveAuthRateLimit, passwordCheckRateLimit, registerRateLimit, socialCallbackRateLimit, socialStartRateLimit, twoFactorVerifyRateLimit, emailSendRateLimit, writeRateLimit, passwordForgotRateLimit, passwordForgotEmailRateLimit, passwordResetRateLimit, passwordResetEmailRateLimit, emailChangeUndoRateLimit } from '../middlewares/rateLimit.middleware.js';
+import { REFRESH_COOKIE } from '../utils/cookies.js';
+import { authRateLimit, loginAccountRateLimit, refreshRateLimit, passwordCheckRateLimit, registerRateLimit, socialCallbackRateLimit, socialStartRateLimit, twoFactorVerifyRateLimit, emailSendRateLimit, writeRateLimit, passwordForgotRateLimit, passwordForgotEmailRateLimit, passwordResetRateLimit, passwordResetEmailRateLimit, emailChangeUndoRateLimit } from '../middlewares/rateLimit.middleware.js';
 import { validateRegister, validateLogin, validateEmailCode, validatePasswordForgot, validatePasswordReset, validateEmailChangeUndo } from '../validators/auth.validator.js';
 import { forgotPassword, resetPassword } from '../controllers/passwordReset.controller.js';
 import { cancelEmailChange, confirmEmailChange, getEmailChange, resendEmailChange, undoEmailChange } from '../controllers/emailChange.controller.js';
@@ -19,7 +20,10 @@ authRouter.get('/csrf', csrf);
 authRouter.get('/me', authAllowUnverified, getMe);
 authRouter.post('/register', registerRateLimit, authRateLimit, requireCsrf, validateRegister, register);
 authRouter.post('/login', authRateLimit, requireCsrf, validateLogin, loginAccountRateLimit, login);
-authRouter.post('/refresh', sensitiveAuthRateLimit, requireCsrf, refresh);
+// A browser without a refresh cookie (every signed-out visit) has no session to renew: it gets the
+// same 401 at once, without spending the per-IP limit that signed-in people on its network share.
+const answerWithoutSession = (req, res, next) => (req.cookies?.[REFRESH_COOKIE] ? next() : refresh(req, res, next));
+authRouter.post('/refresh', answerWithoutSession, refreshRateLimit, requireCsrf, refresh);
 authRouter.post('/logout', requireCsrf, logout);
 authRouter.post('/logout-all', authAllowUnverified, writeRateLimit, requireCsrf, logoutAll);
 

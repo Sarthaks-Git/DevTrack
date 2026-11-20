@@ -3,6 +3,7 @@ import SettingsSection, { Notice } from "./SettingsSection";
 import ConfirmModal from "../common/ConfirmModal";
 import { listSocialProviders, startSocialLink, unlinkIdentity } from "../../services/authService";
 import { PROVIDER_LABELS } from "../auth/socialMessages";
+import useRestoredPage from "../common/useRestoredPage";
 
 function formatDay(value) {
   return value ? new Date(value).toLocaleDateString(undefined, { dateStyle: "medium" }) : "";
@@ -12,6 +13,7 @@ function formatDay(value) {
 function SignInSection({ user, identities, onChanged, notice }) {
   const [providers, setProviders] = useState(null);
   const [busy, setBusy] = useState("");
+  useRestoredPage(() => setBusy(""));
   const [status, setStatus] = useState({ kind: "", text: "" });
   const [unlinking, setUnlinking] = useState(null);
   const [password, setPassword] = useState("");

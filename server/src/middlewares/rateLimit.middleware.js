@@ -51,7 +51,9 @@ const byEmailHash = req => `emailHash:${crypto.createHash('sha256').update(typeo
 export const apiRateLimit = createRateLimit({ name: 'api', limit: 1000 });
 export const authRateLimit = createRateLimit({ name: 'auth', failClosed: true, limit: 10, skipSuccessfulRequests: true });
 export const loginAccountRateLimit = createRateLimit({ name: 'loginAccount', failClosed: true, limit: 10, skipSuccessfulRequests: true, keyGenerator: byEmail });
-export const sensitiveAuthRateLimit = createRateLimit({ name: 'sensitiveAuth', limit: 30 });
+// Session renewal: only failed attempts count, so people sharing one network (campus, office)
+// renewing their sessions never use up each other's allowance.
+export const refreshRateLimit = createRateLimit({ name: 'refresh', limit: 30, skipSuccessfulRequests: true });
 export const passwordCheckRateLimit = createRateLimit({ name: 'passwordCheck', failClosed: true, limit: 10, skipSuccessfulRequests: true, keyGenerator: byUser });
 export const verificationRateLimit = createRateLimit({ name: 'verification', limit: 20, keyGenerator: byUser });
 export const statsRefreshRateLimit = createRateLimit({ name: 'statsRefresh', limit: 30, keyGenerator: byUser });

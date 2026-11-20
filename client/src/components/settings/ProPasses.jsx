@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Notice } from "./SettingsSection";
 import { createOrder, formatMoney, getBilling, loadCheckout, verifyPayment } from "../../services/billingService";
+import useRestoredPage from "../common/useRestoredPage";
 
 const STATUS_TEXT = { paid: "Paid", refunded: "Refunded" };
 
@@ -14,7 +15,9 @@ const CHECKOUT_DISPLAY = {
 
 function ProPasses({ onPlanChanged }) {
   const [billing, setBilling] = useState(null);
+  // "opening" while the order is created and Razorpay loads; "confirming" while the server checks a payment.
   const [busy, setBusy] = useState("");
+  const [confirming, setConfirming] = useState(false);
   const [notice, setNotice] = useState({ kind: "", text: "" });
 
   useEffect(() => {
@@ -27,7 +30,21 @@ function ProPasses({ onPlanChanged }) {
     };
   }, []);
 
+  // Back from a bank or UPI page: nothing is pending any more, and the webhook may already have
+  // turned Pro on, so read the plan again.
+  useRestoredPage(() => {
+    setBusy("");
+    setConfirming(false);
+    getBilling()
+      .then(data => {
+        setBilling(data);
+        onPlanChanged?.();
+      })
+      .catch(() => {});
+  });
+
   async function confirm(response) {
+    setConfirming(true);
     try {
       const data = await verifyPayment({
         orderId: response.razorpay_order_id,
@@ -41,7 +58,7 @@ function ProPasses({ onPlanChanged }) {
       // Razorpay also tells the server directly, so a paid order still turns Pro on.
       setNotice({ kind: "error", text: `${error.message} If money left your account, Pro turns on automatically within a few minutes once Razorpay confirms it.` });
     } finally {
-      setBusy("");
+      setConfirming(false);
     }
   }
 
@@ -59,7 +76,6 @@ function ProPasses({ onPlanChanged }) {
         description: `Pro, ${order.label}`,
         config: { display: CHECKOUT_DISPLAY },
         handler: confirm,
-        modal: { ondismiss: () => setBusy("") },
       });
       checkout.on("payment.failed", event => {
         setNotice({ kind: "error", text: event?.error?.description || "The payment did not go through. You were not charged." });
@@ -67,6 +83,8 @@ function ProPasses({ onPlanChanged }) {
       checkout.open();
     } catch (error) {
       setNotice({ kind: "error", text: error.message });
+    } finally {
+      // Razorpay's window covers the page from here on, so the buttons need no lock while it is open.
       setBusy("");
     }
   }
@@ -93,7 +111,7 @@ function ProPasses({ onPlanChanged }) {
               key={pass.id}
               type="button"
               onClick={() => buy(pass)}
-              disabled={Boolean(busy)}
+              disabled={Boolean(busy) || confirming}
               className="border border-[var(--dt-border)] p-4 text-left hover:border-[var(--dt-accent)] disabled:opacity-50"
             >
               <span className="block text-[11px] uppercase tracking-[0.18em] text-[var(--dt-text-muted)]">{pass.label}</span>
@@ -127,6 +145,7 @@ function ProPasses({ onPlanChanged }) {
         </ul>
       ) : null}
 
+      {confirming ? <p role="status" className="mt-4 text-xs text-[var(--dt-text-secondary)]">Confirming your payment...</p> : null}
       <Notice kind={notice.kind}>{notice.text}</Notice>
     </div>
   );

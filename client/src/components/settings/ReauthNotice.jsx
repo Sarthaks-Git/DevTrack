@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { startSocialSignIn } from "../../services/authService";
 import { PROVIDER_LABELS } from "../auth/socialMessages";
+import useRestoredPage from "../common/useRestoredPage";
 
 // For accounts without a password: changes are confirmed by signing in again with a linked provider.
 function ReauthNotice({ identities }) {
   const [busy, setBusy] = useState("");
+  useRestoredPage(() => setBusy(""));
   const [error, setError] = useState("");
 
   async function confirm(provider) {

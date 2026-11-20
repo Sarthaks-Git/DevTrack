@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { listSocialProviders, startSocialSignIn } from "../../services/authService";
+import useRestoredPage from "../common/useRestoredPage";
 
 // "Continue with Google / GitHub / LinkedIn" buttons. Only providers set up on the server are shown.
 function SocialSignIn({ disabled = false, onError }) {
   const [providers, setProviders] = useState([]);
   const [busy, setBusy] = useState("");
+  useRestoredPage(() => setBusy(""));
 
   useEffect(() => {
     let active = true;

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import SettingsSection, { Notice } from "./SettingsSection";
 import ConfirmModal from "../common/ConfirmModal";
+import useRestoredPage from "../common/useRestoredPage";
 import { disconnectGitHub, getGitHubStatus, startGitHubConnect, syncGitHub } from "../../services/githubService";
 
 // Outcome words the server's OAuth callback appends to /app/settings?github=...
@@ -24,6 +25,7 @@ function GitHubSection() {
   const [state, setState] = useState({ loading: true, status: null });
   const [notice, setNotice] = useState(() => OUTCOMES[params.get("github")] || { kind: "", text: "" });
   const [busy, setBusy] = useState("");
+  useRestoredPage(() => setBusy(""));
   const [confirmDisconnect, setConfirmDisconnect] = useState(false);
 
   // Show the outcome once, then drop it from the URL so a refresh does not repeat it.

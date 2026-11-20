@@ -87,4 +87,18 @@ describe('Authentication API', () => {
       .set('Cookie', `${currentAccess}; ${rotatedRefresh}; ${csrf.csrfCookie}`);
     expect(afterReplay.status).toBe(401);
   });
+
+  it('answers a signed-out refresh at once, without using the shared per-IP limit', async () => {
+    const csrf = await csrfContext();
+    const signedOut = await request(app).post('/api/auth/refresh').set('Cookie', csrf.csrfCookie).set('x-csrf-token', csrf.csrfToken);
+    expect(signedOut.status).toBe(401);
+    expect(signedOut.body.code).toBe('SESSION_INVALID');
+    // The refresh limiter (30 per 15 min, x100 in tests) stamps its own RateLimit header over the general API one.
+    expect(signedOut.headers.ratelimit).not.toMatch(/"3000-in-15min"/);
+
+    const withBadCookie = await request(app).post('/api/auth/refresh')
+      .set('Cookie', `devtrack_refresh=not-a-real-token; ${csrf.csrfCookie}`).set('x-csrf-token', csrf.csrfToken);
+    expect(withBadCookie.status).toBe(401);
+    expect(withBadCookie.headers.ratelimit).toMatch(/"3000-in-15min"/);
+  });
 });
