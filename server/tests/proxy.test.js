@@ -3,6 +3,7 @@ import { randomBytes } from 'node:crypto';
 import request from 'supertest';
 import app from '../src/app.js';
 import config, { buildConfig, PROXY_HEADER } from '../src/config/config.js';
+import { CLIENT_IP_HEADER } from '../src/middlewares/proxy.middleware.js';
 
 const SECRET = randomBytes(32).toString('base64url');
 const saved = config.PROXY;
@@ -44,6 +45,16 @@ describe('Direct calls that skip the Vercel proxy', () => {
     const health = await request(app).get('/api/health').set(PROXY_HEADER, SECRET);
     expect(health.body).toMatchObject({ proxied: true });
     expect(typeof health.body.ip).toBe('string');
+  });
+
+  it('take the client IP from the proxy header only when the secret matches', async () => {
+    config.PROXY = { mode: 'report', secret: SECRET };
+    const proxied = await request(app).get('/api/health').set(PROXY_HEADER, SECRET).set(CLIENT_IP_HEADER, '203.0.113.7');
+    expect(proxied.body.ip).toBe('203.0.113.7');
+    const forged = await request(app).get('/api/health').set(CLIENT_IP_HEADER, '203.0.113.7');
+    expect(forged.body.ip).not.toBe('203.0.113.7');
+    const junk = await request(app).get('/api/health').set(PROXY_HEADER, SECRET).set(CLIENT_IP_HEADER, 'not-an-ip');
+    expect(junk.body.ip).not.toBe('not-an-ip');
   });
 
   it('change nothing when the check is off', async () => {
