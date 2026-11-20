@@ -64,7 +64,7 @@ export async function aiConsentGiven(userId) {
 
 export const planAllows = (plan, feature) => plan.features.includes(feature);
 
-export const planRequiredError = () => new AiUnavailableError('Code review is part of the Pro plan', 403, 'AI_PLAN_REQUIRED');
+export const planRequiredError = () => new AiUnavailableError('This AI feature is part of the Pro plan', 403, 'AI_PLAN_REQUIRED');
 
 // Conditional upsert: succeeds only while the counter is below the limit, so parallel calls cannot overshoot.
 async function reserve(filter, condition, inc) {

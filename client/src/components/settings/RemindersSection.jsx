@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import SettingsSection, { Notice } from "./SettingsSection";
 import { getReminderSettings, updateReminderSettings } from "../../services/notificationService";
+import PushPanel from "./PushPanel";
 
 const inputClass =
   "w-28 border border-[var(--dt-border)] bg-[var(--dt-surface)] px-3 py-2 text-sm text-[var(--dt-text-primary)] outline-none focus:border-[var(--dt-accent)]";
@@ -135,6 +136,8 @@ function RemindersSection() {
           <p className="text-xs leading-5 text-[var(--dt-text-muted)]">
             This also sets when the dashboard marks work as stalled. Progress includes edits, milestones, linked journal notes and work on linked projects.
           </p>
+
+          <PushPanel remindersOn={settings.enabled} />
         </div>
       )}
       <Notice kind={status.kind === "error" ? "error" : "ok"}>{status.text}</Notice>

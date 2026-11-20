@@ -6,3 +6,10 @@ export async function deleteGoal(goalId) { const { data } = await api.delete(`/g
 export async function addGoalMilestone(goalId, milestone) { const { data } = await api.post(`/goals/${goalId}/milestones`, milestone); return data.goal; }
 export async function updateGoalMilestone(goalId, milestoneId, changes) { const { data } = await api.patch(`/goals/${goalId}/milestones/${milestoneId}`, changes); return data.goal; }
 export async function deleteGoalMilestone(goalId, milestoneId) { const { data } = await api.delete(`/goals/${goalId}/milestones/${milestoneId}`); return data.goal; }
+// AI mentor: a suggested plan (not saved), then the kept steps added as milestones in one go.
+export async function suggestGoalRoadmap(goalId) { const { data } = await api.post(`/goals/${goalId}/roadmap`); return data.data; }
+export async function addGoalMilestones(goalId, milestones) { const { data } = await api.post(`/goals/${goalId}/milestones/bulk`, { milestones }); return data.goal; }
+// AI mentor: a self-check quiz per goal (answers stay on the server until an attempt).
+export async function getGoalQuiz(goalId) { const { data } = await api.get(`/goals/${goalId}/quiz`); return data.data; }
+export async function createGoalQuiz(goalId) { const { data } = await api.post(`/goals/${goalId}/quiz`); return data.data; }
+export async function submitGoalQuiz(goalId, answers) { const { data } = await api.post(`/goals/${goalId}/quiz/attempts`, { answers }); return data.data; }

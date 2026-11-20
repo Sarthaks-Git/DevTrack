@@ -36,6 +36,21 @@ export async function addMilestoneLogic(kind, userId, parentId, { title, dueDate
   throw new AppError(`A ${label.toLowerCase()} can have at most ${MAX_MILESTONES} milestones`, 409, 'MILESTONE_LIMIT');
 }
 
+/** Adds several milestones in order, all or none, within the cap. */
+export async function addMilestonesLogic(kind, userId, parentId, list) {
+  const { Model, label } = parentFor(kind, userId);
+  const room = `milestones.${MAX_MILESTONES - list.length}`;
+  const doc = await Model.findOneAndUpdate(
+    { _id: parentId, owner: userId, [room]: { $exists: false } },
+    { $push: { milestones: { $each: list.map(({ title, dueDate = null }) => ({ title, dueDate })) } } },
+    { returnDocument: 'after', runValidators: true }
+  );
+  if (doc) return doc;
+
+  if (!(await Model.exists({ _id: parentId, owner: userId }))) throw notFound(label);
+  throw new AppError(`A ${label.toLowerCase()} can have at most ${MAX_MILESTONES} milestones`, 409, 'MILESTONE_LIMIT');
+}
+
 export async function updateMilestoneLogic(kind, userId, parentId, milestoneId, changes) {
   const { Model, label } = parentFor(kind, userId);
 

@@ -49,6 +49,8 @@ const userSchema = new mongoose.Schema({
   // India calendar day (YYYY-MM-DD) of the last reminder-email check; claimed atomically so each
   // account is processed at most once a day, even with several server instances.
   reminderDigestDay: { type: String, default: null },
+  // Same, for the daily phone/browser notification (services/reminderPush.service.js).
+  pushDigestDay: { type: String, default: null },
 }, { timestamps: true });
 
 userSchema.index({ email: 1 }, { unique: true });

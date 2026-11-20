@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import Goal from '../models/Goal.js';
+import GoalQuiz from '../models/GoalQuiz.js';
 import Activity from '../models/Activity.js';
 import Notification from '../models/Notification.js';
 import SolvedProblem from '../models/SolvedProblem.js';
@@ -119,6 +120,22 @@ export async function refreshRemindersLogic(userId, todayDate, { force = false }
     });
   }
 
+  // Spaced review of a goal quiz is due. One reminder per scheduled review.
+  const dueQuizzes = await GoalQuiz.find({ owner, nextReviewAt: { $ne: null, $lte: now } }).select('goal nextReviewAt').limit(20).lean();
+  if (dueQuizzes.length) {
+    const titles = new Map((await Goal.find({ owner, _id: { $in: dueQuizzes.map(quiz => quiz.goal) } }).select('title').lean()).map(goal => [String(goal._id), goal.title]));
+    for (const quiz of dueQuizzes) {
+      const title = titles.get(String(quiz.goal));
+      if (!title) continue;
+      docs.push({
+        type: 'quiz_review', subjectType: 'goal', subjectId: String(quiz.goal),
+        dedupeKey: `quiz_review:${quiz._id}:${quiz.nextReviewAt.getTime()}`,
+        title: clip(`Quiz review due: ${title}`, 200),
+        body: 'Retake the quiz to lock in what you learned.',
+      });
+    }
+  }
+
   if (prefs.weeklyReview) {
     const review = await weeklyReviewReminder(owner, todayDate);
     if (review) docs.push(review);
@@ -144,7 +161,7 @@ export async function listNotificationsLogic(userId, { limit, before, today }) {
 
   const filter = { owner, ...(before ? { _id: { $lt: new mongoose.Types.ObjectId(before) } } : {}) };
   const [items, unread] = await Promise.all([
-    Notification.find(filter).sort({ _id: -1 }).limit(limit + 1).select('-owner -dedupeKey -emailedAt -__v').lean(),
+    Notification.find(filter).sort({ _id: -1 }).limit(limit + 1).select('-owner -dedupeKey -emailedAt -pushedAt -__v').lean(),
     Notification.countDocuments({ owner, readAt: null }),
   ]);
   const hasMore = items.length > limit;

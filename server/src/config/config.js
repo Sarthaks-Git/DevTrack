@@ -130,6 +130,23 @@ function buildProxyConfig(env) {
   return { mode, secret };
 }
 
+// Web Push (phone and browser notifications). VAPID keys come from `npx web-push generate-vapid-keys`;
+// all three values or none.
+function buildPushConfig(env) {
+  const values = { VAPID_PUBLIC_KEY: env.VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY: env.VAPID_PRIVATE_KEY, VAPID_SUBJECT: env.VAPID_SUBJECT };
+  const missing = Object.keys(values).filter(key => !values[key]);
+  if (missing.length === 3) return { enabled: false };
+  if (missing.length) throw new Error(`Web Push is partly configured: missing ${missing.join(', ')}`);
+  // A P-256 public key is 65 bytes (87 base64url characters); the private key is 32 bytes (43).
+  if (!/^[A-Za-z0-9_-]{87}$/.test(values.VAPID_PUBLIC_KEY) || !/^[A-Za-z0-9_-]{43}$/.test(values.VAPID_PRIVATE_KEY)) {
+    throw new Error('VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY must be the base64url keys from web-push generate-vapid-keys');
+  }
+  if (!/^(mailto:[^\s@]+@[^\s@]+\.[^\s@]+|https:\/\/\S+)$/.test(values.VAPID_SUBJECT)) {
+    throw new Error('VAPID_SUBJECT must be a mailto: address or an https URL');
+  }
+  return { enabled: true, publicKey: values.VAPID_PUBLIC_KEY, privateKey: values.VAPID_PRIVATE_KEY, subject: values.VAPID_SUBJECT };
+}
+
 function buildPaymentsConfig(env, { nodeEnv }) {
   // Tests use fake values generated per run; the Razorpay network module is mocked there.
   if (nodeEnv === 'test') {
@@ -218,7 +235,7 @@ export const AI_MODEL_PRICES = {
   // Opus 5.5 cannot turn thinking off; adaptive at low effort keeps it short.
   'claude-opus-5-5': { input: 4, output: 20, label: 'Claude Opus 5.5', thinking: { type: 'adaptive' } },
 };
-export const AI_FEATURES = ['securityReview', 'codeReview'];
+export const AI_FEATURES = ['securityReview', 'codeReview', 'goalRoadmap', 'goalQuiz'];
 export const AI_PLAN_IDS = ['free', 'pro'];
 
 // Owner decisions (16 Nov 2026): Free = cheapest model, 100 actions; Pro = Sonnet 5.5, 300 actions,
@@ -246,14 +263,14 @@ function buildAiConfig(env, { nodeEnv }) {
         label: 'Free',
         model: model('AI_MODEL_FREE', 'claude-haiku-5-5'),
         monthlyActions: limit('AI_FREE_MONTHLY_LIMIT', 100),
-        features: ['securityReview'],
+        features: ['securityReview', 'goalRoadmap', 'goalQuiz'],
       },
       pro: {
         id: 'pro',
         label: 'Pro',
         model: model('AI_MODEL_PRO', 'claude-sonnet-5-5'),
         monthlyActions: limit('AI_PRO_MONTHLY_LIMIT', 300),
-        features: ['securityReview', 'codeReview'],
+        features: ['securityReview', 'codeReview', 'goalRoadmap', 'goalQuiz'],
       },
     },
   };
@@ -356,6 +373,7 @@ export function buildConfig(rawEnv) {
     AI: buildAiConfig(env, { nodeEnv }),
     PAYMENTS: buildPaymentsConfig(env, { nodeEnv }),
     PROXY: buildProxyConfig(env),
+    PUSH: buildPushConfig(env),
   };
 }
 

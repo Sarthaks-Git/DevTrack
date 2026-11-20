@@ -14,10 +14,12 @@ import {
 } from '../validators/goal.validator.js';
 
 import { authMiddleware } from '../middlewares/auth.middleware.js';
-import { limitWrites } from '../middlewares/rateLimit.middleware.js';
+import { limitWrites, mentorRateLimit } from '../middlewares/rateLimit.middleware.js';
 import { requireCsrf } from '../middlewares/csrf.middleware.js';
 import { validateObjectId } from '../middlewares/validateObjectId.middleware.js';
-import { validateCreateMilestone, validateUpdateMilestone } from '../validators/milestone.validator.js';
+import { validateBulkMilestones, validateCreateMilestone, validateUpdateMilestone } from '../validators/milestone.validator.js';
+import { createQuiz, getQuiz, submitQuizAttempt, suggestRoadmap } from '../controllers/goalRoadmap.controller.js';
+import { validateQuizAttempt } from '../validators/goalQuiz.validator.js';
 import { milestoneControllers } from '../controllers/milestone.controller.js';
 
 const goalRouter = Router();
@@ -57,6 +59,14 @@ goalRouter.delete(
 );
 
 const milestones = milestoneControllers('goal');
+
+// AI mentor: a suggested plan for the goal (nothing saved; see goalRoadmap.service.js).
+goalRouter.post('/:id/roadmap', mentorRateLimit, requireCsrf, validateObjectId('id'), suggestRoadmap);
+// AI mentor: a self-check quiz per goal with spaced reviews (see goalQuiz.service.js).
+goalRouter.get('/:id/quiz', validateObjectId('id'), getQuiz);
+goalRouter.post('/:id/quiz', mentorRateLimit, requireCsrf, validateObjectId('id'), createQuiz);
+goalRouter.post('/:id/quiz/attempts', requireCsrf, validateObjectId('id'), validateQuizAttempt, submitQuizAttempt);
+goalRouter.post('/:id/milestones/bulk', requireCsrf, validateObjectId('id'), validateBulkMilestones, milestones.addMany);
 
 goalRouter.post(
     '/:id/milestones',

@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-export const NOTIFICATION_TYPES = ['goal_overdue', 'project_overdue', 'due_soon', 'milestone_overdue', 'stalled', 'target_reached', 'weekly_review', 'security_review', 'code_review', 'new_sign_in'];
+export const NOTIFICATION_TYPES = ['goal_overdue', 'project_overdue', 'due_soon', 'milestone_overdue', 'stalled', 'target_reached', 'weekly_review', 'security_review', 'code_review', 'new_sign_in', 'quiz_review'];
 const RETENTION_DAYS = 60;
 
 // In-app reminders. Written only by the server; the client can only read and mark them read.
@@ -18,6 +18,8 @@ const notificationSchema = new mongoose.Schema(
     readAt: { type: Date, default: null },
     // Set once the reminder went out in a daily email, so it is never emailed twice.
     emailedAt: { type: Date, default: null },
+    // Set once it was counted in a daily phone/browser notification.
+    pushedAt: { type: Date, default: null },
   },
   { timestamps: { createdAt: true, updatedAt: false }, strict: 'throw' }
 );

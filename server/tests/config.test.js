@@ -39,6 +39,16 @@ describe('Configuration guards', () => {
     expect(buildConfig(production({ ...razorpay, RAZORPAY_KEY_ID: 'rzp_live_AbC123xyz' })).PAYMENTS.mode).toBe('live');
   });
 
+  it('turns Web Push on only with all three VAPID values in the right format', () => {
+    expect(buildConfig(production()).PUSH).toEqual({ enabled: false });
+    const vapid = { VAPID_PUBLIC_KEY: randomBytes(65).toString('base64url'), VAPID_PRIVATE_KEY: randomBytes(32).toString('base64url'), VAPID_SUBJECT: 'mailto:owner@devtrack.app' };
+    expect(() => buildConfig(production({ VAPID_PUBLIC_KEY: vapid.VAPID_PUBLIC_KEY }))).toThrow(/missing VAPID_PRIVATE_KEY, VAPID_SUBJECT/);
+    expect(() => buildConfig(production({ ...vapid, VAPID_PUBLIC_KEY: 'short' }))).toThrow(/base64url keys/);
+    expect(() => buildConfig(production({ ...vapid, VAPID_SUBJECT: 'owner@devtrack.app' }))).toThrow(/mailto/);
+    expect(buildConfig(production({ ...vapid, VAPID_SUBJECT: 'https://devtrack.app' })).PUSH.enabled).toBe(true);
+    expect(buildConfig(production(vapid)).PUSH).toEqual({ enabled: true, publicKey: vapid.VAPID_PUBLIC_KEY, privateKey: vapid.VAPID_PRIVATE_KEY, subject: vapid.VAPID_SUBJECT });
+  });
+
   it('rejects a CLIENT_ORIGIN with a path or trailing slash', () => {
     expect(() => buildConfig(production({ CLIENT_ORIGIN: 'https://devtrack.app/' }))).toThrow(/origin only/);
     expect(() => buildConfig(production({ CLIENT_ORIGIN: 'https://devtrack.app/app' }))).toThrow(/origin only/);

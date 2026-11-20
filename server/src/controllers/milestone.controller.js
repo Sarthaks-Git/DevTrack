@@ -1,4 +1,4 @@
-import { addMilestoneLogic, updateMilestoneLogic, deleteMilestoneLogic } from '../services/milestone.service.js';
+import { addMilestoneLogic, addMilestonesLogic, updateMilestoneLogic, deleteMilestoneLogic } from '../services/milestone.service.js';
 
 // Each parent keeps its own response shape: goals use the legacy `{ goal }` envelope,
 // projects use `{ success, data: { project } }` (see docs/API.md).
@@ -13,6 +13,10 @@ export function milestoneControllers(kind) {
     async add(req, res) {
       const doc = await addMilestoneLogic(kind, req.user.id, req.params.id, req.body);
       return respond(res, 201, 'Milestone added', doc);
+    },
+    async addMany(req, res) {
+      const doc = await addMilestonesLogic(kind, req.user.id, req.params.id, req.body.milestones);
+      return respond(res, 201, 'Milestones added', doc);
     },
     async update(req, res) {
       const doc = await updateMilestoneLogic(kind, req.user.id, req.params.id, req.params.milestoneId, req.body);

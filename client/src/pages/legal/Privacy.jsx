@@ -27,6 +27,7 @@ const sections = [
           <li><strong>Coding platforms you connect:</strong> your LeetCode username and the public statistics and accepted submissions LeetCode shows for it.</li>
           <li><strong>Payments, if you buy Pro:</strong> which pass you bought, the amount, its status and dates, and Razorpay's order and payment ids. Your card, UPI or bank details go straight to Razorpay; DevTrack never sees them.</li>
           <li><strong>GitHub, if you connect it:</strong> for the repositories you choose, commit messages, dates, authors and the names of changed files. We do not store your source code.</li>
+          <li><strong>Phone and browser notifications, if you turn them on:</strong> the browser's push address and keys, and a device label such as "Chrome on Android". Signing out on that device removes them.</li>
         </ul>
         <p>
           We do not use advertising or analytics trackers, and we do not store your IP address with your account. Rate limits
@@ -53,7 +54,8 @@ const sections = [
       <p>
         AI features are off until you turn them on in Settings. When they are on, commit messages and changed file names (and,
         for code review on a repository you switch it on for, the changed lines, with anything that looks like a secret removed)
-        are sent to Anthropic to generate suggestions. Anthropic does not use this data to train its models. Suggestions are
+        are sent to Anthropic to generate suggestions. When you ask for a plan for a goal, that goal's title, description,
+        deadline and milestones are sent too. Anthropic does not use this data to train its models. Suggestions are
         labelled as AI and never count as verified progress. Turning AI off stops all sending.
       </p>
     ),
@@ -68,6 +70,7 @@ const sections = [
           <li><strong>Vercel</strong> serves the website; <strong>Render</strong> runs the server (Singapore).</li>
           <li><strong>MongoDB Atlas</strong> stores the database (Singapore).</li>
           <li><strong>Brevo</strong> sends account email.</li>
+          <li><strong>Google, Mozilla, Apple or Microsoft</strong> deliver phone and browser notifications if you turn them on, through your browser's own push service. The notification is encrypted and says only how many reminders are new.</li>
           <li><strong>Have I Been Pwned</strong> checks new passwords against breaches. Only the first 5 characters of a hash of the password are sent, never the password.</li>
           <li><strong>Google, GitHub and LinkedIn</strong> when you sign in with them or connect GitHub; <strong>LeetCode</strong> when we fetch your public statistics.</li>
           <li><strong>Anthropic</strong>, only when you turn on AI features.</li>

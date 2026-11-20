@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import MilestoneList from "../milestones/MilestoneList";
 import GoalTargetProgress from "./GoalTargetProgress";
 
-function GoalCard({ goal, number, linkedProjects = [], milestoneHandlers, onEdit, onDelete }) {
+function GoalCard({ goal, number, linkedProjects = [], milestoneHandlers, onEdit, onDelete, onPlan, onQuiz }) {
     const statusConfig = {
         not_started: {
             symbol: "○",
@@ -182,6 +182,44 @@ function GoalCard({ goal, number, linkedProjects = [], milestoneHandlers, onEdit
                             md:group-hover:opacity-100
                         "
                     >
+                        {onPlan && goal.status !== "completed" && goal.status !== "archived" ? (
+                        <button
+                            type="button"
+                            onClick={() => onPlan(goal)}
+                            className="
+                                text-[11px]
+                                font-medium
+                                uppercase
+                                tracking-[0.18em]
+                                text-[var(--dt-accent-soft)]
+                                transition-colors
+                                duration-200
+                                hover:text-[var(--dt-text-primary)]
+                            "
+                        >
+                            Plan with AI
+                        </button>
+                        ) : null}
+
+                        {onQuiz && goal.status !== "archived" ? (
+                        <button
+                            type="button"
+                            onClick={() => onQuiz(goal)}
+                            className="
+                                text-[11px]
+                                font-medium
+                                uppercase
+                                tracking-[0.18em]
+                                text-[var(--dt-accent-soft)]
+                                transition-colors
+                                duration-200
+                                hover:text-[var(--dt-text-primary)]
+                            "
+                        >
+                            Quiz me
+                        </button>
+                        ) : null}
+
                         <button
                             type="button"
                             onClick={() => onEdit(goal)}

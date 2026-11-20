@@ -12,6 +12,7 @@ import {
 } from '../services/authService';
 import { SESSION_ENDED_EVENT } from '../services/api';
 import { AuthContext } from './authContextObject';
+import { disablePush } from '../services/pushService';
 
 // While the page is visible, re-check the session this often, and whenever the tab regains focus,
 // so a session ended from another device signs this page out without waiting for a click.
@@ -153,6 +154,9 @@ export function AuthProvider({ children }) {
 
   const logout = useCallback(async () => {
     try {
+      // A shared computer should not keep getting this account's notifications. Best effort, and
+      // never allowed to hold up signing out.
+      await Promise.race([disablePush().catch(() => {}), new Promise(resolve => setTimeout(resolve, 3000))]);
       await logoutRequest();
     } finally {
       setUser(null);

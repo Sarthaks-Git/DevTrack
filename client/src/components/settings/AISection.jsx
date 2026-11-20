@@ -7,6 +7,7 @@ import { getAiStatus, setAiConsent } from "../../services/aiService";
 const PLAN_FEATURES = {
   securityReview: "Security checks from commit messages",
   codeReview: "Code review of changed lines",
+  goalRoadmap: "Step-by-step plans for your goals",
 };
 
 const QUEUED ="Your commits are queued and will be reviewed on the next sync.";

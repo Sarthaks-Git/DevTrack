@@ -19,6 +19,7 @@ const TYPE_LABELS = {
   security_review: "Security check",
   code_review: "Code review",
   new_sign_in: "New sign-in",
+  quiz_review: "Quiz review",
 };
 
 function Notifications() {

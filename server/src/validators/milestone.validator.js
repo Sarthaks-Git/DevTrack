@@ -39,6 +39,32 @@ function validateMilestone(body, { partial }) {
   return { errors, clean };
 }
 
+export const MAX_BULK_MILESTONES = 15;
+
+// { milestones: [{ title, dueDate? }, ...] }: 1 to 15 new, open milestones.
+export function validateBulkMilestones(req, res, next) {
+  const body = req.body;
+  const list = body && typeof body === 'object' && !Array.isArray(body) ? body.milestones : undefined;
+  const errors = {};
+  if (!body || typeof body !== 'object' || Array.isArray(body) || Object.keys(body).some(key => key !== 'milestones')) errors.fields = 'Request contains invalid fields';
+  if (!Array.isArray(list) || list.length < 1 || list.length > MAX_BULK_MILESTONES) errors.milestones = `Send 1 to ${MAX_BULK_MILESTONES} milestones`;
+  const clean = [];
+  if (!Object.keys(errors).length) {
+    list.forEach((item, index) => {
+      const result = validateMilestone(item, { partial: false });
+      if (Object.keys(result.errors).length) errors[`milestones.${index}`] = Object.values(result.errors).join('; ');
+      else clean.push(result.clean);
+    });
+  }
+  if (Object.keys(errors).length) {
+    const error = new AppError('Validation failed', 400, 'VALIDATION_ERROR');
+    error.errors = errors;
+    return next(error);
+  }
+  req.body = { milestones: clean };
+  return next();
+}
+
 function middleware(partial) {
   return (req, res, next) => {
     const { errors, clean } = validateMilestone(req.body, { partial });

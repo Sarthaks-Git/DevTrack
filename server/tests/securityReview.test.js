@@ -89,8 +89,8 @@ describe('AI settings', () => {
   });
 
   it('puts Free on the cheapest model and keeps code review for Pro', () => {
-    expect(config.AI.plans.free).toMatchObject({ model: 'claude-haiku-5-5', monthlyActions: 100, features: ['securityReview'] });
-    expect(config.AI.plans.pro).toMatchObject({ model: 'claude-sonnet-5-5', monthlyActions: 300, features: ['securityReview', 'codeReview'] });
+    expect(config.AI.plans.free).toMatchObject({ model: 'claude-haiku-5-5', monthlyActions: 100, features: ['securityReview', 'goalRoadmap', 'goalQuiz'] });
+    expect(config.AI.plans.pro).toMatchObject({ model: 'claude-sonnet-5-5', monthlyActions: 300, features: ['securityReview', 'codeReview', 'goalRoadmap', 'goalQuiz'] });
   });
 });
 

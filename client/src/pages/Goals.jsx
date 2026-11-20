@@ -7,6 +7,9 @@ import GoalList from "../components/goals/GoalList";
 import PageHeader from "../components/common/PageHeader";
 import GoalForm from "../components/goals/GoalForm";
 import DeleteConfirmModal from "../components/goals/DeleteConfirmModal";
+import RoadmapModal from "../components/goals/RoadmapModal";
+import QuizModal from "../components/goals/QuizModal";
+import { getAiStatus } from "../services/aiService";
 import {
   getGoals,
   deleteGoal,
@@ -27,9 +30,23 @@ function Goals() {
 
   const formSectionRef = useRef(null);
 
+  const [planningGoal, setPlanningGoal] = useState(null);
+  const [quizGoal, setQuizGoal] = useState(null);
+  // "Plan with AI" shows only when AI is set up on the server; consent is asked for in the modal.
+  const [aiAvailable, setAiAvailable] = useState(false);
   const [deletingGoal, setDeletingGoal] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const goalPages = usePagination(goals, GOALS_PER_PAGE);
+
+  useEffect(() => {
+    let active = true;
+    getAiStatus()
+      .then((status) => active && setAiAvailable(Boolean(status.available)))
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (!showForm) {
@@ -287,10 +304,15 @@ function Goals() {
           milestoneHandlers={milestoneHandlers}
           onEdit={handleEdit}
           onDelete={handleDelete}
+          onPlan={aiAvailable ? setPlanningGoal : undefined}
+          onQuiz={aiAvailable ? setQuizGoal : undefined}
         />
         <Pagination page={goalPages.page} pageCount={goalPages.pageCount} onChange={goalPages.setPage} label="Goal pages" scrollTargetId="goal-list" total={goals.length} pageSize={GOALS_PER_PAGE} />
         </div>
       )}
+
+      <RoadmapModal goal={planningGoal} onClose={() => setPlanningGoal(null)} onSaved={replaceGoal} />
+      <QuizModal key={quizGoal?._id || "none"} goal={quizGoal} onClose={() => setQuizGoal(null)} />
 
       {/* Delete Modal */}
       <DeleteConfirmModal

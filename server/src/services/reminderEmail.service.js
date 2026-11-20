@@ -6,6 +6,7 @@ import { sendEmail } from './email.transport.js';
 import { refreshRemindersLogic } from './notification.service.js';
 import { alertOwner } from './errorAlert.service.js';
 import { describeUnexpectedError } from '../middlewares/error.middleware.js';
+import { runReminderPushes } from './reminderPush.service.js';
 
 // Daily email summary of new in-app reminders. Runs inside the API process (the free host has no
 // cron); an hourly tick sends after SEND_HOUR_IST each India day. Each account is claimed
@@ -16,11 +17,11 @@ const TIME_ZONE = 'Asia/Kolkata';
 const TICK_MS = 60 * 60 * 1000;
 const FIRST_TICK_MS = 60 * 1000;
 // Only reminders created this recently go out, so the first run never mails an old backlog.
-const FRESH_MS = 48 * 60 * 60 * 1000;
+export const FRESH_MS = 48 * 60 * 60 * 1000;
 const MAX_ITEMS = 10;
 // Brevo's free plan sends 300 emails a day in total; leave room for codes and security alerts.
 const DAILY_CAP = 200;
-const DIGEST_TYPES = ['goal_overdue', 'project_overdue', 'due_soon', 'milestone_overdue', 'stalled', 'target_reached', 'weekly_review'];
+export const DIGEST_TYPES = ['goal_overdue', 'project_overdue', 'due_soon', 'milestone_overdue', 'stalled', 'target_reached', 'weekly_review', 'quiz_review'];
 
 const escapeHtml = value => String(value).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
 
@@ -29,7 +30,7 @@ const hourFormat = new Intl.DateTimeFormat('en-GB', { timeZone: TIME_ZONE, hour:
 
 /** The calendar day in India as YYYY-MM-DD. */
 export const indiaDay = now => dayFormat.format(now);
-const indiaHour = now => Number(hourFormat.format(now));
+export const indiaHour = now => Number(hourFormat.format(now));
 
 function digestEmail(items, extra) {
   const alertsUrl = `${config.CLIENT_ORIGIN}/app/notifications`;
@@ -114,16 +115,20 @@ export async function runReminderEmails({ now = new Date(), onlyUserIds } = {}) 
   return result;
 }
 
-/** Starts the hourly tick. Returns a stop function. Not started in tests. */
+/** Starts the hourly tick for reminder emails and pushes. Returns a stop function. Not started in tests. */
 export function startReminderEmailSchedule() {
-  if (!config.REMINDER_EMAILS) return () => {};
+  if (!config.REMINDER_EMAILS && !config.PUSH.enabled) return () => {};
   let running = false;
   const tick = async () => {
     if (running) return;
     running = true;
     try {
-      const result = await runReminderEmails();
-      if (result.checked) process.stdout.write(`Reminder emails: ${result.sent} sent, ${result.failed} failed, ${result.checked} checked\n`);
+      if (config.REMINDER_EMAILS) {
+        const result = await runReminderEmails();
+        if (result.checked) process.stdout.write(`Reminder emails: ${result.sent} sent, ${result.failed} failed, ${result.checked} checked\n`);
+      }
+      const pushes = await runReminderPushes();
+      if (pushes.checked) process.stdout.write(`Reminder pushes: ${pushes.sent} sent, ${pushes.failed} failed, ${pushes.checked} checked\n`);
     } catch (error) {
       const detail = describeUnexpectedError(error);
       process.stderr.write(`Reminder email run failed: ${detail}\n`);

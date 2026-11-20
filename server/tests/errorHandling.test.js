@@ -17,6 +17,7 @@ import notificationRouter from '../src/routes/notification.routes.js';
 import githubRouter from '../src/routes/github.routes.js';
 import { aiRouter, codeFindingRouter, securityReviewRouter } from '../src/routes/ai.routes.js';
 import billingRouter from '../src/routes/billing.routes.js';
+import pushRouter from '../src/routes/push.routes.js';
 import { createSession } from './helpers.js';
 
 // Anything that would reveal internals: stack frames, file paths, database or driver text.
@@ -69,7 +70,7 @@ describe('Global error handling', () => {
 });
 
 describe('Every endpoint answers bad input without leaking internals', () => {
-  const ROUTERS = { authRouter, goalRouter, projectRouter, codingProfileRouter, journalRouter, activityRouter, dashboardRouter, notificationRouter, githubRouter, aiRouter, codeFindingRouter, securityReviewRouter, billingRouter };
+  const ROUTERS = { authRouter, goalRouter, projectRouter, codingProfileRouter, journalRouter, activityRouter, dashboardRouter, notificationRouter, githubRouter, aiRouter, codeFindingRouter, securityReviewRouter, billingRouter, pushRouter };
   // Read the mounts from app.js itself, so a newly mounted router cannot be skipped silently.
   const mounts = [...fs.readFileSync(new URL('../src/app.js', import.meta.url), 'utf8').matchAll(/app\.use\('(\/api\/[^']+)', (\w+)\)/g)]
     .map(([, prefix, name]) => ({ prefix, name, router: ROUTERS[name] }));
