@@ -93,6 +93,11 @@ export const aiSettingsRateLimit = createRateLimit({ name: 'aiSettings', limit: 
 export const securityReviewRateLimit = createRateLimit({ name: 'securityReviews', limit: 300, keyGenerator: byUser });
 export const codeFindingRateLimit = createRateLimit({ name: 'codeFindings', limit: 300, keyGenerator: byUser });
 
+// Billing: creating orders calls Razorpay, so per user and modest. The webhook comes from Razorpay's
+// servers (signed); the per-IP limit only stops floods.
+export const billingRateLimit = createRateLimit({ name: 'billing', limit: 30, keyGenerator: byUser });
+export const billingWebhookRateLimit = createRateLimit({ name: 'billingWebhook', limit: 600 });
+
 // Forgot password always answers 200, so these count every request. Per IP, and per target email
 // across IPs (the service also sends at most one code a minute and five an hour per account).
 export const passwordForgotRateLimit = createRateLimit({ name: 'passwordForgot', failClosed: true, limit: 10 });

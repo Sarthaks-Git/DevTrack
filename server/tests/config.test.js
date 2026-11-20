@@ -28,6 +28,17 @@ describe('Configuration guards', () => {
     expect(buildConfig(production()).GITHUB.enabled).toBe(false);
   });
 
+  it('turns Razorpay on only with every value, and names what is missing', () => {
+    expect(buildConfig(production()).PAYMENTS).toEqual({ enabled: false });
+    const razorpay = { RAZORPAY_KEY_ID: 'rzp_test_AbC123xyz', RAZORPAY_KEY_SECRET: randomBytes(18).toString('hex'), RAZORPAY_WEBHOOK_SECRET: randomBytes(18).toString('hex') };
+    expect(() => buildConfig(production({ RAZORPAY_KEY_ID: razorpay.RAZORPAY_KEY_ID }))).toThrow(/missing RAZORPAY_KEY_SECRET, RAZORPAY_WEBHOOK_SECRET/);
+    expect(() => buildConfig(production({ ...razorpay, RAZORPAY_KEY_ID: 'pk_live_123456' }))).toThrow(/rzp_test_/);
+    expect(() => buildConfig(production({ ...razorpay, RAZORPAY_WEBHOOK_SECRET: 'short' }))).toThrow(/16 characters/);
+    expect(() => buildConfig(production({ ...razorpay, RAZORPAY_KEY_SECRET: 'replace-with-secret' }))).toThrow(/placeholders/);
+    expect(buildConfig(production(razorpay)).PAYMENTS).toMatchObject({ enabled: true, mode: 'test', keyId: 'rzp_test_AbC123xyz' });
+    expect(buildConfig(production({ ...razorpay, RAZORPAY_KEY_ID: 'rzp_live_AbC123xyz' })).PAYMENTS.mode).toBe('live');
+  });
+
   it('rejects a CLIENT_ORIGIN with a path or trailing slash', () => {
     expect(() => buildConfig(production({ CLIENT_ORIGIN: 'https://devtrack.app/' }))).toThrow(/origin only/);
     expect(() => buildConfig(production({ CLIENT_ORIGIN: 'https://devtrack.app/app' }))).toThrow(/origin only/);

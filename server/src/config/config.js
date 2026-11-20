@@ -102,6 +102,49 @@ function buildGitHubConfig(env, { nodeEnv, clientOrigin }) {
   return { enabled: true, clientId, clientSecret, appSlug, callbackUrl: callback.toString(), encryptionKey };
 }
 
+// Pro passes sold through Razorpay. Owner decisions (20 Nov 2026): prepaid passes, no auto-renew;
+// ₹299 for 30 days, ₹2,999 for 365 days. Prices live here, never in a request.
+export const PRO_PASSES = {
+  month: { id: 'month', label: '1 month', amount: 29_900, currency: 'INR', days: 30 },
+  year: { id: 'year', label: '12 months', amount: 299_900, currency: 'INR', days: 365 },
+};
+
+const RAZORPAY_KEY_ID = /^rzp_(test|live)_[A-Za-z0-9]{6,40}$/;
+
+// Razorpay. Off unless every value is present; half a configuration refuses to start.
+function buildPaymentsConfig(env, { nodeEnv }) {
+  // Tests use fake values generated per run; the Razorpay network module is mocked there.
+  if (nodeEnv === 'test') {
+    return {
+      enabled: true,
+      mode: 'test',
+      keyId: 'rzp_test_devtrackfake',
+      keySecret: crypto.randomBytes(18).toString('hex'),
+      webhookSecret: crypto.randomBytes(18).toString('hex'),
+    };
+  }
+  const settings = {
+    RAZORPAY_KEY_ID: env.RAZORPAY_KEY_ID || '',
+    RAZORPAY_KEY_SECRET: env.RAZORPAY_KEY_SECRET || '',
+    RAZORPAY_WEBHOOK_SECRET: env.RAZORPAY_WEBHOOK_SECRET || '',
+  };
+  const missing = Object.keys(settings).filter(key => !settings[key]);
+  if (missing.length === 3) return { enabled: false };
+  if (missing.length) throw new Error(`Razorpay is partly configured; missing ${missing.join(', ')}`);
+  if (!RAZORPAY_KEY_ID.test(settings.RAZORPAY_KEY_ID)) throw new Error('RAZORPAY_KEY_ID must look like rzp_test_... or rzp_live_...');
+  if (settings.RAZORPAY_WEBHOOK_SECRET.length < 16) throw new Error('RAZORPAY_WEBHOOK_SECRET must be at least 16 characters');
+  if (nodeEnv === 'production' && (PLACEHOLDER_PATTERN.test(settings.RAZORPAY_KEY_SECRET) || PLACEHOLDER_PATTERN.test(settings.RAZORPAY_WEBHOOK_SECRET))) {
+    throw new Error('Razorpay secrets are placeholders');
+  }
+  return {
+    enabled: true,
+    mode: settings.RAZORPAY_KEY_ID.startsWith('rzp_live_') ? 'live' : 'test',
+    keyId: settings.RAZORPAY_KEY_ID,
+    keySecret: settings.RAZORPAY_KEY_SECRET,
+    webhookSecret: settings.RAZORPAY_WEBHOOK_SECRET,
+  };
+}
+
 // "Sign in with Google / GitHub / LinkedIn". Each provider is on only when both its values are set.
 // The callback goes through the client origin (the dev server and production both proxy /api), so
 // the state cookie and the session cookies stay first-party.
@@ -293,6 +336,7 @@ export function buildConfig(rawEnv) {
     REMINDER_EMAILS: nodeEnv !== 'test' && (env.REMINDER_EMAILS || (nodeEnv === 'production' ? 'on' : 'off')).toLowerCase() === 'on',
 
     AI: buildAiConfig(env, { nodeEnv }),
+    PAYMENTS: buildPaymentsConfig(env, { nodeEnv }),
   };
 }
 

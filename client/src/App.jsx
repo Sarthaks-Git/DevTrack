@@ -21,6 +21,7 @@ const WeeklyReview = lazy(() => import("./pages/WeeklyReview"));
 const UndoEmailChange = lazy(() => import("./pages/UndoEmailChange"));
 const Privacy = lazy(() => import("./pages/legal/Privacy"));
 const Terms = lazy(() => import("./pages/legal/Terms"));
+const Refunds = lazy(() => import("./pages/legal/Refunds"));
 
 function PageFallback() {
   return <p className="p-8 text-sm text-[var(--dt-text-secondary)]" role="status">Loading...</p>;
@@ -51,6 +52,7 @@ const router = createBrowserRouter([{ errorElement: <RouteError />, children: [
   { path: "/undo-email-change", element: page(UndoEmailChange) },
   { path: "/privacy", element: page(Privacy) },
   { path: "/terms", element: page(Terms) },
+  { path: "/refunds", element: page(Refunds) },
   {
     path: "/app",
     element: <ProtectedRoute />,

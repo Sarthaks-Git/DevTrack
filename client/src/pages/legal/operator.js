@@ -5,4 +5,4 @@ export const OPERATOR = {
   country: "India",
 };
 
-export const EFFECTIVE_DATE = "19 November 2026";
+export const EFFECTIVE_DATE = "20 November 2026";

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import SettingsSection, { Notice } from "./SettingsSection";
 import ConfirmModal from "../common/ConfirmModal";
+import ProPasses from "./ProPasses";
 import { getAiStatus, setAiConsent } from "../../services/aiService";
 
 const PLAN_FEATURES = {
@@ -29,6 +30,11 @@ function AISection() {
   const [notice, setNotice] = useState({ kind: "", text: "" });
   const [busy, setBusy] = useState(false);
   const [confirmOn, setConfirmOn] = useState(false);
+
+  // After a purchase the plan cards and monthly limit change.
+  function reloadStatus() {
+    getAiStatus().then(status => setState({ loading: false, status })).catch(() => {});
+  }
 
   useEffect(() => {
     let active = true;
@@ -117,11 +123,13 @@ function AISection() {
                 <p className="mt-3 text-xs text-[var(--dt-text-muted)]">
                   {tier.current
                     ? tier.id === "pro" && status.planUntil ? `Active until ${new Date(status.planUntil).toLocaleDateString()}` : "Active"
-                    : tier.available ? "Included" : "Upgrade coming soon"}
+                    : tier.id === "free" ? "Included" : tier.available ? "Buy a pass below" : "Upgrade coming soon"}
                 </p>
               </div>
             ))}
           </div>
+
+          <ProPasses onPlanChanged={reloadStatus} />
 
           {status.enabled && status.lastIssue ? (
             <p role="status" className="mt-4 border-l-2 border-amber-400/60 pl-3 text-xs leading-5 text-amber-200">

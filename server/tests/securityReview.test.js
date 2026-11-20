@@ -75,7 +75,7 @@ describe('AI settings', () => {
     const status = await s.get('/api/ai');
     expect(status.status).toBe(200);
     expect(status.body.data).toMatchObject({ available: true, enabled: false, plan: 'free', planUntil: null, usage: { used: 0, limit: 100 } });
-    expect(status.body.data.tiers.map(t => [t.id, t.available, t.current])).toEqual([['free', true, true], ['pro', false, false]]);
+    expect(status.body.data.tiers.map(t => [t.id, t.available, t.current])).toEqual([['free', true, true], ['pro', true, false]]); // Pro can be bought: Razorpay is configured in tests
     expect(status.body.data.tiers.map(t => [t.model, t.monthlyActions])).toEqual([['Claude Haiku 5.5', 100], ['Claude Sonnet 5.5', 300]]);
 
     expect((await s.put('/api/ai/consent').send({ enabled: 'yes' })).status).toBe(400);

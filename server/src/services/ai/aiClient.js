@@ -182,8 +182,8 @@ const publicTier = (plan, current) => ({
   monthlyActions: plan.monthlyActions,
   features: plan.features,
   current,
-  // Pro can be chosen once payments exist; until then it is granted by the owner only.
-  available: plan.id === 'free' || current,
+  // Pro can be bought when Razorpay is set up; otherwise it is granted by the owner only.
+  available: plan.id === 'free' || current || config.PAYMENTS.enabled,
 });
 
 export async function getAiStatusLogic(userId) {

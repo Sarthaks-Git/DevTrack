@@ -163,6 +163,7 @@ function Landing() {
                         <nav aria-label="Legal" className="flex gap-6">
                             <Link to="/privacy" className="hover:text-[var(--dt-accent-soft)]">Privacy</Link>
                             <Link to="/terms" className="hover:text-[var(--dt-accent-soft)]">Terms</Link>
+                            <Link to="/refunds" className="hover:text-[var(--dt-accent-soft)]">Pricing and refunds</Link>
                         </nav>
                     </div>
                 </footer>

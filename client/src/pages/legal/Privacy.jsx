@@ -25,6 +25,7 @@ const sections = [
           <li><strong>Security records:</strong> active sessions with a device label such as "Chrome on Windows" and the time of use, hashed tokens for browsers you have signed in from, and two-factor settings (the secret is encrypted).</li>
           <li><strong>What you write:</strong> goals, milestones, projects, journal entries, reminder settings and notifications.</li>
           <li><strong>Coding platforms you connect:</strong> your LeetCode username and the public statistics and accepted submissions LeetCode shows for it.</li>
+          <li><strong>Payments, if you buy Pro:</strong> which pass you bought, the amount, its status and dates, and Razorpay's order and payment ids. Your card, UPI or bank details go straight to Razorpay; DevTrack never sees them.</li>
           <li><strong>GitHub, if you connect it:</strong> for the repositories you choose, commit messages, dates, authors and the names of changed files. We do not store your source code.</li>
         </ul>
         <p>
@@ -70,6 +71,7 @@ const sections = [
           <li><strong>Have I Been Pwned</strong> checks new passwords against breaches. Only the first 5 characters of a hash of the password are sent, never the password.</li>
           <li><strong>Google, GitHub and LinkedIn</strong> when you sign in with them or connect GitHub; <strong>LeetCode</strong> when we fetch your public statistics.</li>
           <li><strong>Anthropic</strong>, only when you turn on AI features.</li>
+          <li><strong>Razorpay</strong> processes payments when you buy Pro. It receives an order with the amount and an internal reference, never your DevTrack account details; it collects whatever it needs for the payment itself.</li>
         </ul>
         <p>Some of these store data outside India. We may also disclose data when the law requires it.</p>
       </>
@@ -98,7 +100,8 @@ const sections = [
       <ul>
         <li>Your account data stays until you delete it.</li>
         <li>Verification codes, reset codes and sign-in handshakes expire within minutes to days and are then deleted automatically.</li>
-        <li>Deleting your account (Settings → Delete account) permanently removes your account and everything linked to it, and revokes DevTrack's access to GitHub. We keep no separate backup copies.</li>
+        <li>Deleting your account (Settings → Delete account) permanently removes your account and everything linked to it, including payment records, and revokes DevTrack's access to GitHub. Razorpay keeps its own record of any payment, as payment law requires.</li>
+        <li>An encrypted backup of the database is made every week and each one is kept for 90 days, so deleted data is gone from every backup within 90 days.</li>
       </ul>
     ),
   },

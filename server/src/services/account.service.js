@@ -26,6 +26,7 @@ import PasswordReset from '../models/PasswordReset.js';
 import SecurityReview from '../models/SecurityReview.js';
 import AiUsage from '../models/AiUsage.js';
 import AiAllowance from '../models/AiAllowance.js';
+import Payment from '../models/Payment.js';
 import { revokeGitHubAccess } from './github.service.js';
 import { startEmailChangeLogic } from './emailChange.service.js';
 import { confirmAccountOwner } from './socialAuth.service.js';
@@ -35,7 +36,7 @@ import { SALT_ROUNDS, publicUser } from './auth.service.js';
 import { passwordProblem } from '../validators/account.validator.js';
 
 // Every collection holding user-owned data. Account deletion must cover all of them.
-export const OWNED_MODELS = [Goal, Project, CodingProfile, VerificationChallenge, JournalEntry, Activity, CodingSubmission, SolvedProblem, Notification, GitHubConnection, GitHubCommit, OAuthState, SecurityReview, CodeFinding, AiUsage, AiAllowance, AuthIdentity, TwoFactor, LoginChallenge, EmailVerification, EmailChange, EmailChangeUndo, PasswordReset, AuthSession];
+export const OWNED_MODELS = [Goal, Project, CodingProfile, VerificationChallenge, JournalEntry, Activity, CodingSubmission, SolvedProblem, Notification, GitHubConnection, GitHubCommit, OAuthState, SecurityReview, CodeFinding, AiUsage, AiAllowance, Payment, AuthIdentity, TwoFactor, LoginChallenge, EmailVerification, EmailChange, EmailChangeUndo, PasswordReset, AuthSession];
 
 function assertUserId(userId) {
   if (!mongoose.isValidObjectId(userId)) throw new AppError('Authentication is required', 401, 'UNAUTHENTICATED');

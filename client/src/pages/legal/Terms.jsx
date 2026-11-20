@@ -3,6 +3,7 @@ import LegalPage from "./LegalPage";
 import { OPERATOR } from "./operator";
 
 const mail = <a href={`mailto:${OPERATOR.email}`} className="text-[var(--dt-accent-soft)] underline underline-offset-2">{OPERATOR.email}</a>;
+const refunds = <Link to="/refunds" className="text-[var(--dt-accent-soft)] underline underline-offset-2">pricing and refunds</Link>;
 const privacy = <Link to="/privacy" className="text-[var(--dt-accent-soft)] underline underline-offset-2">privacy policy</Link>;
 
 const sections = [
@@ -79,10 +80,12 @@ const sections = [
     id: "plans",
     title: "Plans and payments",
     body: (
-      <p>
-        DevTrack currently has a free plan. If paid plans are introduced, their price, limits and refund terms will be shown
-        before you pay, and you will not be charged without choosing a paid plan yourself.
-      </p>
+      <ul>
+        <li>DevTrack has a free plan. Pro is sold as prepaid passes: ₹299 for 30 days or ₹2,999 for 365 days, paid through Razorpay.</li>
+        <li>A pass starts as soon as the payment is confirmed and does not renew. Nothing is charged again unless you buy another pass, which adds its days on top.</li>
+        <li>Refunds are covered on the {refunds} page: a full refund within 7 days if you used fewer than 10 Pro AI actions, and failed or double charges are always refunded. A refunded pass ends.</li>
+        <li>Prices may change for future passes; a pass you already bought keeps its length.</li>
+      </ul>
     ),
   },
   {
