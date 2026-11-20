@@ -112,6 +112,24 @@ export const PRO_PASSES = {
 const RAZORPAY_KEY_ID = /^rzp_(test|live)_[A-Za-z0-9]{6,40}$/;
 
 // Razorpay. Off unless every value is present; half a configuration refuses to start.
+// The browser reaches the API only through the Vercel proxy, which adds PROXY_SECRET as a header.
+// Callers that skip the proxy could fake X-Forwarded-For and dodge per-IP limits, so "enforce"
+// refuses them. "report" only tells /api/health whether the header arrived (for a safe rollout).
+export const PROXY_HEADER = 'x-devtrack-proxy';
+
+function buildProxyConfig(env) {
+  const secret = env.PROXY_SECRET || '';
+  const mode = (env.PROXY_CHECK || (secret ? 'enforce' : 'off')).toLowerCase();
+  if (!['off', 'report', 'enforce'].includes(mode)) {
+    throw new Error('PROXY_CHECK must be off, report or enforce');
+  }
+  if (mode === 'off') return { mode };
+  if (secret.length < 32) {
+    throw new Error('PROXY_SECRET must contain at least 32 characters when PROXY_CHECK is report or enforce');
+  }
+  return { mode, secret };
+}
+
 function buildPaymentsConfig(env, { nodeEnv }) {
   // Tests use fake values generated per run; the Razorpay network module is mocked there.
   if (nodeEnv === 'test') {
@@ -337,6 +355,7 @@ export function buildConfig(rawEnv) {
 
     AI: buildAiConfig(env, { nodeEnv }),
     PAYMENTS: buildPaymentsConfig(env, { nodeEnv }),
+    PROXY: buildProxyConfig(env),
   };
 }
 

@@ -17,6 +17,7 @@ import billingRouter from './routes/billing.routes.js';
 import { razorpayWebhook } from './controllers/billing.controller.js';
 import { apiRateLimit, billingWebhookRateLimit } from './middlewares/rateLimit.middleware.js';
 import { rejectUnsafeInput } from './middlewares/sanitize.middleware.js';
+import { cameThroughProxy, requireProxy } from './middlewares/proxy.middleware.js';
 import config from './config/config.js';
 
 const app = express();
@@ -27,6 +28,7 @@ app.use(helmet({
   crossOriginResourcePolicy: false,
   contentSecurityPolicy: { directives: { defaultSrc: ["'none'"], frameAncestors: ["'none'"] } },
 }));
+app.use(requireProxy);
 app.use(cors({ origin: config.CLIENT_ORIGIN, credentials: true, methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], allowedHeaders: ['Content-Type', 'X-CSRF-Token'], maxAge: 600 }));
 // Razorpay signs the exact bytes it sends, so this route reads the raw body, before JSON parsing.
 // No session or CSRF: the HMAC signature is the authentication.
@@ -44,7 +46,13 @@ app.use('/api', (req, res, next) => {
 });
 app.use('/api', rejectUnsafeInput);
 app.get('/', (req, res) => res.send('DevTrack API is running'));
-app.get('/api/health', (req, res) => res.json({ message: 'DevTrack API is healthy' }));
+app.get('/api/health', (req, res) => res.json({
+  message: 'DevTrack API is healthy',
+  // During a proxy rollout, shows whether this request carried the proxy header and, in report
+  // mode, the client IP the rate limits will see (the caller's own address), to check TRUST_PROXY.
+  ...(config.PROXY.mode !== 'off' && { proxied: cameThroughProxy(req) }),
+  ...(config.PROXY.mode === 'report' && { ip: req.ip }),
+}));
 app.use('/api/auth', authRouter);
 app.use('/api/goals', goalRouter);
 app.use('/api/projects', projectRouter);

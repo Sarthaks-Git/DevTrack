@@ -18,4 +18,9 @@ export default defineConfig([
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
   },
+  {
+    // Vercel Routing Middleware runs on the server, where process.env exists.
+    files: ['middleware.js'],
+    languageOptions: { globals: { ...globals.browser, process: 'readonly' } },
+  },
 ])
