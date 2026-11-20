@@ -17,7 +17,7 @@ import { linkRepository, listProjectCommits, unlinkRepository } from '../control
 import { validateLinkRepository } from '../validators/github.validator.js';
 import { requireCsrf } from '../middlewares/csrf.middleware.js';
 import { validateObjectId } from '../middlewares/validateObjectId.middleware.js';
-import { validateCreateMilestone, validateUpdateMilestone } from '../validators/milestone.validator.js';
+import { validateBulkMilestones, validateCreateMilestone, validateUpdateMilestone } from '../validators/milestone.validator.js';
 import { milestoneControllers } from '../controllers/milestone.controller.js';
 
 import {
@@ -63,6 +63,9 @@ projectRouter.delete(
 );
 
 const milestones = milestoneControllers('project');
+
+// Several milestones at once, all or none (used when a project is created from an AI idea).
+projectRouter.post('/:id/milestones/bulk', requireCsrf, validateObjectId('id'), validateBulkMilestones, milestones.addMany);
 
 projectRouter.post(
     '/:id/milestones',

@@ -13,3 +13,17 @@ export async function getWeeklyReview(week = 'current') {
   });
   return data.data;
 }
+
+// AI mentor: a written note on a weekly review. GET is free (the saved note or null); POST writes
+// one with 1 AI action and replaces the old one.
+const weekParams = week => ({ today: localDayKey(), tz: -new Date().getTimezoneOffset(), week });
+
+export async function getWeeklyReviewNote(week = 'current') {
+  const { data } = await api.get('/dashboard/weekly/ai', { params: weekParams(week) });
+  return data.data.note;
+}
+
+export async function writeWeeklyReviewNote(week = 'current') {
+  const { data } = await api.post('/dashboard/weekly/ai', undefined, { params: weekParams(week) });
+  return data.data.note;
+}

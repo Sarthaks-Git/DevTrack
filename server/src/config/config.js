@@ -235,7 +235,7 @@ export const AI_MODEL_PRICES = {
   // Opus 5.5 cannot turn thinking off; adaptive at low effort keeps it short.
   'claude-opus-5-5': { input: 4, output: 20, label: 'Claude Opus 5.5', thinking: { type: 'adaptive' } },
 };
-export const AI_FEATURES = ['securityReview', 'codeReview', 'goalRoadmap', 'goalQuiz'];
+export const AI_FEATURES = ['securityReview', 'codeReview', 'goalRoadmap', 'goalQuiz', 'projectIdeas', 'weeklyReview'];
 export const AI_PLAN_IDS = ['free', 'pro'];
 
 // Owner decisions (16 Nov 2026): Free = cheapest model, 100 actions; Pro = Sonnet 5.5, 300 actions,
@@ -263,14 +263,14 @@ function buildAiConfig(env, { nodeEnv }) {
         label: 'Free',
         model: model('AI_MODEL_FREE', 'claude-haiku-5-5'),
         monthlyActions: limit('AI_FREE_MONTHLY_LIMIT', 100),
-        features: ['securityReview', 'goalRoadmap', 'goalQuiz'],
+        features: ['securityReview', 'goalRoadmap', 'goalQuiz', 'projectIdeas', 'weeklyReview'],
       },
       pro: {
         id: 'pro',
         label: 'Pro',
         model: model('AI_MODEL_PRO', 'claude-sonnet-5-5'),
         monthlyActions: limit('AI_PRO_MONTHLY_LIMIT', 300),
-        features: ['securityReview', 'codeReview', 'goalRoadmap', 'goalQuiz'],
+        features: ['securityReview', 'codeReview', 'goalRoadmap', 'goalQuiz', 'projectIdeas', 'weeklyReview'],
       },
     },
   };

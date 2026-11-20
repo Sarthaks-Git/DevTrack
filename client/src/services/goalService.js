@@ -13,3 +13,5 @@ export async function addGoalMilestones(goalId, milestones) { const { data } = a
 export async function getGoalQuiz(goalId) { const { data } = await api.get(`/goals/${goalId}/quiz`); return data.data; }
 export async function createGoalQuiz(goalId) { const { data } = await api.post(`/goals/${goalId}/quiz`); return data.data; }
 export async function submitGoalQuiz(goalId, answers) { const { data } = await api.post(`/goals/${goalId}/quiz/attempts`, { answers }); return data.data; }
+// AI mentor: practice project ideas for a goal (nothing saved until one is picked).
+export async function suggestProjectIdeas(goalId) { const { data } = await api.post(`/goals/${goalId}/project-ideas`); return data.data.ideas; }

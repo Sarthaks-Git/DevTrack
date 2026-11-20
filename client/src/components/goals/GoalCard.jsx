@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import MilestoneList from "../milestones/MilestoneList";
 import GoalTargetProgress from "./GoalTargetProgress";
 
-function GoalCard({ goal, number, linkedProjects = [], milestoneHandlers, onEdit, onDelete, onPlan, onQuiz }) {
+function GoalCard({ goal, number, linkedProjects = [], milestoneHandlers, onEdit, onDelete, onPlan, onQuiz, onIdeas }) {
     const statusConfig = {
         not_started: {
             symbol: "○",
@@ -173,13 +173,16 @@ function GoalCard({ goal, number, linkedProjects = [], milestoneHandlers, onEdit
                         className="
                             mt-6
                             flex
+                            flex-wrap
                             items-center
-                            gap-5
+                            gap-x-5
+                            gap-y-2
                             opacity-100
                             transition-opacity
                             duration-200
                             md:opacity-0
                             md:group-hover:opacity-100
+                            md:group-focus-within:opacity-100
                         "
                     >
                         {onPlan && goal.status !== "completed" && goal.status !== "archived" ? (
@@ -198,6 +201,25 @@ function GoalCard({ goal, number, linkedProjects = [], milestoneHandlers, onEdit
                             "
                         >
                             Plan with AI
+                        </button>
+                        ) : null}
+
+                        {onIdeas && goal.status !== "archived" ? (
+                        <button
+                            type="button"
+                            onClick={() => onIdeas(goal)}
+                            className="
+                                text-[11px]
+                                font-medium
+                                uppercase
+                                tracking-[0.18em]
+                                text-[var(--dt-accent-soft)]
+                                transition-colors
+                                duration-200
+                                hover:text-[var(--dt-text-primary)]
+                            "
+                        >
+                            Project ideas
                         </button>
                         ) : null}
 

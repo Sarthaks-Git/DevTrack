@@ -4,6 +4,7 @@ import PageHeader from "../components/common/PageHeader";
 import StateMessage from "../components/common/StateMessage";
 import DayStrip from "../components/dashboard/DayStrip";
 import { getWeeklyReview } from "../services/dashboardService";
+import AiReviewNote from "../components/review/AiReviewNote";
 import { describeNextStep, describeReason, subjectPath } from "../utils/attentionUtils";
 import { formatMilestoneDue } from "../utils/milestoneUtils";
 import { describeSkillSignal } from "../utils/skillUtils";
@@ -172,6 +173,7 @@ function WeeklyReview() {
 
       {data && !loading ? (
         <div className="space-y-8">
+          <AiReviewNote key={week} week={week} />
           <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
             <Figure value={data.totals.finished} label="Finished" note={compareText(data.totals.finished, data.previous.finished, { partial })} />
             <Figure

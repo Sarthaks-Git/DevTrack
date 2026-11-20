@@ -1,6 +1,6 @@
 import GoalCard from "./GoalCard";
 
-function GoalList({ goals, projects = [], milestoneHandlers, onEdit, onDelete, onPlan, onQuiz, offset = 0 }) {
+function GoalList({ goals, projects = [], milestoneHandlers, onEdit, onDelete, onPlan, onQuiz, onIdeas, offset = 0 }) {
     return (
         <div>
             {goals.map((goal, index) => (
@@ -14,6 +14,7 @@ function GoalList({ goals, projects = [], milestoneHandlers, onEdit, onDelete, o
                     onDelete={onDelete}
                     onPlan={onPlan}
                     onQuiz={onQuiz}
+                    onIdeas={onIdeas}
                 />
             ))}
         </div>

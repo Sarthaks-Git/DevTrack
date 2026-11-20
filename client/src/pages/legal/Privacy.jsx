@@ -54,8 +54,9 @@ const sections = [
       <p>
         AI features are off until you turn them on in Settings. When they are on, commit messages and changed file names (and,
         for code review on a repository you switch it on for, the changed lines, with anything that looks like a secret removed)
-        are sent to Anthropic to generate suggestions. When you ask for a plan for a goal, that goal's title, description,
-        deadline and milestones are sent too. Anthropic does not use this data to train its models. Suggestions are
+        are sent to Anthropic to generate suggestions. When you ask for a plan, a quiz or project ideas for a goal, that goal's
+        title, description, deadline and milestones are sent too; for a written weekly review, that week's numbers and the titles
+        of what you finished or let slip. Anthropic does not use this data to train its models. Suggestions are
         labelled as AI and never count as verified progress. Turning AI off stops all sending.
       </p>
     ),

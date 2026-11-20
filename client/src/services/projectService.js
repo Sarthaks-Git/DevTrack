@@ -7,3 +7,4 @@ export async function deleteProject(projectId) { const { data } = await api.dele
 export async function addProjectMilestone(projectId, milestone) { const { data } = await api.post(`/projects/${projectId}/milestones`, milestone); return data.data.project; }
 export async function updateProjectMilestone(projectId, milestoneId, changes) { const { data } = await api.patch(`/projects/${projectId}/milestones/${milestoneId}`, changes); return data.data.project; }
 export async function deleteProjectMilestone(projectId, milestoneId) { const { data } = await api.delete(`/projects/${projectId}/milestones/${milestoneId}`); return data.data.project; }
+export async function addProjectMilestones(projectId, milestones) { const { data } = await api.post(`/projects/${projectId}/milestones/bulk`, { milestones }); return data.data.project; }

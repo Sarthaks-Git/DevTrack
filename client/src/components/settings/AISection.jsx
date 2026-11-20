@@ -8,6 +8,9 @@ const PLAN_FEATURES = {
   securityReview: "Security checks from commit messages",
   codeReview: "Code review of changed lines",
   goalRoadmap: "Step-by-step plans for your goals",
+  goalQuiz: "Self-check quizzes with spaced reviews",
+  projectIdeas: "Practice project ideas for a goal",
+  weeklyReview: "A written weekly review",
 };
 
 const QUEUED ="Your commits are queued and will be reviewed on the next sync.";
