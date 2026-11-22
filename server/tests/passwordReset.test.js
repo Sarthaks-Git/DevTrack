@@ -25,9 +25,10 @@ async function signedOut() {
   return { post: url => request(app).post(url).set('Cookie', cookie).set('x-csrf-token', token) };
 }
 
-// The code is sent after the response; wait for the mocked transport to receive it.
+// The code is sent after the response; wait for the mocked transport to receive it. The 5 s timeout
+// covers slow full runs against the remote test database (the 1 s default flaked).
 async function codeSentTo(email) {
-  await vi.waitFor(() => expect(sendEmail.mock.calls.some(([mail]) => mail.to === email && /password reset/.test(mail.subject))).toBe(true));
+  await vi.waitFor(() => expect(sendEmail.mock.calls.some(([mail]) => mail.to === email && /password reset/.test(mail.subject))).toBe(true), { timeout: 5000 });
   const mail = sendEmail.mock.calls.filter(([m]) => m.to === email && /password reset/.test(m.subject)).at(-1)[0];
   return mail.text.match(/\b(\d{6})\b/)[1];
 }

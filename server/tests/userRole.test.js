@@ -3,6 +3,7 @@ import express from 'express';
 import cookieParser from 'cookie-parser';
 import request from 'supertest';
 import { setUserRoleLogic } from '../src/services/userRole.service.js';
+import { setUserPlanLogic } from '../src/services/plan.service.js';
 import { authMiddleware, requireRole } from '../src/middlewares/auth.middleware.js';
 import User from '../src/models/User.js';
 import { createSession } from './helpers.js';
@@ -34,6 +35,18 @@ describe('owner role script logic', () => {
     await expect(setUserRoleLogic({ username: { $ne: null }, role: 'admin' })).rejects.toMatchObject({ statusCode: 400 });
     await expect(setUserRoleLogic({ username: 'nobody_here_123', role: 'admin' })).rejects.toMatchObject({ statusCode: 404 });
     expect((await User.findById(s.userId).lean()).role).toBe('user');
+  });
+
+  it('shows the active plan on /auth/me, and an expired Pro plan as free', async () => {
+    const s = await createSession('role_plan');
+    const plan = async () => (await s.get('/api/auth/me')).body.user.plan;
+    expect(await plan()).toBe('free');
+
+    await setUserPlanLogic({ username: s.user.username, tier: 'pro' });
+    expect(await plan()).toBe('pro');
+
+    await User.updateOne({ _id: s.userId }, { $set: { 'plan.until': new Date(Date.now() - 1000) } });
+    expect(await plan()).toBe('free');
   });
 
   it('cannot be reached over HTTP: the account API ignores a role in the body', async () => {

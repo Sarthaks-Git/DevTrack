@@ -65,7 +65,14 @@ function Sidebar({ unread = 0, onNavigate }) {
       <div className="mt-auto border-t border-[var(--dt-border)] pt-5">
         <NotificationBell unread={unread} onNavigate={onNavigate} className="mb-4" />
         <div className="mb-4"><ThemePicker compact /></div>
-        {user ? <p className="mb-3 truncate text-xs text-[var(--dt-text-muted)]">@{user.username}</p> : null}
+        {user ? (
+          <p className="mb-3 flex min-w-0 items-center gap-2 text-xs text-[var(--dt-text-muted)]">
+            <span className="truncate">@{user.username}</span>
+            {user.plan === "pro" ? (
+              <span title="Pro plan" className="shrink-0 border border-[var(--dt-accent)] px-1.5 py-px text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--dt-accent-soft)]">Pro</span>
+            ) : null}
+          </p>
+        ) : null}
         <button
           type="button"
           onClick={handleLogout}

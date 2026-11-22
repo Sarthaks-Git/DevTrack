@@ -11,6 +11,7 @@ import { signAccessToken } from '../utils/jwt.js';
 import { createLoginChallenge, isTwoFactorEnabled } from './loginChallenge.service.js';
 import { assertPasswordNotBreached } from './breachedPassword.service.js';
 import { recognizeDevice, sendNewSignInAlert } from './loginAlert.service.js';
+import { isActivePro } from './plan.service.js';
 
 export const SALT_ROUNDS = 12;
 
@@ -30,6 +31,8 @@ export const publicUser = user => ({
   // false for accounts made through Google, GitHub or LinkedIn that have not set a password yet.
   hasPassword: user.passwordSet !== false,
   emailVerified: Boolean(user.emailVerifiedAt),
+  // Display only (sidebar badge); every paid feature checks the plan on the server itself.
+  plan: isActivePro(user.plan, new Date()) ? 'pro' : 'free',
   createdAt: user.createdAt,
   updatedAt: user.updatedAt,
 });
