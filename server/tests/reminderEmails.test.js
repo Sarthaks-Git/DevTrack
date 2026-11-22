@@ -66,7 +66,16 @@ describe('Daily reminder emails', () => {
 
   it('does not email the same reminder again the next day', async () => {
     await reset(ann.userId);
-    const result = await run([ann.userId], new Date(morning().getTime() + DAY_MS));
+    const nextDay = new Date(morning().getTime() + DAY_MS);
+    // When "next day" is a Monday, a new weekly review is genuinely due for this week's activity.
+    // Mark it handled so the test checks only that old reminders are not emailed again, on any weekday.
+    const weekStart = new Date(nextDay.getTime() - (((nextDay.getUTCDay() + 6) % 7) + 7) * DAY_MS);
+    await Notification.updateOne(
+      { owner: ann.userId, dedupeKey: `weekly_review:${weekStart.toISOString().slice(0, 10)}` },
+      { $setOnInsert: { type: 'weekly_review', subjectType: 'review', title: 'Week in review', emailedAt: new Date() } },
+      { upsert: true }
+    );
+    const result = await run([ann.userId], nextDay);
     expect(result.sent).toBe(0);
     expect(digestsTo(ann.user.email)).toHaveLength(0);
   });

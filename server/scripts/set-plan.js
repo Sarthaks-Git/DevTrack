@@ -16,7 +16,8 @@ async function main() {
   await connectDB(config.MONGO_URI);
   const result = await setUserPlanLogic({ username, tier, until });
   const ends = result.plan.until ? ` until ${result.plan.until.toISOString().slice(0, 10)}` : '';
-  process.stdout.write(`Plan for ${result.username} is now ${result.plan.tier}${ends}.\n`);
+  // The database name (never the connection string) shows which database was changed.
+  process.stdout.write(`Plan for ${result.username} is now ${result.plan.tier}${ends} (database: ${mongoose.connection.name}).\n`);
 }
 
 main()

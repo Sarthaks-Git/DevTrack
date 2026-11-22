@@ -10,7 +10,8 @@
     "test:run": "vitest run",
     "start": "node src/server.js",
     "db:indexes": "node scripts/check-indexes.js",
-    "plan:set": "node scripts/set-plan.js"
+    "plan:set": "node scripts/set-plan.js",
+    "role:set": "node scripts/set-role.js"
   },
   "keywords": [],
   "author": "",
