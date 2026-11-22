@@ -100,6 +100,8 @@ export const codeFindingRateLimit = createRateLimit({ name: 'codeFindings', limi
 export const billingRateLimit = createRateLimit({ name: 'billing', limit: 30, keyGenerator: byUser });
 // Turning notifications on/off and test sends; a test push wakes the user's devices.
 export const pushRateLimit = createRateLimit({ name: 'push', limit: 30, keyGenerator: byUser });
+// Weather theme: the page asks every 30 minutes; this leaves room for reloads and several tabs.
+export const weatherRateLimit = createRateLimit({ name: 'weather', limit: 30, keyGenerator: byUser });
 // AI mentor requests (each also uses one monthly AI action).
 export const mentorRateLimit = createRateLimit({ name: 'mentor', limit: 20, keyGenerator: byUser });
 export const billingWebhookRateLimit = createRateLimit({ name: 'billingWebhook', limit: 600 });

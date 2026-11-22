@@ -4,11 +4,13 @@ import Sidebar from "./Sidebar";
 import AmbientBackground from "./ui/AmbientBackground";
 import NotificationBell from "./common/NotificationBell";
 import { useUnreadNotifications } from "./common/useUnreadNotifications";
+import { useWeatherRefresh } from "../theme/weather";
 
 function AppLayout() {
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
   const { unread, refresh: refreshUnread } = useUnreadNotifications();
+  useWeatherRefresh();
 
   // Move focus to the page on navigation so keyboard and screen-reader users land on new content.
   useEffect(() => {
