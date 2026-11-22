@@ -1,6 +1,6 @@
 
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { getCodingProfiles, syncLeetCode, getSolvedProblems, getProblemDays } from "../services/codingService";
 import ProblemLog from "../components/coding/ProblemLog";
@@ -160,128 +160,75 @@ const heatColors = [
 function ActivityHeatmap({ calendar, problemDays }) {
 
     const [activeTooltip, setActiveTooltip] = useState(null);
+    const scrollerRef = useRef(null);
 
 
 
-    const { weeks, months, totalSubmissions, activeDays, maxCount } =
-
+    const { monthBlocks, totalSubmissions, activeDays, maxCount } =
         useMemo(() => {
-
             const today = new Date();
-
             today.setHours(0, 0, 0, 0);
 
-
-
+            // Last 365 days, ending today.
             const start = new Date(today);
-
             start.setDate(start.getDate() - 364);
 
-            start.setDate(start.getDate() - start.getDay());
-
-
-
-            const days = [];
-
-            const monthLabels = [];
-
-
-
+            const blocks = [];
             let total = 0;
-
             let active = 0;
-
             let maximum = 0;
 
-
-
-            // End the displayed period today.
-
-            const end = new Date(today);
-
-
-
             for (
-
                 const date = new Date(start);
-
-                date <= end;
-
+                date <= today;
                 date.setDate(date.getDate() + 1)
-
             ) {
-
                 const current = new Date(date);
-
                 const count = getSubmissionCount(calendar, current);
+                const year = current.getFullYear();
+                const monthIndex = current.getMonth();
 
-                const future = current > today;
-
-
-
-                days.push({ date: current, count, future });
-
-
-
-                if (current.getDate() === 1) {
-
-                    monthLabels.push({
-
-                        date: current,
-
-                        weekIndex: Math.floor((days.length - 1) / 7),
-
-                    });
-
+                let block = blocks[blocks.length - 1];
+                if (!block || block.year !== year || block.monthIndex !== monthIndex) {
+                    block = {
+                        key: `${year}-${monthIndex}`,
+                        year,
+                        monthIndex,
+                        label: MONTHS[monthIndex],
+                        // Weekday of the 1st places every day of the month in its own week column.
+                        firstWeekday: new Date(year, monthIndex, 1).getDay(),
+                        columns: [],
+                    };
+                    blocks.push(block);
                 }
 
+                const column = Math.floor((current.getDate() - 1 + block.firstWeekday) / 7);
+                while (block.columns.length <= column) block.columns.push(Array(7).fill(null));
+                block.columns[column][current.getDay()] = { date: current, count };
 
-
-                if (!future) {
-
-                    total += count;
-
-
-
-                    if (count > 0) active += 1;
-
-
-
-                    maximum = Math.max(maximum, count);
-
-                }
-
+                total += count;
+                if (count > 0) active += 1;
+                maximum = Math.max(maximum, count);
             }
 
-
-
-            const groupedWeeks = [];
-
-
-
-            for (let i = 0; i < days.length; i += 7) {
-
-                groupedWeeks.push(days.slice(i, i + 7));
-
+            // The first month can start mid-month; drop its leading empty week columns.
+            if (blocks.length) {
+                blocks[0].columns = blocks[0].columns.filter((column) => column.some(Boolean));
             }
-
-
 
             return {
-
-                weeks: groupedWeeks,
-
-                months: monthLabels,
-
+                monthBlocks: blocks,
                 totalSubmissions: total,
-
                 activeDays: active,
-
                 maxCount: maximum,
-
             };
-
         }, [calendar]);
+
+    // Open on the newest months (like LeetCode); older ones are a scroll away.
+    useEffect(() => {
+        const scroller = scrollerRef.current;
+        if (scroller) scroller.scrollLeft = scroller.scrollWidth;
+    }, [monthBlocks]);
 
 
 
@@ -296,11 +243,6 @@ function ActivityHeatmap({ calendar, problemDays }) {
 
 
     function showTooltip(event, day) {
-
-        if (day.future) return;
-
-
-
         const rect = event.currentTarget.getBoundingClientRect();
         const utcKey = utcKeyForLocalDay(day.date);
         const problems = (utcKey && problemDays?.days?.[utcKey]) || [];
@@ -435,184 +377,63 @@ function ActivityHeatmap({ calendar, problemDays }) {
 
 
 
-            {/* Scrollable heatmap */}
-
-            <div
-
-                className="overflow-x-auto pb-3"
-
-                onMouseLeave={hideTooltip}
-
-                onScroll={hideTooltip}
-
-            >
-
-                <div className="min-w-[650px]">
-
-                    {/* Month labels */}
-
-                    <div className="mb-2 grid grid-cols-[30px_1fr] gap-2">
-
-                        <div />
-
-
-
-                        <div className="relative h-4">
-
-                            {months.map((month, index) => (
-
-                                <span
-
-                                    key={`${month.date.toISOString()}-${index}`}
-
-                                    className="absolute text-[11px] text-[var(--dt-text-muted)]"
-
-                                    style={{
-
-                                        left: `${
-
-                                            (month.weekIndex / weeks.length) *
-
-                                            100
-
-                                        }%`,
-
-                                    }}
-
-                                >
-
-                                    {MONTHS[month.date.getMonth()]}
-
-                                </span>
-
-                            ))}
-
-                        </div>
-
-                    </div>
-
-
-
-                    <div className="grid grid-cols-[30px_1fr] gap-2">
-
-                        {/* Weekday labels */}
-
-                        <div className="grid grid-rows-7 gap-[3px] text-[11px] text-[var(--dt-text-muted)]">
-
-                            <span>Sun</span>
-
-                            <span />
-
-                            <span>Tue</span>
-
-                            <span />
-
-                            <span>Thu</span>
-
-                            <span />
-
-                            <span>Sat</span>
-
-                        </div>
-
-
-
-                        {/* Daily activity cells */}
-
-                        <div className="flex gap-[3px]">
-
-                            {weeks.map((week, weekIndex) => (
-
-                                <div
-
-                                    key={weekIndex}
-
-                                    className="grid flex-1 grid-rows-7 gap-[3px]"
-
-                                >
-
-                                    {week.map((day) => {
-
-                                        const level = getHeatLevel(
-
-                                            day.count,
-
-                                            maxCount
-
-                                        );
-
-
-
-                                        const accessibleLabel =
-
-                                            `${formatDate(day.date)}, ` +
-
-                                            `${day.count} submission` +
-
-                                            (day.count === 1 ? "" : "s");
-
-
-
-                                        return (
-
-                                            <div
-
-                                                key={day.date.toISOString()}
-
-                                                role="img"
-
-                                                tabIndex={day.future ? -1 : 0}
-
-                                                aria-label={
-
-                                                    day.future
-
-                                                        ? undefined
-
-                                                        : accessibleLabel
-
-                                                }
-
-                                                onMouseEnter={(event) =>
-
-                                                    showTooltip(event, day)
-
-                                                }
-
-                                                onFocus={(event) =>
-
-                                                    showTooltip(event, day)
-
-                                                }
-
-                                                onBlur={hideTooltip}
-
-                                                className={`aspect-square min-w-0 rounded-[2px] outline-none transition-[opacity,box-shadow] duration-150 focus-visible:ring-1 focus-visible:ring-[var(--dt-accent-soft)] ${
-
-                                                    day.future
-
-                                                        ? "pointer-events-none opacity-0"
-
-                                                        : `${heatColors[level]} cursor-pointer hover:brightness-125`
-
-                                                }`}
-
-                                            />
-
-                                        );
-
-                                    })}
-
-                                </div>
-
-                            ))}
-
-                        </div>
-
-                    </div>
-
+            {/* Scrollable heatmap: one block per month, with a gap between months (LeetCode style). */}
+            <div className="flex gap-2">
+                {/* Weekday labels stay put while the months scroll. */}
+                <div className="grid shrink-0 grid-rows-[repeat(7,11px)] gap-[3px] pr-1 text-[10px] leading-[11px] text-[var(--dt-text-muted)]">
+                    <span>Sun</span>
+                    <span />
+                    <span>Tue</span>
+                    <span />
+                    <span>Thu</span>
+                    <span />
+                    <span>Sat</span>
                 </div>
 
+                <div
+                    ref={scrollerRef}
+                    className="min-w-0 flex-1 overflow-x-auto pb-3"
+                    onMouseLeave={hideTooltip}
+                    onScroll={hideTooltip}
+                >
+                    <div className="flex w-max gap-[10px]">
+                        {monthBlocks.map((month) => (
+                            <div key={month.key} className="flex flex-col items-center">
+                                <div className="flex gap-[3px]">
+                                    {month.columns.map((column, columnIndex) => (
+                                        <div key={columnIndex} className="grid grid-rows-[repeat(7,11px)] gap-[3px]">
+                                            {column.map((day, dayIndex) => {
+                                                if (!day) {
+                                                    return <span key={dayIndex} aria-hidden="true" className="h-[11px] w-[11px]" />;
+                                                }
+                                                const level = getHeatLevel(day.count, maxCount);
+                                                const accessibleLabel =
+                                                    `${formatDate(day.date)}, ` +
+                                                    `${day.count} submission` +
+                                                    (day.count === 1 ? "" : "s");
+                                                return (
+                                                    <div
+                                                        key={day.date.toISOString()}
+                                                        role="img"
+                                                        tabIndex={0}
+                                                        aria-label={accessibleLabel}
+                                                        onMouseEnter={(event) => showTooltip(event, day)}
+                                                        onFocus={(event) => showTooltip(event, day)}
+                                                        onBlur={hideTooltip}
+                                                        className={`h-[11px] w-[11px] cursor-pointer rounded-[2px] outline-none transition-[opacity,box-shadow] duration-150 hover:brightness-125 focus-visible:ring-1 focus-visible:ring-[var(--dt-accent-soft)] ${heatColors[level]}`}
+                                                    />
+                                                );
+                                            })}
+                                        </div>
+                                    ))}
+                                </div>
+                                <span className="mt-2 text-[11px] text-[var(--dt-text-muted)]">
+                                    {month.label}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
             </div>
 
 

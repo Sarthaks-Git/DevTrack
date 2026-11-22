@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import SettingsSection, { Notice } from "./SettingsSection";
 import ConfirmModal from "../common/ConfirmModal";
 import {
@@ -22,6 +22,9 @@ function PlatformsSection() {
   const [confirmDisconnect, setConfirmDisconnect] = useState(false);
   const [disconnecting, setDisconnecting] = useState(false);
   const [status, setStatus] = useState({ kind: "", text: "" });
+  const [copyState, setCopyState] = useState("");
+  const tokenRef = useRef(null);
+  const copyTimer = useRef(null);
 
   useEffect(() => {
     let active = true;
@@ -36,6 +39,7 @@ function PlatformsSection() {
       .finally(() => active && setLoading(false));
     return () => {
       active = false;
+      clearTimeout(copyTimer.current);
     };
   }, []);
 
@@ -73,13 +77,52 @@ function PlatformsSection() {
     }
   }
 
-  async function handleCopy() {
+  // Older browsers and some embedded views block navigator.clipboard; fall back to a hidden
+  // textarea, and if that fails too, select the token so the user can copy it themselves.
+  function copyWithFallback(text) {
+    const area = document.createElement("textarea");
+    area.value = text;
+    area.setAttribute("readonly", "");
+    area.style.position = "fixed";
+    area.style.opacity = "0";
+    document.body.appendChild(area);
+    area.select();
+    let copied;
     try {
-      await navigator.clipboard.writeText(challenge.token);
-      setStatus({ kind: "ok", text: "Verification token copied." });
+      copied = document.execCommand("copy");
     } catch {
-      setStatus({ kind: "error", text: "Clipboard access was unavailable. Copy the token manually." });
+      copied = false;
     }
+    document.body.removeChild(area);
+    return copied;
+  }
+
+  function selectToken() {
+    const node = tokenRef.current;
+    if (!node) return;
+    const range = document.createRange();
+    range.selectNodeContents(node);
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+  }
+
+  async function handleCopy() {
+    let copied = false;
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(challenge.token);
+        copied = true;
+      }
+    } catch {
+      copied = false;
+    }
+    if (!copied) copied = copyWithFallback(challenge.token);
+    if (!copied) selectToken();
+    setCopyState(copied ? "copied" : "failed");
+    clearTimeout(copyTimer.current);
+    // The failure hint is an instruction, so it stays until the next attempt.
+    if (copied) copyTimer.current = setTimeout(() => setCopyState(""), 2500);
   }
 
   async function handleDisconnect() {
@@ -136,9 +179,18 @@ function PlatformsSection() {
                     Save it in the About Me field on your LeetCode profile. It expires at {new Date(challenge.expiresAt).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}.
                   </p>
                   <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-                    <code className="min-w-0 flex-1 break-all border border-[var(--dt-border)] px-3 py-2.5 text-xs text-[var(--dt-text-primary)]">{challenge.token}</code>
-                    <button type="button" onClick={handleCopy} className="dt-link-button px-3 text-left">Copy token</button>
+                    <code ref={tokenRef} className="min-w-0 flex-1 break-all border border-[var(--dt-border)] px-3 py-2.5 text-xs text-[var(--dt-text-primary)]">{challenge.token}</code>
+                    <button
+                      type="button"
+                      onClick={handleCopy}
+                      className={`shrink-0 border px-4 py-2.5 text-[11px] font-medium uppercase tracking-[0.16em] transition-colors ${copyState === "copied" ? "border-[var(--dt-verified-border)] text-[var(--dt-verified)]" : "border-[var(--dt-border-strong)] text-[var(--dt-text-primary)] hover:bg-[var(--dt-surface-elevated)]"}`}
+                    >
+                      {copyState === "copied" ? "Copied ✓" : "Copy token"}
+                    </button>
                   </div>
+                  <p role="status" aria-live="polite" className={`mt-2 min-h-4 text-xs ${copyState === "failed" ? "text-amber-300" : "text-[var(--dt-verified)]"}`}>
+                    {copyState === "copied" ? "Token copied to your clipboard." : copyState === "failed" ? "Your browser blocked copying. The token is selected: press Ctrl+C (or ⌘C)." : ""}
+                  </p>
                   <p className="mt-5 text-sm font-medium text-[var(--dt-text-primary)]">Step 2: paste it back to verify</p>
                   <form onSubmit={handleVerify} className="mt-3 flex flex-col gap-3 sm:flex-row">
                     <label className="sr-only" htmlFor="settings-verification-token">Verification token</label>

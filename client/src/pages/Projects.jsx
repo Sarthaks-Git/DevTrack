@@ -11,9 +11,10 @@ import MilestoneList from "../components/milestones/MilestoneList";
 import PageHeader from "../components/common/PageHeader";
 import ProjectCodeReview from "../components/projects/ProjectCodeReview";
 import ProjectRepository from "../components/projects/ProjectRepository";
+import RepoPicker from "../components/projects/RepoPicker";
 import ProjectSecurityChecks from "../components/projects/ProjectSecurityChecks";
 import { getAiStatus, listCodeFindings, listSecurityReviews } from "../services/aiService";
-import { getGitHubStatus, syncGitHub } from "../services/githubService";
+import { getGitHubStatus, linkRepository, syncGitHub } from "../services/githubService";
 
 const STATUS_OPTIONS = [
   { value: "planning", label: "Planning" },
@@ -221,7 +222,7 @@ function ProjectCard({ project, goal, milestoneHandlers, githubConnected, securi
   );
 }
 
-function ProjectForm({ initialProject, goals = [], saving, onCancel, onSubmit }) {
+function ProjectForm({ initialProject, goals = [], githubConnected = false, saving, onCancel, onSubmit }) {
   const [form, setForm] = useState(() => {
     if (!initialProject) return { ...EMPTY_FORM };
 
@@ -244,6 +245,8 @@ function ProjectForm({ initialProject, goals = [], saving, onCancel, onSubmit })
   });
 
   const [formError, setFormError] = useState("");
+  const [repoChoice, setRepoChoice] = useState("");
+  const alreadyLinked = Boolean(initialProject?.repository);
 
   function updateField(event) {
     const { name, value } = event.target;
@@ -279,7 +282,7 @@ function ProjectForm({ initialProject, goals = [], saving, onCancel, onSubmit })
     };
 
     try {
-      await onSubmit(payload);
+      await onSubmit(payload, repoChoice ? Number(repoChoice) : null);
     } catch (error) {
       setFormError(error.message || "Unable to save this project.");
     }
@@ -408,6 +411,33 @@ function ProjectForm({ initialProject, goals = [], saving, onCancel, onSubmit })
             Separate technologies with commas.
           </span>
         </label>
+
+        {!alreadyLinked ? (
+          <div className={`${labelClass} sm:col-span-2`}>
+            <p>Track a GitHub repository</p>
+            {githubConnected ? (
+              <>
+                <div className="mt-2">
+                  <RepoPicker
+                    id={`form-repo-${initialProject?._id || "new"}`}
+                    projectId={initialProject?._id}
+                    value={repoChoice}
+                    allowNone
+                    onChange={(repo) => {
+                      setRepoChoice(repo ? String(repo.id) : "");
+                      if (repo && !form.githubUrl.trim()) setForm((current) => ({ ...current, githubUrl: repo.url }));
+                    }}
+                  />
+                </div>
+                <p className="mt-2 font-normal text-[var(--dt-text-muted)]">Your commits to it are synced and count as verified progress on this project.</p>
+              </>
+            ) : (
+              <p className="mt-2 font-normal text-[var(--dt-text-muted)]">
+                <Link to="/app/settings#github" className="text-[var(--dt-text-secondary)] underline hover:text-[var(--dt-accent-soft)]">Connect GitHub in Settings</Link> to link a repository and track its commits.
+              </p>
+            )}
+          </div>
+        ) : null}
 
         <label className={labelClass}>
           GitHub URL
@@ -690,20 +720,22 @@ function Projects() {
     }
   }
 
-  async function handleSave(payload) {
+  async function handleSave(payload, repoId = null) {
     setSaving(true);
     setPageError("");
 
     try {
+      let saved;
       if (editingProject) {
         const data = await requestProjects(`/${editingProject._id}`, {
           method: "PATCH",
           data: payload,
         });
+        saved = data.project;
 
         setProjects((current) =>
           current.map((project) =>
-            project._id === editingProject._id ? data.project : project
+            project._id === editingProject._id ? saved : project
           )
         );
       } else {
@@ -711,12 +743,23 @@ function Projects() {
           method: "POST",
           data: payload,
         });
+        saved = data.project;
 
-        setProjects((current) => [data.project, ...current]);
+        setProjects((current) => [saved, ...current]);
       }
 
       setFormOpen(false);
       setEditingProject(null);
+
+      // The project is saved either way; a failed link is reported without undoing it.
+      if (repoId) {
+        try {
+          const repository = await linkRepository(saved._id, repoId);
+          replaceProject({ ...saved, repository });
+        } catch (error) {
+          setPageError(`Project saved, but the repository could not be linked: ${error.message}`);
+        }
+      }
     } catch (error) {
       setPageError(error.message || "Unable to save the project.");
       throw error;
@@ -880,6 +923,7 @@ function Projects() {
               key={editingProject?._id || "new-project"}
               initialProject={editingProject}
               goals={goals}
+              githubConnected={githubConnected}
               saving={saving}
               onCancel={() => {
                 setFormOpen(false);

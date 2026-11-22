@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import ConfirmModal from "../common/ConfirmModal";
-import { getProjectCommits, linkRepository, listGitHubRepos, unlinkRepository } from "../../services/githubService";
+import RepoPicker from "./RepoPicker";
+import { getProjectCommits, linkRepository, unlinkRepository } from "../../services/githubService";
 
 function formatDay(value) {
   return value ? new Date(value).toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "";
@@ -10,23 +11,15 @@ function formatDay(value) {
 // Linked GitHub repository on a project card: link/unlink, plus the latest verified commits.
 function ProjectRepository({ project, githubConnected, onChange }) {
   const repository = project.repository;
-  const [picker, setPicker] = useState({ open: false, loading: false, repos: [], installUrl: "", choice: "" });
+  const [picker, setPicker] = useState({ open: false, choice: "" });
   const [commits, setCommits] = useState({ open: false, loading: false, items: [] });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [confirmUnlink, setConfirmUnlink] = useState(false);
 
-  async function openPicker() {
+  function openPicker() {
     setError("");
-    setPicker(previous => ({ ...previous, open: true, loading: true }));
-    try {
-      const { repos, installUrl } = await listGitHubRepos();
-      const available = repos.filter(repo => !repo.linkedProject || repo.linkedProject.id === project._id);
-      setPicker({ open: true, loading: false, repos: available, installUrl, choice: available[0] ? String(available[0].id) : "" });
-    } catch (failure) {
-      setError(failure.message);
-      setPicker(previous => ({ ...previous, open: false, loading: false }));
-    }
+    setPicker({ open: true, choice: "" });
   }
 
   async function handleLink(event) {
@@ -75,7 +68,15 @@ function ProjectRepository({ project, githubConnected, onChange }) {
     }
   }
 
-  if (!repository && !githubConnected) return null;
+  if (!repository && !githubConnected) {
+    return (
+      <div className="mt-5 border-t border-[var(--dt-border)] pt-4 text-xs">
+        <Link to="/app/settings#github" className="text-[var(--dt-text-secondary)] hover:text-[var(--dt-accent-soft)]">
+          + Connect GitHub to link a repository
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="mt-5 border-t border-[var(--dt-border)] pt-4 text-xs">
@@ -111,20 +112,16 @@ function ProjectRepository({ project, githubConnected, onChange }) {
           ) : null}
         </>
       ) : picker.open ? (
-        picker.loading ? <p className="text-[var(--dt-text-muted)]">Loading your repositories...</p> : picker.repos.length ? (
-          <form onSubmit={handleLink} className="flex flex-col gap-2 sm:flex-row">
-            <label className="sr-only" htmlFor={`repo-${project._id}`}>Repository</label>
-            <select id={`repo-${project._id}`} className="dt-input mt-0 min-w-0 flex-1" value={picker.choice} onChange={event => setPicker(previous => ({ ...previous, choice: event.target.value }))}>
-              {picker.repos.map(repo => <option key={repo.id} value={repo.id}>{repo.fullName}{repo.private ? " (private)" : ""}</option>)}
-            </select>
-            <button type="submit" className="dt-primary-button" disabled={busy}>{busy ? "Linking..." : "Link"}</button>
-            <button type="button" className="dt-link-button" onClick={() => setPicker(previous => ({ ...previous, open: false }))}>Cancel</button>
-          </form>
-        ) : (
-          <p className="text-[var(--dt-text-secondary)]">
-            No repositories available. <a href={picker.installUrl} target="_blank" rel="noopener noreferrer" className="dt-link-button">Choose repositories on GitHub ↗</a>
-          </p>
-        )
+        <form onSubmit={handleLink} className="flex flex-col gap-2 sm:flex-row sm:items-start">
+          <RepoPicker
+            id={`repo-${project._id}`}
+            projectId={project._id}
+            value={picker.choice}
+            onChange={repo => setPicker(previous => ({ ...previous, choice: repo ? String(repo.id) : "" }))}
+          />
+          <button type="submit" className="dt-primary-button" disabled={busy || !picker.choice}>{busy ? "Linking..." : "Link"}</button>
+          <button type="button" className="dt-link-button sm:py-3" onClick={() => setPicker(previous => ({ ...previous, open: false }))}>Cancel</button>
+        </form>
       ) : (
         <button type="button" onClick={openPicker} className="text-[var(--dt-text-secondary)] hover:text-[var(--dt-accent-soft)]">
           + Link GitHub repository
