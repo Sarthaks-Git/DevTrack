@@ -1,14 +1,14 @@
 import { lazy, Suspense } from "react";
 import { createBrowserRouter, Link, Navigate, RouterProvider } from "react-router-dom";
-import Login from "./pages/Login";
-import Landing from "./pages/Landing";
-import Register from "./pages/Register";
 import AppLayout from "./components/AppLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import RouteError from "./components/RouteError";
 import { AuthProvider } from "./context/AuthContext";
 
-// App pages load on demand so the landing and auth screens stay small.
+// Every page loads on demand: the landing story, the sign-in screens and the app each ship separately.
+const Landing = lazy(() => import("./pages/Landing"));
+const Login = lazy(() => import("./pages/Login"));
+const Register = lazy(() => import("./pages/Register"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Goals = lazy(() => import("./pages/Goals"));
 const Projects = lazy(() => import("./pages/Projects"));
@@ -45,9 +45,9 @@ const page = Component => (
 
 // The pathless root catches any page crash and shows RouteError instead of the raw error.
 const router = createBrowserRouter([{ errorElement: <RouteError />, children: [
-  { path: "/", element: <Landing /> },
-  { path: "/register", element: <Register /> },
-  { path: "/login", element: <Login /> },
+  { path: "/", element: page(Landing) },
+  { path: "/register", element: page(Register) },
+  { path: "/login", element: page(Login) },
   // Signed out on purpose: opened from the email-changed alert.
   { path: "/undo-email-change", element: page(UndoEmailChange) },
   { path: "/privacy", element: page(Privacy) },
