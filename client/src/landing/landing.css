@@ -104,6 +104,15 @@ a.lp-wordmark:hover {
 
 /* Type */
 
+.lp-tagline {
+  margin-bottom: var(--dt-space-3);
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  color: var(--dt-accent-soft);
+}
+
 .lp-h1 {
   font-family: var(--dt-font-display);
   font-weight: 400;
