@@ -21,3 +21,4 @@ coverage/
 # Design skills installed locally for Claude Code (listed in docs/DESIGN.md, not committed)
 /.claude/skills/
 /skills-lock.json
+/.hallmark/
