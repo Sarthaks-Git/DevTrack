@@ -1,28 +1,22 @@
 import Scene from "../Scene";
-import { ProgressSplit } from "../mock/GoalCardMock";
-import { sampleGoal } from "../sampleData";
+import AppFrame from "../mock/AppFrame";
+import MilestonesOpen from "../mock/MilestonesOpen";
+import GoalTargetProgress from "../../components/goals/GoalTargetProgress";
+import ActivityItem from "../../components/activity/ActivityItem";
+import { sampleActivity, sampleGoal } from "../sampleData";
 
+// Manual and verified side by side, drawn with the app's own components.
 function ProofVisual() {
   return (
-    <div className="lp-proof">
-      <div className="lp-card lp-proof-row">
-        <span className="lp-check lp-check-manual" />
-        <div>
-          <p className="lp-card-title">Trees and recursion notes</p>
-          <p className="lp-card-sub">You ticked this step. It counts as manual.</p>
-        </div>
-        <span className="lp-tag lp-tag-manual">Marked done</span>
-      </div>
-      <div className="lp-card lp-proof-row">
-        <span className="lp-check lp-check-verified" />
-        <div>
-          <p className="lp-card-title">Solved “Course Schedule”</p>
-          <p className="lp-card-sub">LeetCode confirmed it. It counts as verified.</p>
-        </div>
-        <span className="lp-tag lp-tag-verified">Verified</span>
-      </div>
-      <div className="lp-card"><ProgressSplit target={sampleGoal.target} /></div>
-    </div>
+    <AppFrame>
+      <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--dt-text-muted)]">Ticked by you</p>
+      <MilestonesOpen milestones={sampleGoal.milestones.slice(0, 3)} />
+      <p className="mt-8 text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--dt-text-muted)]">Confirmed by LeetCode and GitHub</p>
+      <GoalTargetProgress target={sampleGoal.target} progress={sampleGoal.targetProgress} />
+      <ol className="mt-4 divide-y divide-[var(--dt-border)]">
+        {sampleActivity.slice(0, 2).map(item => <ActivityItem key={item._id} item={item} compact />)}
+      </ol>
+    </AppFrame>
   );
 }
 
@@ -30,10 +24,10 @@ export default function ProofScene() {
   return (
     <Scene id="proof" title="See which progress is proven." visual={<ProofVisual />} flip>
       <p>
-        Ticking a step yourself counts as manual. A problem solved on your verified LeetCode account,
-        or commits pushed to a GitHub repo you track, count as verified.
+        Milestones you tick yourself stay plain. Problems solved on your verified LeetCode account and
+        commits to GitHub repos you track carry a Verified badge, and they move your goal’s target bar.
       </p>
-      <p>DevTrack keeps the two apart, so your progress bar never flatters you.</p>
+      <p>The two never mix, so your progress never flatters you.</p>
     </Scene>
   );
 }

@@ -23,7 +23,7 @@ export default function PlansScene() {
             <p className="lp-muted text-sm">{pro.note} <Link to="/refunds" className="lp-link">Pricing and refunds</Link></p>
           </div>
         </div>
-        <p className="lp-soon"><span className="lp-tag lp-tag-open">Coming soon</span> {comingSoon.join(", ")}</p>
+        <p className="lp-soon"><span className="dt-badge">Coming soon</span> {comingSoon.join(", ")}</p>
       </div>
     </section>
   );

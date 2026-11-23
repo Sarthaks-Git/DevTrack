@@ -1,22 +1,19 @@
-import { sampleJournal } from "../sampleData";
+import JournalEntryCard from "../../components/journal/JournalEntryCard";
+import ActivityItem from "../../components/activity/ActivityItem";
+import AppFrame from "./AppFrame";
+import { sampleActivity, sampleJournalEntry } from "../sampleData";
 
-export default function JournalMock({ data = sampleJournal }) {
+const noop = () => {};
+
+// The real JournalEntryCard, then the real timeline rows it sits among.
+export default function JournalMock() {
   return (
-    <div className="lp-journal">
-      <div className="lp-card">
-        <p className="lp-card-kicker">Journal · {data.entry.date}</p>
-        <p className="lp-card-title">{data.entry.title}</p>
-        <p className="lp-card-sub">{data.entry.body}</p>
-      </div>
-      <ol className="lp-timeline">
-        {data.timeline.map(item => (
-          <li key={item.text} className="lp-timeline-item">
-            <i className={`lp-dot lp-dot-${item.kind}`} />
-            <span className="lp-timeline-date">{item.date}</span>
-            <span>{item.text}</span>
-          </li>
-        ))}
+    <AppFrame eyebrow="05 — Journal" title="Notes as you go">
+      <JournalEntryCard entry={sampleJournalEntry} onEdit={noop} onDelete={noop} onTagClick={noop} />
+      <p className="mt-6 border-b border-[var(--dt-border)] pb-3 text-xs uppercase tracking-[0.25em] text-[var(--dt-text-muted)]">Timeline · 21 Nov</p>
+      <ol className="divide-y divide-[var(--dt-border)]">
+        {sampleActivity.slice(0, 3).map(item => <ActivityItem key={item._id} item={item} compact />)}
       </ol>
-    </div>
+    </AppFrame>
   );
 }

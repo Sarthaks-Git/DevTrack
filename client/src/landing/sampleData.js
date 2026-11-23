@@ -1,50 +1,50 @@
 // Sample values for the landing page visuals. Shown with a "Sample data" caption; never real users.
 
+// Shapes match what the API returns, so the app's own components render them unchanged.
 export const sampleGoal = {
+  _id: "sample-goal",
   title: "Get interview-ready in data structures",
-  target: { label: "Medium problems solved on LeetCode", goal: 60, verified: 34, manual: 6 },
-  steps: [
-    { title: "Arrays and hashing", due: "Nov 28", state: "verified" },
-    { title: "Two pointers and sliding window", due: "Dec 5", state: "verified" },
-    { title: "Trees and recursion notes", due: "Dec 12", state: "manual" },
-    { title: "Graphs: BFS and DFS", due: "Dec 19", state: "open" },
+  description: "Two problems a day, one topic a week, notes for anything that took more than an hour.",
+  status: "in_progress",
+  priority: "high",
+  deadline: "2026-12-31T00:00:00.000Z",
+  target: { count: 60, difficulty: "Medium", pattern: null },
+  targetProgress: { connected: true, current: 34, count: 60, reached: false },
+  milestones: [
+    { _id: "m1", title: "Arrays and hashing", done: true, dueDate: "2026-11-28T00:00:00.000Z" },
+    { _id: "m2", title: "Two pointers and sliding window", done: true, dueDate: "2026-12-05T00:00:00.000Z" },
+    { _id: "m3", title: "Trees and recursion", done: false, dueDate: "2026-12-12T00:00:00.000Z" },
+    { _id: "m4", title: "Graphs: BFS and DFS", done: false, dueDate: "2026-12-19T00:00:00.000Z" },
   ],
 };
 
-export const sampleDashboard = {
-  focus: "Finish the graphs step before Dec 19",
-  attention: [
-    { label: "Portfolio site", detail: "No commits in 9 days" },
-    { label: "System design notes", detail: "Step overdue by 2 days" },
-  ],
-  // Last seven days, oldest first: active or not.
-  week: [
-    { day: "M", active: true },
-    { day: "T", active: true },
-    { day: "W", active: false },
-    { day: "T", active: true },
-    { day: "F", active: true },
-    { day: "S", active: false },
-    { day: "S", active: true },
-  ],
-  recent: [
-    { kind: "verified", text: "Solved “Course Schedule” on LeetCode" },
-    { kind: "verified", text: "3 commits to portfolio-site" },
-    { kind: "manual", text: "Marked “Trees notes” done" },
-  ],
-};
+// ActivityItem shape. "verified" items come from LeetCode or GitHub; the rest are things you did.
+export const sampleActivity = [
+  { _id: "a1", type: "problem_solved", source: "verified", title: "Course Schedule", occurredAt: "2026-11-21T18:42:00" },
+  { _id: "a2", type: "commit_pushed", source: "verified", title: "graph-visualizer: add BFS step mode", occurredAt: "2026-11-21T16:05:00" },
+  { _id: "a3", type: "journal_created", source: "manual", title: "Topological sort finally clicked", occurredAt: "2026-11-20T22:10:00" },
+  { _id: "a4", type: "goal_created", source: "manual", title: "Get interview-ready in data structures", occurredAt: "2026-11-18T09:30:00" },
+];
 
-export const sampleJournal = {
-  entry: {
-    date: "Thu, Nov 20",
-    title: "Topological sort finally clicked",
-    body: "Kahn’s algorithm made more sense once I drew the in-degree table by hand.",
-  },
-  timeline: [
-    { date: "Nov 21", kind: "verified", text: "Solved “Course Schedule II”" },
-    { date: "Nov 20", kind: "note", text: "Journal: Topological sort finally clicked" },
-    { date: "Nov 19", kind: "verified", text: "Pushed 2 commits to graph-visualizer" },
-  ],
+export const sampleCoding = { username: "sample_dev", totalSolved: 148, easySolved: 71, mediumSolved: 64, hardSolved: 13 };
+
+export const sampleWeek = { days: [true, true, false, true, true, false], activeDays: 4, daysElapsed: 6, solved: 9, finished: 2, journal: 3 };
+
+export const sampleAttention = [
+  { title: "System design notes", reason: "Milestone overdue by 2 days", urgent: true, next: "Finish “Caching basics” or move its date." },
+  { title: "Portfolio site", reason: "No progress in 9 days", urgent: false, next: "Push one small change, or pause the project." },
+];
+
+export const sampleJournalEntry = {
+  _id: "j1",
+  entryDate: "2026-11-20T00:00:00.000Z",
+  type: "learning",
+  pinned: false,
+  title: "Topological sort finally clicked",
+  content: "Kahn’s algorithm made more sense once I drew the in-degree table by hand. Next: redo Course Schedule II without looking.",
+  goal: { title: "Get interview-ready in data structures" },
+  project: null,
+  tags: ["graphs", "leetcode"],
 };
 
 // AI tools that exist today (server/src/config/config.js, AI plans).

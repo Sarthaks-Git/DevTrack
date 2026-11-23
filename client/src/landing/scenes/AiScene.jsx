@@ -15,7 +15,7 @@ export default function AiScene() {
             <li key={tool.name} className="lp-card">
               <p className="lp-card-title">
                 {tool.name}
-                {tool.pro ? <span className="lp-tag lp-tag-pro">Pro</span> : null}
+                {tool.pro ? <span className="dt-badge lp-badge-pro">Pro</span> : null}
               </p>
               <p className="lp-card-sub">{tool.detail}</p>
             </li>

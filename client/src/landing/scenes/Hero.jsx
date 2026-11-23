@@ -16,7 +16,7 @@ export default function Hero() {
         </div>
       </div>
       <figure className="lp-hero-visual">
-        <div aria-hidden="true"><GoalCardMock showSteps={false} /></div>
+        <div aria-hidden="true"><GoalCardMock showMilestones={false} /></div>
         <figcaption className="lp-caption">Sample data</figcaption>
       </figure>
     </section>
